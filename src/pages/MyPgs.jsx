@@ -1,6 +1,7 @@
 // src/pages/MyPgs.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 import { sampleData } from '../sampleData' // ensure file is exactly "sampleData.js"
 
 // --- tiny inline icons ---
@@ -34,9 +35,7 @@ export default function MyPgs() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  // search/sort
-  const [query, setQuery] = useState('')
-  const [sort, setSort] = useState('name-asc')
+  // (no search/sort — simplified list view)
 
   // create modal (local only)
   const [showCreate, setShowCreate] = useState(false)
@@ -88,54 +87,16 @@ export default function MyPgs() {
   }
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    const list = pgs.filter(pg =>
-      !q || pg.name?.toLowerCase().includes(q) || pg.address?.toLowerCase().includes(q)
-    )
-    if (sort === 'name-asc') list.sort((a,b)=> (a.name||'').localeCompare(b.name||''))
-    if (sort === 'name-desc') list.sort((a,b)=> (b.name||'').localeCompare(a.name||''))
-    return list
-  }, [pgs, query, sort])
+    return Array.isArray(pgs) ? pgs : []
+  }, [pgs])
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
-      {/* Header + stat */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-2xl font-extrabold tracking-tight">My PGs</h2>
-        <div className="rounded-2xl border shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white">
-            <div className="h-8 w-8 rounded-xl bg-white/20 flex items-center justify-center">
-              <BuildingsIcon className="h-5 w-5" />
-            </div>
-            <div className="text-sm">
-              <div className="opacity-90">Total PGs</div>
-              <div className="text-lg font-bold leading-tight">{pgs.length}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="max-w-6xl px-4 py-6 space-y-4">
+      <PageHeader title="My PGs" />
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3" />
 
-      {/* Toolbar */}
-      <div className="sticky top-16 z-10">
-        <div className="rounded-2xl border bg-white/80 backdrop-blur p-4 shadow-sm">
-          <div className="grid lg:grid-cols-3 gap-4">
-            <div className="rounded-xl border p-3">
-              <div className="relative flex flex-col sm:flex-row gap-3">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.2-5.2M10 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" />
-                </svg>
-                <input
-                  value={query}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder="Search by PG name or address…"
-                  className="flex-1 pl-10 pr-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="hidden lg:block" />
-
-            <div className="flex items-center justify-end">
+       <div className="flex items-center justify-end">
               <button
                 onClick={()=>setShowCreate(true)}
                 className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow"
@@ -144,9 +105,6 @@ export default function MyPgs() {
                 Create new PG
               </button>
             </div>
-          </div>
-        </div>
-      </div>
 
       {/* Error */}
       {error && (
@@ -159,9 +117,14 @@ export default function MyPgs() {
       {loading && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[...Array(6)].map((_,i)=>(
-            <div key={i} className="rounded-2xl border p-4 animate-pulse">
-              <div className="h-5 w-1/2 bg-gray-200 rounded mb-2" />
-              <div className="h-4 w-2/3 bg-gray-200 rounded" />
+            <div key={i} className="rounded-2xl border p-4 animate-pulse bg-white">
+              <div className="h-4 w-3/4 bg-gray-200 rounded mb-4" />
+              <div className="h-3 w-1/2 bg-gray-200 rounded mb-3" />
+              <div className="flex gap-2 mt-3">
+                <div className="h-8 w-8 bg-gray-200 rounded" />
+                <div className="h-8 w-8 bg-gray-200 rounded" />
+                <div className="h-8 w-8 bg-gray-200 rounded" />
+              </div>
             </div>
           ))}
         </div>
@@ -186,19 +149,38 @@ export default function MyPgs() {
       {!loading && filtered.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {filtered.map((pg, idx) => {
-            const zebraBg = idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+            // compute beds/fill/vacating safely
+            let totalBeds = 0, filled = 0, vacating = 0
+            for (const f of (pg.floors || [])) {
+              for (const r of (f.rooms || [])) {
+                for (const b of (r.beds || [])) {
+                  totalBeds++
+                  if (b.occupied) {
+                    filled++
+                    if (b.tenant?.end) {
+                      try {
+                        const end = Date.parse(b.tenant.end)
+                        const msLeft = end - Date.now()
+                        if (msLeft > 0 && msLeft <= 7*24*3600*1000) vacating++
+                      } catch {}
+                    }
+                  }
+                }
+              }
+            }
+            const occupancy = totalBeds ? Math.round((filled/totalBeds)*100) : 0
             return (
               <Link
                 key={pg.id}
                 to={'/pg/'+pg.id}
-                className={`group rounded-2xl border ${zebraBg} p-4 hover:shadow-md hover:-translate-y-0.5 transition`}
+                className={`group rounded-2xl border bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-base font-semibold tracking-tight">{pg.name}</div>
                     <div className="mt-1 text-xs text-gray-600 inline-flex items-center gap-1">
                       <MapPinIcon />
-                      {pg.address || '—'}
+                      <span className="truncate block max-w-xs">{pg.address || '—'}</span>
                     </div>
                   </div>
                   <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-100 to-blue-100 border flex items-center justify-center text-indigo-700">
@@ -207,14 +189,17 @@ export default function MyPgs() {
                 </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-white/60">
-                    <span className="font-semibold">Beds:</span> <span className="opacity-80">—</span>
+                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
+                    <div className="font-semibold">Beds</div>
+                    <div className="text-sm">{totalBeds}</div>
                   </div>
-                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-white/60">
-                    <span className="font-semibold">Filled:</span> <span className="opacity-80">—</span>
+                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-green-50">
+                    <div className="font-semibold">Filled</div>
+                    <div className="text-sm">{filled} ({occupancy}%)</div>
                   </div>
-                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-white/60">
-                    <span className="font-semibold">Vacating:</span> <span className="opacity-80">—</span>
+                  <div className={`rounded-lg border px-2 py-1 text-gray-700 ${vacating ? 'bg-amber-50' : 'bg-gray-50'}`}>
+                    <div className="font-semibold">Vacating</div>
+                    <div className="text-sm">{vacating || '—'}</div>
                   </div>
                 </div>
               </Link>

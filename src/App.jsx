@@ -3,22 +3,35 @@ import React, { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom'
 
 import Login from './pages/Login'
+import AdminLogin from './pages/AdminLogin'
+import AdminDashboard from './pages/AdminDashboard'
+import AdminOwnersList from './pages/AdminOwnersList'
+import AdminOwnerDetails from './pages/AdminOwnerDetails'
 import Home from './pages/Home'
 import MyPgs from './pages/MyPgs'
 import PgDetail from './pages/PgDetail'
 import BedDetail from './pages/BedDetail'
 import Reports from './pages/Reports'
 import Tenants from './pages/Tenants'
+import Offers from './pages/Offers'
 import Complaints from './pages/Complaints' // <-- fixed import
 
 // Import LandingPage plus named SignIn/SignUp exports
 import LandingPage, { SignInPage, SignUpPage } from './pages/LandingPage'
 
 import SidebarFresh from './pages/Sidebar'
+import AdminHeader from './pages/AdminHeader'
+import PageLoader from './components/PageLoader'
+import useRouteLoader from './hooks/useRouteLoader'
 
 function Header({ onMobileOpen }) {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const isOwnerLocal = typeof window !== 'undefined' && localStorage.getItem('isOwner') === 'true'
   const isLanding = pathname === '/'
+
+  // Hide header on admin login; admin pages will render AdminHeader when admin
+  if (pathname === '/admin/login') return null
 
   // Hide hamburger / show landing CTA only on the actual landing page.
   // Sidebar visibility is controlled by the parent (App) using `hideSidebar`.
@@ -58,6 +71,13 @@ function Header({ onMobileOpen }) {
             </Link>
           </div>
         )}
+
+        {/* Show sign out button for owner when logged in */}
+        {!isLanding && isOwnerLocal && (
+          <div className="flex items-center gap-2">
+            <button onClick={() => { try { localStorage.removeItem('isOwner') } catch {} navigate('/') }} className="px-3 py-1 rounded-md border hover:bg-gray-50">Sign out</button>
+          </div>
+        )}
       </div>
     </header>
   )
@@ -91,12 +111,34 @@ export default function App() {
   const { pathname } = useLocation()
 
   // Hide sidebar on landing and auth pages
-  const hideSidebar = ['/','/signin','/signup'].includes(pathname)
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true'
+  const isOwner = typeof window !== 'undefined' && localStorage.getItem('isOwner') === 'true'
+  // Hide sidebar for landing and auth pages. When admin is logged in, hide only on admin routes.
+  const isAdminRoute = pathname.startsWith('/admin')
+  const hideSidebar = ['/','/signin','/signup','/admin/login'].includes(pathname) || (isAdmin && isAdminRoute)
+
+  // Show mobile hamburger when the sidebar exists but the header doesn't (non-landing pages)
+  const showMobileHamburger = !hideSidebar && pathname !== '/' && !isAdminRoute
+
+  const routeLoading = useRouteLoader()
 
   return (
     <>
-      <Header onMobileOpen={() => setMobileOpen(true)} />
+      {/* Header behaviour: AdminHeader for admin routes; landing page shows the regular Header only. Sidebar handles navigation elsewhere. */}
+      {isAdminRoute && isAdmin ? (
+        <AdminHeader />
+      ) : (
+        pathname === '/' ? <Header onMobileOpen={() => setMobileOpen(true)} /> : null
+      )}
       <ScrollToHash />
+      <PageLoader show={routeLoading} />
+
+      {/* Floating mobile hamburger for pages without Header */}
+      {showMobileHamburger && (
+        <button onClick={() => setMobileOpen(true)} className="md:hidden fixed top-3 left-3 z-50 p-2 rounded-lg bg-white border shadow hover:bg-gray-50">
+          <svg className="h-6 w-6 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      )}
 
       <div className="min-h-[calc(100vh-64px)] flex">
         {/* Sidebar hidden on landing and auth pages */}
@@ -109,17 +151,22 @@ export default function App() {
           />
         )}
 
-        <main className="flex-1 mx-auto max-w-7xl px-4 py-6 transition-all duration-200">
+        <main className="flex-1 px-4 py-6 transition-all duration-200">
           <Routes>
             <Route path="/" element={<LandingWrapper />} />
             <Route path="/signin" element={<SignInPage />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+            <Route path="/admin/owners" element={<RequireAdmin><AdminOwnersList /></RequireAdmin>} />
+            <Route path="/admin/owner/:id" element={<RequireAdmin><AdminOwnerDetails /></RequireAdmin>} />
             <Route path="/home" element={<Home />} />
             <Route path="/my-pgs" element={<MyPgs />} />
             <Route path="/pg/:id" element={<PgDetail />} />
             <Route path="/beds/:bedId" element={<BedDetail />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/offers" element={<Offers />} />
             <Route path="/tenants" element={<Tenants />} />
             <Route path="/complaints" element={<Complaints />} /> {/* <-- complaints route */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -128,4 +175,12 @@ export default function App() {
       </div>
     </>
   )
+}
+
+// Simple admin guard
+function RequireAdmin({ children }){
+  const { pathname } = useLocation()
+  const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true'
+  if (!isAdmin) return <Navigate to="/admin/login" state={{ from: pathname }} replace />
+  return children
 }

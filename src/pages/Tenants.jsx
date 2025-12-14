@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { sampleData } from '../sampleData'
+import PageHeader from '../components/PageHeader'
 
 // Simple utility to get initials
 const initials = (name = '') => name.split(' ').filter(Boolean).slice(0,2).map(s => s[0]?.toUpperCase()).join('') || '?'
@@ -55,15 +56,18 @@ export default function Tenants() {
     })
   }, [q, tenants, showActive, showPast])
 
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold">Tenants</h1>
-          <p className="text-sm text-gray-600 mt-1">Search and navigate to a tenant's bed details. Search by name or mobile number.</p>
-        </div>
+  // Pagination
+  const ITEMS_PER_PAGE = 20
+  const [page, setPage] = useState(1)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
+  // reset page when filters/search change
+  React.useEffect(() => setPage(1), [q, showActive, showPast, filtered.length])
+  const current = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
 
-        <div className="flex items-center gap-3 w-full max-w-lg">
+  return (
+    <div className="w-full max-w-screen-2xl px-4 py-8">
+      <PageHeader title="Tenants" subtitle="Search by name or mobile number.">
+        <div className="flex items-center gap-3 w-full max-w-md justify-end">
           <label className="relative flex-1">
             <span className="sr-only">Search</span>
             <input
@@ -101,13 +105,13 @@ export default function Tenants() {
             </label>
           </div>
         </div>
-      </div>
+      </PageHeader>
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-xl border border-dashed p-6 text-center text-gray-600">No tenants found. Adjust filters or search term.</div>
         ) : (
-          filtered.map((item, idx) => {
+          current.map((item, idx) => {
             const t = item.tenant || {}
             const isCurrent = !item.history && item.bed && item.bed.occupied && item.bed.tenant && item.bed.tenant.name === t.name
             const altBg = (Math.floor(idx / 3) % 2 === 0) ? 'bg-gray-50' : 'bg-white'
@@ -158,6 +162,18 @@ export default function Tenants() {
           })
         )}
       </div>
+
+      {/* Pagination controls */}
+      {filtered.length > ITEMS_PER_PAGE && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-600">Showing {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} tenants</div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded-lg border text-sm disabled:opacity-50">Previous</button>
+            <div className="text-sm">Page {page} / {totalPages}</div>
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 rounded-lg border text-sm disabled:opacity-50">Next</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

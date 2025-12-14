@@ -1,0 +1,2 @@
+import{j as t}from"./index-BVo0_FFL.js";import{R as a,B as s,X as r,Y as i,T as n,l as x}from"./BarChart-gQpCKNT7.js";function c({data:e=[]}){return e.length?t.jsx(a,{width:"100%",height:250,children:t.jsxs(s,{data:e,layout:"vertical",children:[t.jsx(r,{type:"number"}),t.jsx(i,{type:"category",dataKey:"state"}),t.jsx(n,{}),t.jsx(x,{dataKey:"count",fill:"#10b981"})]})}):t.jsx("div",{className:"h-[250px] flex items-center justify-center text-sm text-gray-400",children:"No data available"})}export{c as default};
+//# sourceMappingURL=OwnersByStateChart-zj3xliph.js.map

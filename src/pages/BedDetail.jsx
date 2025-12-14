@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { sampleData } from '../sampleData'
+import PageHeader from '../components/PageHeader'
 
 /* ---------------- utilities ---------------- */
 
@@ -566,10 +567,10 @@ export default function BedDetail(){
 
   // --------- safe early returns AFTER hooks ----------
 
-  if (loading) return <div className="max-w-6xl mx-auto px-4 py-6">Loading...</div>
+  if (loading) return <div className="w-full max-w-screen-2xl px-4 py-6">Loading...</div>
   if (!bedExists) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-4">
+      <div className="w-full max-w-screen-2xl px-4 py-6 space-y-4">
         <div className="text-lg font-semibold">No bed found for id “{bedId}”.</div>
         <button onClick={()=>navigate(-1)} className="px-3 py-2 rounded-lg border hover:bg-gray-50">← Back</button>
       </div>
@@ -601,22 +602,10 @@ export default function BedDetail(){
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 space-y-5">
-      {/* Top bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-100 to-blue-100 border flex items-center justify-center text-indigo-700 font-extrabold">
-            {String(bed.id).replace(/^Bed\s*/i,'')}
-          </div>
-          <div>
-            <div className="text-xl font-extrabold tracking-tight">Bed {bed.id}</div>
-            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-semibold ${statusClasses}`}>{statusLabel}</div>
-          </div>
-        </div>
-        <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-          <BackIcon /> Back
-        </button>
-      </div>
+    <div className="w-full max-w-screen-2xl px-4 py-6 space-y-5">
+      <PageHeader title={`Bed ${bed.id}`} subtitle={bed._context ? `${bed._context.pgId} • Room ${bed._context.room}` : undefined}>
+        <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs font-semibold ${statusClasses}`}>{statusLabel}</div>
+      </PageHeader>
 
       {/* Context chips */}
       {bed._context && (
@@ -628,259 +617,197 @@ export default function BedDetail(){
       )}
 
       {/* Content */}
-      <div className="grid lg:grid-cols-3 gap-4">
+      <div className="grid lg:grid-cols-3 gap-6">
         {/* Tenant card */}
-        <div className="lg:col-span-1 rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold">Tenant Details</h3>
-            {!current && <span className="text-xs text-gray-500">No active tenant</span>}
-          </div>
-
-          {current ? (
-            <div className="mt-3">
-              <div className="rounded-xl bg-gray-50 border p-3">
-                <div className="text-base font-semibold">{current.name ?? '—'}</div>
-                <div className="text-xs text-gray-600">{current.phone ? `Phone: ${current.phone}` : 'Phone: —'}</div>
+        <div className="lg:col-span-2 rounded-2xl border bg-white p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <div className="flex-none h-14 w-14 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-semibold">{current?.name ? current.name.split(' ').map(s=>s[0]).slice(0,2).join('') : String(bed.id)}</div>
+            <div className="flex-1">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-lg font-semibold">{current?.name ?? `Bed ${bed.id}`}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{current ? (current.phone ?? '') : 'No tenant assigned'}</div>
+                </div>
+                <div className="ml-4">{current && <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-semibold ${statusClasses}`}>{statusLabel}</div>}</div>
               </div>
 
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6">
-                <InfoRow label="Date of Join" value={fmt(current.start)} />
-                <InfoRow label="Expected Vacate" value={fmt(current.end)} />
-                <InfoRow label="Monthly Rent" value={current.rent ? `₹${current.rent}` : `₹${defaultRent}`} />
-                <InfoRow label="Deposit" value={current.deposit ? `₹${current.deposit}` : '—'} />
-                <InfoRow label="Email" value={current.email ?? '—'} />
-                <InfoRow label="Vehicle No." value={current.vehicleNo ?? '—'} />
-                <InfoRow label="Parent Name" value={current.parentName ?? '—'} />
-                <InfoRow label="Age" value={current.age ?? '—'} />
-                <InfoRow label="Qualification" value={current.qualification ?? '—'} />
-                <InfoRow label="Works at" value={current.company ?? '—'} />
-                <InfoRow label="Room No." value={bed._context?.room ?? '—'} />
-              </div>
+              {current ? (
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {/* Contact */}
+                  <div className="rounded-lg border bg-gradient-to-br from-indigo-50 to-white p-3 border-indigo-100">
+                    <div className="text-xs font-semibold mb-2 text-indigo-700">Contact</div>
+                    <div className="space-y-2">
+                      <InfoRow label="Email" value={current.email ? <a href={`mailto:${current.email}`} className="text-sm text-indigo-700 hover:underline">{current.email}</a> : '—'} />
+                      <InfoRow label="Phone" value={current.phone ?? '—'} />
+                      <InfoRow label="Vehicle" value={current.vehicleNo ?? '—'} />
+                      <InfoRow label="Parent" value={current.parentName ?? '—'} />
+                    </div>
+                  </div>
 
-              {current.start && (
-                <div className="mt-3 rounded-lg border bg-blue-50 text-blue-900 px-3 py-2 text-xs">
-                  <div className="font-semibold">Billing rule</div>
-                  <div>Monthly on join-date (anniversary). First month may be prorated.</div>
+                  {/* Financial */}
+                  <div className="rounded-lg border bg-gradient-to-br from-amber-50 to-white p-3 border-amber-100">
+                    <div className="text-xs font-semibold mb-2 text-amber-700">Financial</div>
+                    <div className="space-y-2">
+                      <InfoRow label="Monthly Rent" value={`₹${current.rent ?? defaultRent}`} />
+                      <InfoRow label="Deposit" value={current.deposit ? `₹${current.deposit}` : '—'} />
+                      <InfoRow label="Pending" value={`₹${totals.pending ?? 0}`} />
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="rounded-lg border bg-gradient-to-br from-blue-50 to-white p-3 border-blue-100">
+                    <div className="text-xs font-semibold mb-2 text-blue-700">Details</div>
+                    <div className="space-y-2">
+                      <InfoRow label="Date of Join" value={fmt(current.start)} />
+                      <InfoRow label="Expected Vacate" value={fmt(current.end)} />
+                      <InfoRow label="Age" value={current.age ?? '—'} />
+                      <InfoRow label="Qualification" value={current.qualification ?? '—'} />
+                      <InfoRow label="Works at" value={current.company ?? '—'} />
+                      <InfoRow label="Room No." value={bed._context?.room ?? '—'} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-dashed p-5 text-sm text-gray-600">
+                  <div>No one is currently assigned to this bed.</div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      onClick={() => { setTenantDraft(null); setTenantModalOpen(true) }}
+                      className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700"
+                    >Assign tenant</button>
+
+                    <button
+                      onClick={() => {
+                        const minimal = {
+                          name: `Tenant ${String(bed.id)}`,
+                          start: dayjs().startOf('day').toISOString(),
+                          rent: defaultRent
+                        }
+                        setTenantDraft(minimal)
+                        setTenantModalOpen(true)
+                      }}
+                      className="px-4 py-2 rounded-lg border text-sm hover:bg-gray-50"
+                      title="Quick assign minimal details (you can edit in form)"
+                    >Quick assign</button>
+                  </div>
                 </div>
               )}
-
-              {/* Quick actions */}
-              <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm"
-                  onClick={() => {
-                    const days = parseInt(prompt('Extend by how many days?', '30') || '0', 10)
-                    if (!Number.isFinite(days) || days <= 0) return
-                    const newEnd = current.end ? dayjs(current.end).add(days, 'day') : dayjs().add(days, 'day')
-                    setBed(prev => ({ ...prev, tenant: { ...prev.tenant, end: newEnd.toISOString() } }))
-                  }}
-                >Extend stay</button>
-
-                <button
-                  className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm"
-                  onClick={() => {
-                    const d = prompt('Set vacate date (YYYY-MM-DD)', current.end ? dayjs(current.end).format('YYYY-MM-DD') : '')
-                    if (!d) return
-                    const iso = dayjs(d, 'YYYY-MM-DD', true)
-                    if (!iso.isValid()) { alert('Invalid date'); return }
-                    setBed(prev => ({ ...prev, tenant: { ...prev.tenant, end: iso.toISOString() } }))
-                  }}
-                >Set vacate date</button>
-
-                <button
-                  className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm"
-                  onClick={() => {
-                    const r = parseInt(prompt('New monthly rent', current.rent ?? defaultRent) || '', 10)
-                    if (!Number.isFinite(r) || r <= 0) return
-                    setBed(prev => ({ ...prev, tenant: { ...prev.tenant, rent: r } }))
-                  }}
-                >Change rent</button>
-
-                <button
-                  className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm"
-                  onClick={() => {
-                    const d = prompt('Mark last working day (YYYY-MM-DD)', dayjs().format('YYYY-MM-DD'))
-                    if (!d) return
-                    const iso = dayjs(d, 'YYYY-MM-DD', true)
-                    if (!iso.isValid()) { alert('Invalid date'); return }
-                    setBed(prev => {
-                      const endISO = iso.toISOString()
-                      const t = prev?.tenant || {}
-                      return {
-                        ...prev,
-                        tenant: { ...t, end: endISO },
-                        history: [
-                          ...(prev?.history || []),
-                          { tenantName: t.name || '—', start: t.start, end: endISO, note: 'Last working day marked' },
-                        ],
-                      }
-                    })
-                  }}
-                  title="Marks the tenant's final day in this bed"
-                >Mark last working day</button>
-              </div>
             </div>
-          ) : (
-            <div className="mt-3 rounded-xl border border-dashed p-4 text-sm text-gray-600">
-              <div>No one is currently assigned to this bed.</div>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => { setTenantDraft(null); setTenantModalOpen(true) }}
-                  className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700"
-                >Assign tenant</button>
-
-                <button
-                  onClick={() => {
-                    // quick assign minimal tenant with today's start & default rent
-                    const minimal = {
-                      name: `Tenant ${String(bed.id)}`,
-                      start: dayjs().startOf('day').toISOString(),
-                      rent: defaultRent
-                    }
-                    setTenantDraft(minimal)
-                    setTenantModalOpen(true)
-                  }}
-                  className="px-3 py-1.5 rounded-lg border text-sm hover:bg-gray-50"
-                  title="Quick assign minimal details (you can edit in form)"
-                >Quick assign</button>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Payments Schedule */}
-        <div className="lg:col-span-2 rounded-2xl border bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="font-semibold">Payments</h3>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-gray-500">{periods.length} period{periods.length !== 1 ? 's' : ''}</span>
-              <button
-                onClick={markAllPastDueAsPaid}
-                className="px-2.5 py-1 rounded border text-xs hover:bg-gray-50"
-                title="Mark all past-due unpaid periods as paid at current rent"
-              >Mark past due paid</button>
-              <button
-                onClick={exportPaymentsCSV}
-                className="px-2.5 py-1 rounded border text-xs hover:bg-gray-50"
-              >Export CSV</button>
-              <button
-                onClick={printPayments}
-                className="px-2.5 py-1 rounded border text-xs hover:bg-gray-50"
-              >Print</button>
-            </div>
-          </div>
-
-          <div className="mt-2 grid grid-cols-3 gap-2 text-sm">
-            <div className="rounded-lg border px-3 py-2 bg-gray-50"><div className="text-gray-600">Total Due</div><div className="font-semibold">₹{totals.due}</div></div>
-            <div className="rounded-lg border px-3 py-2 bg-gray-50"><div className="text-gray-600">Total Paid</div><div className="font-semibold">₹{totals.paid}</div></div>
-            <div className="rounded-lg border px-3 py-2 bg-gray-50"><div className="text-gray-600">Pending</div><div className="font-semibold">₹{totals.pending}</div></div>
-          </div>
-
-          {(!current || periods.length === 0) ? (
-            <div className="mt-3 rounded-2xl border border-dashed p-4 text-sm text-gray-600">No periods to display.</div>
-          ) : (
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {periods.map((p) => {
-                const paid = payments[p.key]
-                const status = dueStatus(p)
-                const badgeTone =
-                  paid ? 'bg-green-50 border-green-200 text-green-800'
-                  : status.tone === 'red' ? 'bg-red-50 border-red-200 text-red-800'
-                  : status.tone === 'amber' ? 'bg-amber-50 border-amber-200 text-amber-800'
-                  : 'bg-gray-50 border-gray-200 text-gray-700'
-
-                return (
-                  <div key={p.key} className="rounded-xl border p-3 hover:shadow-sm transition">
-                    <div className="flex items-center justify-between">
-                      <div className="font-semibold">{p.label}</div>
-                      <div className={`px-2 py-0.5 rounded-lg text-xs border ${badgeTone}`}>{paid ? 'Paid' : status.label}</div>
-                    </div>
-                    <div className="mt-1 text-xs text-gray-600">{fmt(p.from, 'DD MMM')} – {fmt(p.to, 'DD MMM')}</div>
-
-                    {p.isFirst && current?.start && dayjs(current.start).date() !== 1 && (
-                      <div className="mt-2 text-[11px] rounded bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 inline-block">Prorated</div>
-                    )}
-
-                    <div className="mt-3 flex items-start justify-between text-sm">
-                      {paid ? (
-                        <div className="text-gray-700">
-                          ₹{paid.amountPaid}{paid.pending>0 ? <span className="text-amber-700"> • Pending ₹{paid.pending}</span> : null}
-                        </div>
-                      ) : (
-                        <div className="text-gray-500">Unpaid</div>
-                      )}
-
-                      {paid ? (
-                        <div className="flex flex-col items-end gap-1 text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <button
-                              onClick={() => downloadReceipt({ tenant: current, period: p, payment: paid })}
-                              className="px-2 py-1 rounded border hover:bg-gray-50"
-                              title="Download receipt"
-                            >
-                              Receipt
-                            </button>
-                            <button
-                              onClick={() => handleEditPayment(p)}
-                              className="px-2 py-1 rounded border hover:bg-gray-50"
-                              title="Edit payment"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                          <div className="text-gray-500">{paid.mode} • {fmt(paid.paidAt, 'DD MMM')}</div>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => { setActivePeriod(p); setModalOpen(true) }}
-                          className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700"
-                        >
-                          Mark Paid
-                        </button>
-                      )}
-                    </div>
-
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* History card */}
-        <div className="lg:col-span-3 rounded-2xl border bg-white p-5 shadow-sm">
+        <div className="lg:col-span-1 rounded-2xl border bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold">History</h3>
-            <span className="text-xs text-gray-500">{sortedHistory.length} record{sortedHistory.length !== 1 ? 's' : ''}</span>
+            <h3 className="font-semibold">Payments</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">{periods.length} period{periods.length !== 1 ? 's' : ''}</span>
+              <div className="flex items-center gap-2">
+                <button onClick={exportPaymentsCSV} className="px-2 py-1 rounded border text-xs hover:bg-gray-50">CSV</button>
+                <button onClick={printPayments} className="px-2 py-1 rounded border text-xs hover:bg-gray-50">Print</button>
+              </div>
+            </div>
           </div>
 
-          {sortedHistory.length === 0 ? (
-            <div className="mt-3 rounded-xl border border-dashed p-4 text-sm text-gray-600">No history records yet.</div>
-          ) : (
-            <ol className="mt-3 space-y-3">
-              {sortedHistory.map((h, idx) => (
-                <li key={idx} className="rounded-xl border p-3 bg-gradient-to-br from-gray-50 to-white">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" aria-hidden />
-                      <div className="font-medium">{h.tenantName ?? '—'}</div>
+          <div className="mt-4 space-y-3">
+            <div className="rounded-lg border bg-gray-50 p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-gray-600">Total Due</div>
+                <div className="font-semibold">₹{totals.due}</div>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                <div>Paid: <span className="font-medium text-gray-900">₹{totals.paid}</span></div>
+                <div>Pending: <span className="font-medium text-amber-700">₹{totals.pending}</span></div>
+              </div>
+            </div>
+
+            {(!current || periods.length === 0) ? (
+              <div className="rounded-2xl border border-dashed p-4 text-sm text-gray-600">No periods to display.</div>
+            ) : (
+              <div className="space-y-3">
+                {periods.map((p) => {
+                  const paid = payments[p.key]
+                  const status = dueStatus(p)
+                  const badgeTone =
+                    paid ? 'bg-green-50 border-green-200 text-green-800'
+                    : status.tone === 'red' ? 'bg-red-50 border-red-200 text-red-800'
+                    : status.tone === 'amber' ? 'bg-amber-50 border-amber-200 text-amber-800'
+                    : 'bg-gray-50 border-gray-200 text-gray-700'
+
+                  return (
+                    <div key={p.key} className="rounded-xl border p-3 hover:shadow-sm transition">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold truncate">{p.label}</div>
+                          <div className="mt-1 text-xs text-gray-500">{fmt(p.from, 'DD MMM')} – {fmt(p.to, 'DD MMM')}</div>
+                        </div>
+                        <div className="flex-none text-right">
+                          <div className={`inline-flex items-center gap-2 px-2 py-0.5 rounded ${badgeTone}`}>{paid ? 'Paid' : status.label}</div>
+                          <div className="mt-1 font-semibold">₹{paid ? paid.amountPaid : defaultRent}</div>
+                          <div className="mt-2 flex items-center gap-2 justify-end">
+                            {paid ? (
+                              <>
+                                <button onClick={() => downloadReceipt({ tenant: current, period: p, payment: paid })} className="px-2 py-1 rounded border text-xs hover:bg-gray-50">Receipt</button>
+                                <button onClick={() => handleEditPayment(p)} className="px-2 py-1 rounded border text-xs hover:bg-gray-50">Edit</button>
+                              </>
+                            ) : (
+                              <button onClick={() => { setActivePeriod(p); setModalOpen(true) }} className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-700">Mark Paid</button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {p.isFirst && current?.start && dayjs(current.start).date() !== 1 && (
+                        <div className="mt-2 text-[11px] rounded bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 inline-block">Prorated</div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 border text-gray-700">
-                        {fmtShort(h.start)} → {h.end ? fmtShort(h.end) : 'Ongoing'}
-                      </span>
-                      <button
-                        className="px-2 py-1 rounded border text-xs hover:bg-gray-50"
-                        onClick={() => { setHistoryItem(h); setHistoryOpen(true) }}
-                      >View details</button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* spacer for grid alignment when history is below */}
+        <div className="hidden lg:block" />
+      </div>
+
+      {/* History (full width below) */}
+      <div className="rounded-2xl border bg-white p-5 shadow-sm mt-4">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">History</h3>
+          <span className="text-xs text-gray-500">{sortedHistory.length} record{sortedHistory.length !== 1 ? 's' : ''}</span>
+        </div>
+
+        {sortedHistory.length === 0 ? (
+          <div className="mt-3 rounded-xl border border-dashed p-4 text-sm text-gray-600">No history records yet.</div>
+        ) : (
+          <ol className="mt-3 space-y-3">
+            {sortedHistory.map((h, idx) => (
+              <li key={idx} className="rounded-xl border p-3 bg-gradient-to-br from-gray-50 to-white">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-700 font-semibold">{(h.tenantName||'—').split(' ').map(s=>s[0]).slice(0,2).join('')}</span>
+                    <div>
+                      <div className="font-medium">{h.tenantName ?? '—'}</div>
+                      {h.note && <div className="text-xs text-gray-500 mt-1">{h.note}</div>}
                     </div>
                   </div>
-                  {h.note && <div className="mt-1 text-xs text-gray-600">{h.note}</div>}
-                </li>
-              ))}
-            </ol>
-          )}
-        </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="text-right">
+                      <div className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 border text-gray-700">{fmtShort(h.start)} → {h.end ? fmtShort(h.end) : 'Ongoing'}</div>
+                      <div className="mt-1 text-xs text-gray-500">{h.end ? fmt(h.end) : 'Ongoing'}</div>
+                    </div>
+                    <button
+                      className="px-2 py-1 rounded border text-xs hover:bg-gray-50"
+                      onClick={() => { setHistoryItem(h); setHistoryOpen(true) }}
+                    >View details</button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
       </div>
 
       {/* Payment modal */}

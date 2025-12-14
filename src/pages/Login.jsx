@@ -6,6 +6,7 @@ export default function Login(){
   const submit = (e) => {
     e.preventDefault()
     // simple demo: navigate to home
+    try { localStorage.setItem('isOwner', 'true'); localStorage.removeItem('isAdmin') } catch {}
     navigate('/home')
   }
   return (

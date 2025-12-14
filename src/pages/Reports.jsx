@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react"
+import PageHeader from '../components/PageHeader'
 
 /*
   Reports page
@@ -109,11 +110,11 @@ export default function Reports() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+    <div className="w-full max-w-screen-2xl px-4 py-6 space-y-6">
+      <PageHeader title="Reports" />
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-2xl font-extrabold tracking-tight">Reports</h2>
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => exportCSV("all_reports_summary")}
             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm"
@@ -130,7 +131,7 @@ export default function Reports() {
       </div>
 
       {/* Toolbar */}
-      <div className="sticky top-16 z-10">
+      <div className="z-10">
         <div className="rounded-2xl border bg-white/80 backdrop-blur p-4 shadow-sm">
           <div className="grid sm:grid-cols-3 gap-3 items-end">
             {/* PG selector */}
