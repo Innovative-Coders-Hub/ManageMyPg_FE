@@ -107,10 +107,24 @@ export default function Home() {
     }, 500);
   }, []);
 
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  };
+
   if (!stats) return <div className="p-4">Loading dashboard...</div>;
 
   return (
     <div className="space-y-6">
+      {/* Friendly Greeting */}
+      <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">
+        <h1 className="text-3xl font-bold">{getGreeting()}! 👋</h1>
+        <p className="mt-2 text-white/90">Welcome back to your PG management dashboard</p>
+      </div>
+
       <PageHeader title="Dashboard" />
 
       {/* GRID TILES */}
