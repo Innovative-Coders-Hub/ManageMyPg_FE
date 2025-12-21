@@ -79,6 +79,14 @@ function Tile({ title, value, to, color, meta, sparkline }) {
   );
 }
 
+// Get time-based greeting
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function Home() {
   // 📌 SAMPLE DASHBOARD DATA
   const sampleStats = {
@@ -106,14 +114,6 @@ export default function Home() {
       setStats(sampleStats);
     }, 500);
   }, []);
-
-  // Get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  };
 
   if (!stats) return <div className="p-4">Loading dashboard...</div>;
 
