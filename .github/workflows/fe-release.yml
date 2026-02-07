@@ -46,5 +46,4 @@ jobs:
           key: ${{ secrets.FE_SERVER_SSH_KEY }}
           script: |
             cd /var/www
-            mv fe-build.tar.gz /var/www/fe-build.tar.gz
             ~/apps/managemypg-fe/scripts/deploy_fe.sh
