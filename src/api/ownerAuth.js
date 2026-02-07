@@ -3,13 +3,13 @@ import api from './api'
 
 // ---------- AUTH ----------
 export const registerOwner = (payload) => {
-  const res = api.post(`${API_BASE_URL}/mmp/owner/create`, payload)
+  const res = api.post(`/mmp/owner/create`, payload)
   return res.data
 }
 
 export async function ownerLogin({ email, password }) {
   try {
-    const res = await api.post("/api/auth/login", { email, password })
+    const res = await api.post('/api/auth/login', { email, password })
     return res.data
   } catch (err) {
     throw {
