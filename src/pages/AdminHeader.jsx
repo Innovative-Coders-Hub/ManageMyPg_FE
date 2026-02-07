@@ -1,5 +1,6 @@
 import React from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { adminLogout } from '../api/adminAuth'
 
 export default function AdminHeader(){
   const { pathname, search } = useLocation()
@@ -8,8 +9,15 @@ export default function AdminHeader(){
   const activeApproved = activeOwners && q.get('filter') === 'approved'
   const activePending = activeOwners && q.get('filter') === 'pending'
   const navigate = useNavigate()
-  function signOut(){
-    try { localStorage.removeItem('isAdmin'); localStorage.removeItem('isOwner') } catch {}
+  async function signOut() {
+    try {
+      await adminLogout()
+    } catch {}
+    try {
+      localStorage.removeItem('isAdmin')
+      localStorage.removeItem('isOwner')
+      localStorage.removeItem('admin_jwt')
+    } catch {}
     navigate('/admin/login')
   }
 

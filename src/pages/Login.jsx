@@ -7,7 +7,7 @@ export default function Login(){
     e.preventDefault()
     // simple demo: navigate to home
     try { localStorage.setItem('isOwner', 'true'); localStorage.removeItem('isAdmin') } catch {}
-    navigate('/home')
+    navigate('/ownerProfile')
   }
   return (
     <div className="max-w-md mx-auto mt-12 card">

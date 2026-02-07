@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
+import SuccessPopup from "../components/SuccessPopup";
+import { registerOwner } from "../api/ownerAuth";
+import { ownerLogin } from "../api/ownerAuth";
 /* ---------------- Shared primitives still in this file ---------------- */
 
 function Footer() {
@@ -244,20 +246,62 @@ function LandingPage() {
 
 /* ---------------- Shared form bits ---------------- */
 
-function Input({ label, type = "text", value, onChange, placeholder }) {
-  return (
+function Input({
+      label,
+      type = "text",
+      value,
+      onChange,
+      placeholder,
+      numeric = false,
+      maxLength
+    }) {
+      const [show, setShow] = useState(false);
+      const isPassword = type === "password";
+
+      function handleChange(e) {
+        let val = e.target.value;
+
+        if (numeric) {
+          val = val.replace(/\D/g, ""); // remove non-digits
+        }
+
+        if (maxLength) {
+          val = val.slice(0, maxLength);
+        }
+
+        onChange(val);
+      }
+
+    return (
     <label className="block">
       <span className="text-sm font-medium text-gray-700">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-      />
+
+      <div className="relative mt-1">
+        <input
+          type={isPassword && show ? "text" : type}
+          value={value}
+          onChange={handleChange}
+          placeholder={placeholder}
+          inputMode={numeric ? "numeric" : undefined}
+          className="w-full rounded-xl border px-3 py-2 pr-10 outline-none
+                     focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        />
+
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShow(!show)}
+            className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-indigo-600"
+          >
+            {show ? "🙈" : "👁️"}
+          </button>
+        )}
+      </div>
     </label>
   );
 }
+
+
 
 function AuthCard({ title, subtitle, children, footer }) {
   return (
@@ -288,19 +332,76 @@ export function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      navigate("/dashboard");
-    } catch (err) {
-      setError("Invalid email or password");
-    } finally {
-      setLoading(false);
-    }
-  }
+    async function handleSubmit(e) {
+        e.preventDefault()
+        setError("")
+        setLoading(true)
+
+        try {
+          const data = await ownerLogin({ email, password })
+
+          // Normalize booleans (very important)
+          const isBlocked = data.isBlocked === true || data.isBlocked === 'true'
+          const isApproved = data.isApproved === true || data.isApproved === 'true'
+          const role = data.role // "OWNER" | "TENANT"
+          const businessName = data.pgName || ''
+
+          // 1️⃣ Blocked
+          if (isBlocked) {
+            setError("Your account has been blocked. Please contact support.")
+            return
+          }
+
+          // 2️⃣ Not approved (only for OWNER)
+          if (role === 'OWNER' && !isApproved) {
+            setError("Your account is under verification. Please wait until admin approval.")
+            return
+          }
+
+          // 3️⃣ Store session
+          localStorage.setItem('accessToken', data.accessToken)
+          localStorage.setItem('refreshToken', data.refreshToken)
+          localStorage.setItem('tokenType', data.tokenType || 'Bearer')
+          localStorage.setItem('role', role)
+
+          if (role === 'OWNER') {
+            localStorage.setItem('isOwner', 'true')
+            localStorage.setItem('isApproved', isApproved)
+            localStorage.setItem('isBlocked', isBlocked)
+            localStorage.setItem('businessName', businessName)
+
+
+            // Owner profile completion
+            const hasAddress = Boolean(data.isAddress)
+          // const addressData = Boolean(data.address)
+
+            if (hasAddress) {
+              navigate('/home', { replace: true })
+            } else {
+              navigate('/ownerProfile', { replace: true })
+            }
+          }
+
+          if (role === 'TENANT') {
+            localStorage.setItem('tenantId', data.id)
+            localStorage.setItem('isTenant', 'true')
+            // Tenant always goes to dashboard
+            navigate('/tenant/dashboard', { replace: true })
+          }
+
+        } catch (err) {
+          if (err.status === 401) {
+            setError("Invalid email or password")
+          } else if (err.status === 403) {
+            setError("Your account has been blocked. Please contact support.")
+          } else {
+            setError(err.message || "Something went wrong. Please try again.")
+          }
+        } finally {
+          setLoading(false)
+        }
+      }
+
 
   return (
     <AuthCard title="Welcome back" subtitle="Sign in to continue">
@@ -332,29 +433,75 @@ export function SignInPage() {
 
 export function SignUpPage() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [username, setUserName] = useState("");
+  const [fullName, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [address, setAddress] = useState("");
   const [agree, setAgree] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordMatch, setPasswordMatch] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!agree) return alert("Please accept Terms & Privacy");
-    setLoading(true);
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      navigate("/signin");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [apiError, setApiError] = useState("");
+      useEffect(() => {
+        if (showSuccess) {
+          const timer = setTimeout(() => {
+            setShowSuccess(false);
+            // optional cleanup
+            setUserName("");
+            setName("");
+            setEmail("");
+            setPhone("");
+            setPassword("");
+            setConfirmPassword("");
+            setPasswordMatch(false);
+            setPasswordError("");
+            setAgree(false);
 
+            navigate("/signin");
+          }, 30000);
+          return () => clearTimeout(timer);
+        }
+      }, [showSuccess, navigate]);
+
+     async function handleSubmit(e) {
+          e.preventDefault();
+          setApiError("");
+
+          if (!agree) {
+            setApiError("Please accept Terms & Privacy");
+            return;
+          }
+          if (!passwordMatch) return;
+          setLoading(true);
+          try {
+            const payload = {
+              username,
+              fullName,
+              email,
+              phone,
+              password
+            };
+            const response = await registerOwner(payload);
+            // Registration failed
+            if (!response?.data?.success) {
+              setApiError(response?.data?.message || "Registration failed");
+              return;
+            }
+            // ✅ Registration success (approved=false by default)
+            setShowSuccess(true);
+          } catch (err) {
+            setApiError(err?.response?.data?.message ||"Something went wrong. Please try again.");
+          } finally {
+            setLoading(false);
+          }
+        }
   return (
-    <AuthCard
-      title="Create your account"
-      subtitle="Start managing your PG in minutes"
+    <AuthCard  title="Create your account" subtitle="Start managing your PG in minutes"
       footer={
         <span>
           Already have an account?{" "}
@@ -362,13 +509,28 @@ export function SignUpPage() {
             Sign in
           </Link>
         </span>
-      }
-    >
+      }>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Full name" value={name} onChange={setName} placeholder="Sudheer Babu" />
+         <Input label="UserName" value={username} onChange={setUserName} placeholder="VENKATESH" />
+        <Input label="Full name" value={fullName} onChange={setName} placeholder="Venkatest Chowdary" />
         <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
-        <Input label="Phone" type="tel" value={phone} onChange={setPhone} placeholder="98765 43210" />
-        <Input label="Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 8 characters" />
+        <Input label="Phone" type="tel"   value={phone} onChange={setPhone} placeholder="9876543210" numeric maxLength={10} />
+        {/* <Input label="Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 12 characters" /> */}
+        <Input label="Password" type="password" value={password}
+            onChange={(value) => {
+              setPassword(value);
+              setPasswordMatch(false);
+              setPasswordError("");
+            }}
+            placeholder="Minimum 12 characters"/>
+        <Input label="Confirm Password" type="password" value={confirmPassword}
+            onChange={(value) => {setConfirmPassword(value);
+              if (!value) { setPasswordError("");  setPasswordMatch(false);return;}
+              if (password === value) {setPasswordError("");setPasswordMatch(true);} else {setPasswordError("Passwords do not match");setPasswordMatch(false);}
+            }}  placeholder="Minimum 12 characters"/>
+         {passwordError && (<div className="text-red-600 text-sm">{passwordError}</div>)}
+         {passwordMatch && (<div className="text-green-600 text-sm font-medium">✓ Passwords matched</div>)}
+        {/* <Input label="Full Addresss" value={address} onChange={setAddress} placeholder="Enter Full address" /> */}
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="rounded border-gray-300" />
           <span>
@@ -377,12 +539,20 @@ export function SignUpPage() {
           </span>
         </label>
         <button
-          disabled={loading}
-          className="w-full px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:opacity-60"
+          disabled={loading || !passwordMatch}
+          className="w-full px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold
+                    hover:bg-indigo-700 disabled:opacity-60"
         >
           {loading ? "Creating account…" : "Create account"}
         </button>
+        {apiError && (
+            <div className="text-red-600 text-sm text-center">
+              {apiError}
+            </div>
+          )}
+
       </form>
+      {showSuccess && <SuccessPopup />}
     </AuthCard>
   );
 }
