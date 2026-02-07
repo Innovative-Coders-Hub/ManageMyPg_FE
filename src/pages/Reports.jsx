@@ -100,7 +100,7 @@ export default function Reports() {
     const a = document.createElement("a")
     a.href = url
     a.download = `${reportKey}.csv`
-    a.click()
+    if (a) a.click()
     URL.revokeObjectURL(url)
   }
 
@@ -110,25 +110,31 @@ export default function Reports() {
   }
 
   return (
-    <div className="w-full max-w-screen-2xl px-4 py-6 space-y-6">
-      <PageHeader title="Reports" />
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => exportCSV("all_reports_summary")}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm"
-          >
-            <DownloadIcon /> Export CSV
-          </button>
-          <button
-            onClick={() => exportPDF("all_reports_summary")}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700"
-          >
-            <DownloadIcon /> Export PDF
-          </button>
-        </div>
-      </div>
+<div className="space-y-2">
+  {/* Header Row */}
+  <div className="flex items-center justify-between">
+    {/* Left: Page Title */}
+    <PageHeader title="Reports" />
+
+    {/* Right: Report Options */}
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => exportCSV("all_reports_summary")}
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border hover:bg-gray-50 text-sm"
+      >
+        <DownloadIcon /> Export CSV
+      </button>
+
+      <button
+        onClick={() => exportPDF("all_reports_summary")}
+        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700"
+      >
+        <DownloadIcon /> Export PDF
+      </button>
+    </div>
+  </div>
+
+
 
       {/* Toolbar */}
       <div className="z-10">

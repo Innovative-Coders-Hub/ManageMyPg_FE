@@ -29,7 +29,7 @@ function OfferForm({ open, initial = null, onClose, onSave }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="space-y-6">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="relative w-full max-w-xl mx-4 rounded-2xl border bg-white shadow-xl">
         <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-2xl">

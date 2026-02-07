@@ -1,8 +1,10 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom'
+import { ownerLogout } from './api/ownerAuth'
 
 import Login from './pages/Login'
+import OwnerProfile from './pages/OwnerProfile'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminOwnersList from './pages/AdminOwnersList'
@@ -10,11 +12,13 @@ import AdminOwnerDetails from './pages/AdminOwnerDetails'
 import Home from './pages/Home'
 import MyPgs from './pages/MyPgs'
 import PgDetail from './pages/PgDetail'
+import TenantRegistration from './pages/TenantRegistration'
 import BedDetail from './pages/BedDetail'
 import Reports from './pages/Reports'
 import Tenants from './pages/Tenants'
 import Offers from './pages/Offers'
 import Complaints from './pages/Complaints' // <-- fixed import
+import TenantDashboard from './pages/TenantDashboard'
 
 // Import LandingPage plus named SignIn/SignUp exports
 import LandingPage, { SignInPage, SignUpPage } from './pages/LandingPage'
@@ -28,7 +32,7 @@ function Header({ onMobileOpen }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const isOwnerLocal = typeof window !== 'undefined' && localStorage.getItem('isOwner') === 'true'
-  const isLanding = pathname === '/'
+  const isLanding = pathname === '/home'
 
   // Hide header on admin login; admin pages will render AdminHeader when admin
   if (pathname === '/admin/login') return null
@@ -63,6 +67,9 @@ function Header({ onMobileOpen }) {
         {/* For Landing Page only: show sign-in / create account buttons as Links to routes */}
         {isLanding && (
           <div className="flex items-center gap-2">
+             <Link to="/home" className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow">
+              Home Page
+            </Link>
             <Link to="/signin" className="px-4 py-2 rounded-xl hover:bg-gray-100 text-sm font-medium">
               Sign in
             </Link>
@@ -75,7 +82,15 @@ function Header({ onMobileOpen }) {
         {/* Show sign out button for owner when logged in */}
         {!isLanding && isOwnerLocal && (
           <div className="flex items-center gap-2">
-            <button onClick={() => { try { localStorage.removeItem('isOwner') } catch {} navigate('/') }} className="px-3 py-1 rounded-md border hover:bg-gray-50">Sign out</button>
+           <button
+              onClick={async () => {
+                await ownerLogout()
+                navigate('/signin', { replace: true })
+              }}
+              className="px-3 py-1 rounded-md border hover:bg-gray-50"
+            >
+              Sign out
+            </button>
           </div>
         )}
       </div>
@@ -113,14 +128,61 @@ export default function App() {
   // Hide sidebar on landing and auth pages
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true'
   const isOwner = typeof window !== 'undefined' && localStorage.getItem('isOwner') === 'true'
+  const isTenant  = typeof window !== 'undefined' && localStorage.getItem('isTenant') === 'true'
   // Hide sidebar for landing and auth pages. When admin is logged in, hide only on admin routes.
   const isAdminRoute = pathname.startsWith('/admin')
-  const hideSidebar = ['/','/signin','/signup','/admin/login'].includes(pathname) || (isAdmin && isAdminRoute)
+  // const hideSidebar = ['/','/signin','/signup','/admin/login','/mmp/register/:pgId'].includes(pathname) || (isAdmin && isAdminRoute)
+  const hideSidebarRoutes = [
+  '/',
+  '/signin',
+  '/signup',
+  '/admin/login'
+]
+
+const hideSidebar =
+  hideSidebarRoutes.includes(pathname) ||
+  pathname.startsWith('/mmp/register/') || isTenant
 
   // Show mobile hamburger when the sidebar exists but the header doesn't (non-landing pages)
   const showMobileHamburger = !hideSidebar && pathname !== '/' && !isAdminRoute
 
   const routeLoading = useRouteLoader()
+        const resetTimerRef = React.useRef(null)
+
+useEffect(() => {
+  if (!isOwner && !isTenant) return
+
+  let timer
+  let cancelled = false
+
+    resetTimerRef.current = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        if (cancelled) return
+        alert('Session expired due to inactivity')
+        localStorage.clear()
+        window.location.href = '/signin'
+      }, 60 * 60 * 1000)
+    }
+
+    const handler = () => resetTimerRef.current?.()
+
+    ;['mousemove', 'keydown', 'click'].forEach(evt =>
+      window.addEventListener(evt, handler)
+    )
+
+    handler()
+
+      return () => {
+        cancelled = true
+        clearTimeout(timer)
+        ;['mousemove', 'keydown', 'click'].forEach(evt =>
+          window.removeEventListener(evt, handler)
+        )
+      }
+  }, [isOwner, isTenant])
+
+
 
   return (
     <>
@@ -161,7 +223,7 @@ export default function App() {
             <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
             <Route path="/admin/owners" element={<RequireAdmin><AdminOwnersList /></RequireAdmin>} />
             <Route path="/admin/owner/:id" element={<RequireAdmin><AdminOwnerDetails /></RequireAdmin>} />
-            <Route path="/home" element={<Home />} />
+            <Route path="/home" element={<RequireOwner><Home /></RequireOwner>} />
             <Route path="/my-pgs" element={<MyPgs />} />
             <Route path="/pg/:id" element={<PgDetail />} />
             <Route path="/beds/:bedId" element={<BedDetail />} />
@@ -169,6 +231,9 @@ export default function App() {
             <Route path="/offers" element={<Offers />} />
             <Route path="/tenants" element={<Tenants />} />
             <Route path="/complaints" element={<Complaints />} /> {/* <-- complaints route */}
+            <Route path="/ownerProfile"  element={<RequireOwner><OwnerProfile /></RequireOwner>} />
+            <Route path="/mmp/register/:pgId" element={<TenantRegistration />} />
+            <Route path="/tenant/dashboard" element={<RequireTenant><TenantDashboard /></RequireTenant>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -182,5 +247,26 @@ function RequireAdmin({ children }){
   const { pathname } = useLocation()
   const isAdmin = typeof window !== 'undefined' && localStorage.getItem('isAdmin') === 'true'
   if (!isAdmin) return <Navigate to="/admin/login" state={{ from: pathname }} replace />
+  return children
+}
+
+function RequireOwner({ children }) {
+  const { pathname } = useLocation()
+  const isOwner = typeof window !== 'undefined' && localStorage.getItem('isOwner') === 'true'
+
+  if (!isOwner) {
+    return <Navigate to="/signin" state={{ from: pathname }} replace />
+  }
+
+  return children
+}
+function RequireTenant({ children }) {
+  const { pathname } = useLocation()
+  const isTenant = typeof window !== 'undefined' && localStorage.getItem('isTenant') === 'true'
+
+  if (!isTenant) {
+    return <Navigate to="/signin" state={{ from: pathname }} replace />
+  }
+
   return children
 }
