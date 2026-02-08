@@ -541,37 +541,38 @@ export default function MyPgs() {
         </div>
       )}
       {showQrFor && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center">
-    <div
-      className="absolute inset-0 bg-black/40"
-      onClick={() => setShowQrFor(null)}
-    />
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowQrFor(null)}
+          />
 
-    <div className="relative bg-white rounded-2xl p-6 text-center shadow-xl w-80">
-    <h3 className="text-lg font-bold mb-2">
-      Scan to Register for <br />
-      <b>{selectedPg?.pgName}</b>
-    </h3>
+          <div className="relative bg-white rounded-2xl p-6 text-center shadow-xl w-80">
+            <h3 className="text-lg font-bold mb-2">
+              Scan to Register for <br />
+              <b>{selectedPg?.pgName}</b>
+            </h3>
 
-      <img
-        src={`http://localhost:8081/managepg/mmp/pg/${showQrFor}/qr`}
-        alt="PG QR Code"
-        className="mx-auto w-56 h-56"
-      />
+            <img
+              src={`${import.meta.env.VITE_API_BASE_URL}/mmp/pg/${showQrFor}/qr`}
+              alt="PG QR Code"
+              className="mx-auto w-56 h-56"
+            />
+                  
+            <div className="mt-2 text-xs text-gray-600 break-all">
+              {window.location.origin}/mmp/register/{showQrFor}
+            </div>
 
-      <div className="mt-2 text-xs text-gray-600 break-all">
-        http://localhost:5173/mmp/register/{showQrFor}
-      </div>
+            <button
+              onClick={() => setShowQrFor(null)}
+              className="mt-4 px-4 py-2 rounded-xl bg-indigo-600 text-white"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}  
 
-      <button
-        onClick={() => setShowQrFor(null)}
-        className="mt-4 px-4 py-2 rounded-xl bg-indigo-600 text-white"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
 
     </div>
   )
