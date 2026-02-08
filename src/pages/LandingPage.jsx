@@ -488,8 +488,8 @@ export function SignUpPage() {
             };
             const response = await registerOwner(payload);
             // Registration failed
-            if (!response?.data?.success) {
-              setApiError(response?.data?.message || "Registration failed");
+            if (!response?.success) {
+             setApiError(response?.message ?? "Registration failed");
               return;
             }
             // ✅ Registration success (approved=false by default)

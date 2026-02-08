@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getOwnerProfile } from '../api/ownerAuth'
 import { updateOwnerAddress } from '../api/ownerAuth'
+import ProfileImageCropper from '../components/models/ProfileImageCropper'
 
 export default function OwnerProfile() {
   const navigate = useNavigate()
@@ -11,7 +12,13 @@ export default function OwnerProfile() {
   const [pinLoading, setPinLoading] = useState(false)
   const [pinError, setPinError] = useState('')
   const [areas, setAreas] = useState([])
+  const [rawImage, setRawImage] = useState(null)
   /* ---------------- LOAD PROFILE ---------------- */
+  useEffect(() => {
+  document.body.style.overflow = rawImage ? 'hidden' : 'auto'
+  return () => (document.body.style.overflow = 'auto')
+}, [rawImage])
+
   useEffect(() => {
     async function loadProfile() {
       try {
@@ -89,12 +96,21 @@ function onAreaSelect(val) {
         })
       }
 
-      function handleImageChange(e) {
-        const file = e.target.files[0]
-        if (!file) return
-        updateField('imageUrl', URL.createObjectURL(file))
-      }
+    function handleImageChange(e) {
+      const file = e.target.files[0]
+      if (!file) return
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Image must be under 2MB')
+        return
+      } 
+      setRawImage(URL.createObjectURL(file))
+      e.target.value = '' // 👈 reset
+    }
 
+      function handleCropSave(croppedImage) {
+        updateField('imageUrl', croppedImage)
+        setRawImage(null)
+      }
       async function handleSubmit() {
         setSaving(true)
         try {
@@ -118,24 +134,26 @@ function onAreaSelect(val) {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* IMAGE CARD */}
         <div className="bg-white rounded-2xl border p-6 flex flex-col items-center">
-          <div className="relative">
+        <div className="relative">
+          <div className="h-36 w-36 rounded-full overflow-hidden border bg-gray-100">
             <img
               src={profile.imageUrl || '/avatar.png'}
+              className="h-full w-full object-cover"
               alt="Profile"
-              className="h-32 w-32 rounded-full object-cover border"
             />
-            <label className="absolute bottom-1 right-1 bg-indigo-600 text-white p-2 rounded-full cursor-pointer shadow">
-              ✏️
-              <input type="file" hidden accept="image/*" onChange={handleImageChange} />
-            </label>
           </div>
 
-          <div className="mt-4 text-center">
-            <div className="font-semibold">{profile.fullName}</div>
-            <div className="text-sm text-gray-500">{profile.email}</div>
-          </div>
+          <label className="absolute bottom-1 right-1 bg-indigo-600 text-white p-2 rounded-full cursor-pointer shadow">
+            ✏️
+            <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+          </label>
         </div>
 
+        <div className="mt-4 text-center">
+          <div className="font-semibold">{profile.fullName}</div>
+          <div className="text-sm text-gray-500">{profile.email}</div>
+        </div>
+      </div>
         {/* DETAILS */}
         <div className="lg:col-span-2 space-y-6">
           {/* BASIC */}
@@ -147,7 +165,7 @@ function onAreaSelect(val) {
           </Section>
 
           {/* ADDRESS */}
-       <Section title="Address Details" highlight={isMandatory}>
+          <Section title="Address Details" highlight={isMandatory}>
           <Input
             label="Address"
             value={profile.address.address || ''}
@@ -199,7 +217,7 @@ function onAreaSelect(val) {
           <Input label="District" value={profile.address.district || ''} disabled />
           <Input label="State" value={profile.address.state || ''} disabled />
           <Input label="Country" value={profile.address.country || ''} disabled />
-        </Section>
+         </Section>
 
 
           <button
@@ -217,6 +235,14 @@ function onAreaSelect(val) {
           </button>
 
         </div>
+             {/* ✅ MODAL / OVERLAY MUST LIVE HERE */}
+          {rawImage && (
+            <ProfileImageCropper
+              image={rawImage}
+              onCancel={() => setRawImage(null)}
+              onSave={handleCropSave}
+            />
+          )}
       </div>
     </div>
   )
