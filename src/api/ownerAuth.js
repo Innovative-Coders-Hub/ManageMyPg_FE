@@ -2,11 +2,14 @@
 import api from './api'
 
 // ---------- AUTH ----------
-export const registerOwner = (payload) => {
-  const res = api.post(`/mmp/owner/create`, payload)
+export const registerOwner = async (payload) => {
+  const res = await api.post(`/mmp/owner/create`, payload)
   return res.data
 }
-
+// export const registerOwner = (payload) => {
+//   return api.post(`/mmp/owner/create`, payload)
+//     .then(res => res.data)
+// }
 export async function ownerLogin({ email, password }) {
   try {
     const res = await api.post('/api/auth/login', { email, password })
