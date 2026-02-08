@@ -705,6 +705,11 @@ const totalRooms =  pg?.floors?.reduce((sum, f) => sum + (f.rooms?.length || 0),
                                 </label>
                               </div>))}
                               </div>
+                              {formError && (
+                                <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                                  {formError}
+                                </div>
+                              )}
                           <div className="mt-4 flex justify-end gap-2">
                               <button className="px-3 py-2 rounded border"
                                     onClick={() => {
@@ -750,12 +755,15 @@ const totalRooms =  pg?.floors?.reduce((sum, f) => sum + (f.rooms?.length || 0),
                                       setShowAddFloor(false)
                                     }, 2000)
                                   } catch (err) {
-                                    console.error(err)
-                                    setFormError(
-                                      err?.response?.data?.message ||
-                                      'Failed to save floor. Please try again.'
-                                    )
-                                  }
+                                      console.error(err)
+
+                                      const backendMessage =
+                                        err?.response?.data?.message ||
+                                        err?.message ||
+                                        'Failed to save floor. Please try again.'
+
+                                      setFormError(backendMessage)
+                                    }
                                 }}
                                >
                                 Save Floor
