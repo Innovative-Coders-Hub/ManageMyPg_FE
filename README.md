@@ -1,6 +1,6 @@
-# ManegeMyPg - React frontend (Demo)
+# ManageMyPg - React frontend (Demo)
 
-This is a starter React + Vite + Tailwind project for **ManegeMyPg**.
+This is a starter React + Vite + Tailwind project for **ManageMyPg**.
 
 Features included (demo):
 - Login page (demo navigation)

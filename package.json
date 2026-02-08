@@ -17,6 +17,7 @@
     "axios": "^1.4.0",
     "dayjs": "^1.11.19",
     "esbuild": "^0.25.12",
+    "framer-motion": "^12.33.0",
     "jspdf": "^4.0.0",
     "lines-and-columns": "^2.0.4",
     "lucide-react": "^0.553.0",
