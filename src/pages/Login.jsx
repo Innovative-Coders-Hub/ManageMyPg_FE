@@ -11,7 +11,7 @@ export default function Login(){
   }
   return (
     <div className="max-w-md mx-auto mt-12 card">
-      <h2 className="text-2xl font-semibold mb-4">Sign in to ManegeMyPg</h2>
+      <h2 className="text-2xl font-semibold mb-4">Sign in to ManageMyPg</h2>
       <form onSubmit={submit} className="space-y-3">
         <input required placeholder="Email" className="w-full p-2 border rounded"/>
         <input required placeholder="Password" type="password" className="w-full p-2 border rounded"/>

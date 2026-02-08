@@ -1,30 +1,34 @@
 // src/App.jsx
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate, Link } from 'react-router-dom'
+import { Suspense, lazy } from 'react'
+
 import { ownerLogout } from './api/ownerAuth'
 
-import Login from './pages/Login'
-import OwnerProfile from './pages/OwnerProfile'
-import AdminLogin from './pages/AdminLogin'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminOwnersList from './pages/AdminOwnersList'
-import AdminOwnerDetails from './pages/AdminOwnerDetails'
-import Home from './pages/Home'
-import MyPgs from './pages/MyPgs'
-import PgDetail from './pages/PgDetail'
-import TenantRegistration from './pages/TenantRegistration'
-import BedDetail from './pages/BedDetail'
-import Reports from './pages/Reports'
-import Tenants from './pages/Tenants'
-import Offers from './pages/Offers'
-import Complaints from './pages/Complaints' // <-- fixed import
-import TenantDashboard from './pages/TenantDashboard'
+const LandingPage = lazy(() => import('./pages/LandingPage'))
+const SignInPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.SignInPage })))
+const SignUpPage = lazy(() => import('./pages/LandingPage').then(m => ({ default: m.SignUpPage })))
 
-// Import LandingPage plus named SignIn/SignUp exports
-import LandingPage, { SignInPage, SignUpPage } from './pages/LandingPage'
+const Login = lazy(() => import('./pages/Login'))
+const OwnerProfile = lazy(() => import('./pages/OwnerProfile'))
+const AdminLogin = lazy(() => import('./pages/AdminLogin'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminOwnersList = lazy(() => import('./pages/AdminOwnersList'))
+const AdminOwnerDetails = lazy(() => import('./pages/AdminOwnerDetails'))
 
-import SidebarFresh from './pages/Sidebar'
-import AdminHeader from './pages/AdminHeader'
+const Home = lazy(() => import('./pages/Home'))
+const MyPgs = lazy(() => import('./pages/MyPgs'))
+const PgDetail = lazy(() => import('./pages/PgDetail'))
+const TenantRegistration = lazy(() => import('./pages/TenantRegistration'))
+const BedDetail = lazy(() => import('./pages/BedDetail'))
+const Reports = lazy(() => import('./pages/Reports'))
+const Tenants = lazy(() => import('./pages/Tenants'))
+const Offers = lazy(() => import('./pages/Offers'))
+const Complaints = lazy(() => import('./pages/Complaints'))
+const TenantDashboard = lazy(() => import('./pages/TenantDashboard'))
+const SidebarFresh = lazy(() => import('./pages/Sidebar'))
+
+
 import PageLoader from './components/PageLoader'
 import useRouteLoader from './hooks/useRouteLoader'
 
@@ -60,7 +64,7 @@ function Header({ onMobileOpen }) {
 
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow" />
-            <span className="font-extrabold text-lg tracking-tight">ManegeMyPg</span>
+            <span className="font-extrabold text-lg tracking-tight">ManageMyPg</span>
           </div>
         </div>
 
@@ -214,6 +218,7 @@ useEffect(() => {
         )}
 
         <main className="flex-1 px-4 py-6 transition-all duration-200">
+        <Suspense fallback={<PageLoader show={true} />}>
           <Routes>
             <Route path="/" element={<LandingWrapper />} />
             <Route path="/signin" element={<SignInPage />} />
@@ -230,13 +235,15 @@ useEffect(() => {
             <Route path="/reports" element={<Reports />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/tenants" element={<Tenants />} />
-            <Route path="/complaints" element={<Complaints />} /> {/* <-- complaints route */}
-            <Route path="/ownerProfile"  element={<RequireOwner><OwnerProfile /></RequireOwner>} />
+            <Route path="/complaints" element={<Complaints />} />
+            <Route path="/ownerProfile" element={<RequireOwner><OwnerProfile /></RequireOwner>} />
             <Route path="/mmp/register/:pgId" element={<TenantRegistration />} />
             <Route path="/tenant/dashboard" element={<RequireTenant><TenantDashboard /></RequireTenant>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </main>
+        </Suspense>
+      </main>
+
       </div>
     </>
   )
