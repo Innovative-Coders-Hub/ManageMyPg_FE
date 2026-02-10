@@ -236,7 +236,8 @@ useEffect(() => {
             <Route path="/offers" element={<Offers />} />
             <Route path="/tenants" element={<Tenants />} />
             <Route path="/complaints" element={<Complaints />} />
-            <Route path="/ownerProfile" element={<RequireOwner><OwnerProfile /></RequireOwner>} />
+            <Route path="/ownerProfile" element={<RequireOwner><OwnerProfile mode="profile" /></RequireOwner>} />
+            <Route path="/owner/onboarding" element={<RequireOwner><OwnerProfile mode="onboarding" /></RequireOwner>} />
             <Route path="/mmp/register/:pgId" element={<TenantRegistration />} />
             <Route path="/tenant/dashboard" element={<RequireTenant><TenantDashboard /></RequireTenant>} />
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -193,7 +193,7 @@ export function SignInPage() {
           const isBlocked = data.isBlocked === true || data.isBlocked === 'true'
           const isApproved = data.isApproved === true || data.isApproved === 'true'
           const role = data.role // "OWNER" | "TENANT"
-          const businessName = data.pgName || ''
+          const businessName =  data.pgName ||''
 
           // 1️⃣ Blocked
           if (isBlocked) {
@@ -220,14 +220,12 @@ export function SignInPage() {
             localStorage.setItem('businessName', businessName)
 
 
-            // Owner profile completion
-            const hasAddress = Boolean(data.isAddress)
-          // const addressData = Boolean(data.address)
+           const hasAddress = Boolean(data.hasAddress) // ✅ use correct field
 
             if (hasAddress) {
               navigate('/home', { replace: true })
             } else {
-              navigate('/ownerProfile', { replace: true })
+              navigate('/owner/onboarding', { replace: true })
             }
           }
 

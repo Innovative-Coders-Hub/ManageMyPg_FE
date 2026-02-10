@@ -193,71 +193,94 @@ const filtered = useMemo(() => {
             return (
               <div
                 key={item.id}
-                className="rounded-2xl border p-4 bg-white shadow-sm transition hover:bg-gradient-to-br hover:from-emerald-50 hover:to-sky-50 hover:border-emerald-200 hover:shadow-md"
+                className="
+                  group rounded-2xl border border-slate-200
+                  bg-white/80 backdrop-blur
+                  p-4 shadow-sm
+                  transition-all duration-300
+                  hover:shadow-lg hover:-translate-y-0.5
+                  hover:border-emerald-300
+                "
               >
-                <div className="flex items-start gap-3">
-                  <div className={`h-12 w-12 flex items-center justify-center rounded-lg text-white font-bold ${
-                      item.vacated ? 'bg-gray-400' : 'bg-emerald-600'
-                    }`}
+                <div className="flex gap-4">
+                  {/* Avatar */}
+                  <div
+                    className={`
+                      h-12 w-12 shrink-0 flex items-center justify-center
+                      rounded-xl font-semibold text-white
+                      ring-2 ring-white
+                      ${
+                        item.vacated
+                          ? 'bg-slate-400'
+                          : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                      }
+                    `}
                   >
                     {initials(t.name)}
                   </div>
 
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
+                    {/* Header */}
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-semibold text-gray-900">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-slate-900 truncate">
                           {t.name || '—'}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-slate-500 truncate">
                           {t.mobileNumber || t.email || '—'}
                         </div>
                       </div>
 
-                      <div className="text-xs">
-                       <span className="px-3 py-1 rounded-full bg-gray-100 border text-gray-700">
-                          {item.vacated ? 'Vacated' : 'Active'}
-                        </span>
-                      </div>
+                      {/* Status */}
+                      <span
+                        className={`
+                          shrink-0 px-3 py-1 rounded-full text-xs font-medium border
+                          ${
+                            item.vacated
+                              ? 'bg-slate-100 text-slate-600 border-slate-200'
+                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          }
+                        `}
+                      >
+                        {item.vacated ? 'Vacated' : 'Active'}
+                      </span>
                     </div>
-                      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                        {/* Join Date */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-emerald-600">📅</span>
-                          <div>
-                            <div className="text-gray-500">Joined</div>
-                            <div className="font-medium text-emerald-700">
-                              {t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}
-                            </div>
+
+                    {/* Dates */}
+                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                      <div className="rounded-lg bg-slate-50 p-2">
+                        <div className="text-slate-500">Joined</div>
+                        <div className="font-medium text-emerald-700">
+                          {t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}
+                        </div>
+                      </div>
+
+                      {item.vacated && (
+                        <div className="rounded-lg bg-rose-50 p-2">
+                          <div className="text-slate-500">Vacated</div>
+                          <div className="font-medium text-rose-700">
+                            {t.end ? dayjs(t.end).format('DD MMM YYYY') : '—'}
                           </div>
                         </div>
+                      )}
+                    </div>
 
-                        {/* Vacated Date – show only if vacated */}
-                        {item.vacated && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-rose-600">🚪</span>
-                            <div>
-                              <div className="text-gray-500">Vacated</div>
-                              <div className="font-medium text-rose-700">
-                                {t.end ? dayjs(t.end).format('DD MMM YYYY') : '—'}
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-
-
+                    {/* Footer */}
                     <div className="mt-4 flex items-center justify-between">
-                      <div className="text-xs text-gray-500">
-                        {item.vacated ? 'Vacated' : 'Active'}
-                      </div>
+                      <span className="text-xs text-slate-400">
+                        {item.vacated ? 'Past Tenant' : 'Current Tenant'}
+                      </span>
 
                       <button
-                        onClick={() =>
-                          item.bedId && navigate(`/beds/${item.bedId}`)
-                        }
-                        className="px-3 py-1 rounded-lg bg-gradient-to-br from-emerald-600 to-sky-600 text-white text-xs font-medium hover:from-emerald-700 hover:to-sky-700"
+                        onClick={() => item.bedId && navigate(`/beds/${item.bedId}`)}
+                        className="
+                          px-4 py-1.5 rounded-lg text-xs font-semibold
+                          bg-gradient-to-br from-emerald-600 to-teal-600
+                          text-white
+                          transition
+                          hover:from-emerald-700 hover:to-teal-700
+                          focus:outline-none focus:ring-2 focus:ring-emerald-500
+                        "
                       >
                         View
                       </button>
