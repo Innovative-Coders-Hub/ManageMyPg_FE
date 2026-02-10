@@ -201,17 +201,19 @@ export default function MyPgs() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="My PGs">
+     <PageHeader title="My PGs">
+      {filtered.length !== 0 && (
         <div className="flex items-center justify-end w-full sm:w-auto">
           <button
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow"
-            >
-           <PlusIcon />
-           Create new PG
+          >
+            <PlusIcon />
+            Create new PG
           </button>
         </div>
-      </PageHeader>
+      )}
+    </PageHeader>
 
       {/* Error */}
       {error && (
@@ -238,112 +240,176 @@ export default function MyPgs() {
       )}
 
       {/* Empty */}
-     {!loading && filtered.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-indigo-300 bg-indigo-50 p-10 text-center">
-          <div className="text-2xl font-bold text-indigo-700 mb-2">
-            Welcome to PG Management 🎉
-          </div>
-          <div className="text-base text-indigo-600 mb-6">
-            Create your first PG to get started
-          </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow"
-          >
-            <PlusIcon />
-            Create your first PG
-          </button>
-        </div>
-      )}
+      {!loading && filtered.length === 0 && (
+        <div className="min-h-[65vh] flex items-center justify-center px-4">
+          <div className="w-full max-w-2xl text-center">
+            {/* Soft visual anchor */}
+            <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-50">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+                <PlusIcon className="h-6 w-6" />
+              </div>
+            </div>
 
+            {/* Headline */}
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+              Create your first PG
+            </h1>
 
-      {/* List */}
-      {!loading && filtered.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {filtered.map((pg, idx) => {
-            // compute beds/fill/vacating safely
-            let totalBeds = 0, filled = 0, vacating = 0
-            for (const f of (pg.floors || [])) {
-              for (const r of (f.rooms || [])) {
-                for (const b of (r.beds || [])) {
-                  totalBeds++
-                  if (b.occupied) {
-                    filled++
-                    if (b.tenant?.end) {
-                      try {
-                        const end = Date.parse(b.tenant.end)
-                        const msLeft = end - Date.now()
-                        if (msLeft > 0 && msLeft <= 7*24*3600*1000) vacating++
-                      } catch {}
-                    }
-                  }
-                }
-              }
-            }
-            const occupancy = totalBeds ? Math.round((filled/totalBeds)*100) : 0
-            return (
-              <Link
-                key={pg.id}
-                to={'/pg/'+pg.id}
-                className={`group rounded-2xl border bg-white p-4 hover:shadow-md hover:-translate-y-0.5 transition`}
+            {/* Supporting copy */}
+            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+              Once you create PGs, you’ll be able to
+              manage tenants, beds, floors, and payments — all from one place.
+            </p>
+
+            {/* CTA */}
+            <div className="mt-10">
+              <button
+                onClick={() => setShowCreate(true)}
+                className="
+                  inline-flex items-center gap-2
+                  px-10 py-3.5
+                  rounded-xl
+                  bg-indigo-600
+                  text-white text-base font-semibold
+                  shadow
+                  transition
+                  hover:bg-indigo-700
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500
+                "
               >
-                <div className="flex items-start justify-between gap-3">
-                <div>
-                    <div className="text-base font-semibold tracking-tight">
-                      {pg.pgName}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Created on {formatDate(pg.createdAt)}
-                    </div>
-                    <div className="mt-1 text-xs text-gray-600 inline-flex items-center gap-1">
-                      <MapPinIcon />
-                      <span className="truncate block max-w-xs">
-                        {pg.address?.address}, {pg.address?.areaLocality}, {pg.address?.city}
-                      </span>
-                    </div>
-                  </div>
+                <PlusIcon className="h-5 w-5" />
+                Create PG
+              </button>
+            </div>
 
-                  <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-100 to-blue-100 border flex items-center justify-center text-indigo-700">
-                    <ChevronRightIcon />
-                  </div>
-                </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setShowQrFor(pg.id)
-                    }}
-                    className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg
-                              border border-indigo-200 text-indigo-700 text-xs font-medium
-                              hover:bg-indigo-50 hover:border-indigo-300 transition"
-                  >
-                    <span>📲</span>
-                    <span>QR</span>
-                  </button>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
-                    <div className="font-semibold">Floors</div>
-                    <div className="text-sm">{pg.pgFloors}</div>
-                  </div>
-                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
-                    <div className="font-semibold">Beds</div>
-                    <div className="text-sm">{pg.totalBeds}</div>
-                  </div>
-                  <div className="rounded-lg border px-2 py-1 text-gray-700 bg-green-50">
-                    <div className="font-semibold">Filled</div>
-                    <div className="text-sm">{pg.filledBeds}</div>
-                    {/* <div className="text-sm">{pg.filledBeds} ({occupancy}%)</div> */}
-                  </div>
-                  {/* <div className={`rounded-lg border px-2 py-1 text-gray-700 ${vacating ? 'bg-amber-50' : 'bg-gray-50'}`}>
-                    <div className="font-semibold">Vacating</div>
-                    <div className="text-sm">{vacating || '—'}</div>
-                  </div> */}
-                </div>
-              </Link>
-            )
-          })}
+            {/* Subtle hint */}
+            <p className="mt-6 text-xs text-slate-400">
+              You can add more PGs anytime from this page
+            </p>
+          </div>
         </div>
       )}
+
+{/* List */}
+{!loading && filtered.length > 0 && (
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    {filtered.map((pg) => {
+      const isApproved = Boolean(pg.approved)
+
+      return (
+        <Link
+          key={pg.id}
+          to={isApproved ? `/pg/${pg.id}` : '#'}
+          onClick={(e) => {
+            if (!isApproved) {
+              e.preventDefault()
+              e.stopPropagation()
+            }
+          }}
+          className={`
+            group rounded-2xl border p-4 transition
+            ${isApproved
+              ? 'bg-white hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
+              : 'bg-gray-50 opacity-60 cursor-not-allowed'}
+          `}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
+            {/* Left content */}
+            <div className="min-w-0">
+              <div className="text-base font-semibold tracking-tight text-slate-900">
+                {pg.pgName}
+              </div>
+
+              <div className="text-xs text-gray-500">
+                Created on {formatDate(pg.createdAt)}
+              </div>
+
+              <div className="mt-1 text-xs text-gray-600 inline-flex items-start gap-1">
+                <MapPinIcon />
+                <span className="truncate block max-w-xs">
+                  {pg.address?.address}, {pg.address?.areaLocality}, {pg.address?.city}
+                </span>
+              </div>
+            </div>
+
+            {/* Right actions */}
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              {/* Approval Status */}
+              <span
+                className={`
+                  inline-flex items-center rounded-full px-3 py-1
+                  text-xs font-medium
+                  ${isApproved
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-amber-100 text-amber-700'}
+                `}
+              >
+                {isApproved ? '✔ Approved' : '⏳ Pending'}
+              </span>
+
+              {/* Arrow */}
+              {/* <div
+                className={`
+                  h-8 w-8 rounded-xl border flex items-center justify-center
+                  ${isApproved
+                    ? 'bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-700'
+                    : 'bg-gray-200 text-gray-400'}
+                `}
+              >
+                <ChevronRightIcon />
+              </div> */}
+            </div>
+          </div>
+
+          {/* QR Button */}
+          <button
+            type="button"
+            disabled={!isApproved}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (isApproved) {
+                setShowQrFor(pg.id)
+              }
+            }}
+            className={`
+              mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg
+              text-xs font-medium transition
+              ${isApproved
+                ? 'border border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300'
+                : 'border border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'}
+            `}
+          >
+            <span>📲</span>
+            <span>QR</span>
+          </button>
+
+          {/* Stats */}
+          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+            <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
+              <div className="font-semibold">Floors</div>
+              <div className="text-sm">{pg.pgFloors}</div>
+            </div>
+
+            <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
+              <div className="font-semibold">Beds</div>
+              <div className="text-sm">{pg.totalBeds}</div>
+            </div>
+
+            <div className="rounded-lg border px-2 py-1 text-gray-700 bg-green-50">
+              <div className="font-semibold">Filled</div>
+              <div className="text-sm">{pg.filledBeds}</div>
+            </div>
+          </div>
+        </Link>
+      )
+    })}
+  </div>
+)}
+
+
+
 
       {/* Create PG Modal (local only) */}
       {showCreate && (
