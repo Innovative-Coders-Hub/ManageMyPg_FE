@@ -1,32 +1,28 @@
-import React, { useEffect, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import React, { useEffect, useState, useMemo } from 'react'
+import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Building2,
   Users,
   Tag,
-  BedDouble,
   CreditCard,
   BarChart3,
   Shield,
-  Settings,
-  LogOut,
+  User,
 } from 'lucide-react'
-import { ownerLogout } from "../api/ownerAuth";
+import { ownerLogout, getAllPgs } from '../api/ownerAuth'
 import ConfirmModal from '../components/ConfirmModal'
-import { getAllPgs } from '../api/ownerAuth'
 
-// ---------- Nav config ----------
+/* ---------------- Nav Config ---------------- */
 const NAV = [
   { to: '/home', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/my-pgs', label: 'My PGs', icon: Building2 },
   { to: '/tenants', label: 'Tenants', icon: Users },
   { to: '/offers', label: 'Offers', icon: Tag },
-  // { to: '/beds', label: 'Beds', icon: BedDouble },
   { to: '/complaints', label: 'Complaints', icon: CreditCard },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/ownerProfile', label: 'Profile', icon: User },
   { to: '/admin/dashboard', label: 'Admin', icon: Shield, adminOnly: true },
-  // { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 const cx = (...c) => c.filter(Boolean).join(' ')
@@ -38,6 +34,17 @@ export default function Sidebar({
   setMobileOpen: setMobileOpenProp,
 }) {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  /* ---------- URL state ---------- */
+  const selectedPgId = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return params.get('pgId')
+  }, [location.search])
+
+  const isTenantsRoute = location.pathname === '/tenants'
+
+  /* ---------- Collapse ---------- */
   const [internalCollapsed, setInternalCollapsed] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('sidebar_collapsed')) ?? false
@@ -45,15 +52,7 @@ export default function Sidebar({
       return false
     }
   })
-  const [loggingOut, setLoggingOut] = useState(false)
-  const [internalMobileOpen, setInternalMobileOpen] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
-  const [pgs, setPgs] = useState([])
-  const [loadingPgs, setLoadingPgs] = useState(false)
-  const [showTenantPgs, setShowTenantPgs] = useState(false)
-  const [businessName, setBusinessName] = useState(() =>
-    localStorage.getItem('businessName')
-  )
+
   const collapsed =
     typeof collapsedProp === 'boolean' ? collapsedProp : internalCollapsed
 
@@ -64,33 +63,141 @@ export default function Sidebar({
       localStorage.setItem('sidebar_collapsed', JSON.stringify(v))
     })
 
+  /* ---------- Mobile ---------- */
+  const [internalMobileOpen, setInternalMobileOpen] = useState(false)
   const mobileOpen =
     typeof mobileOpenProp === 'boolean' ? mobileOpenProp : internalMobileOpen
   const setMobileOpen = setMobileOpenProp ?? setInternalMobileOpen
 
-   useEffect(() => {
-    const loadPgs = async () => {
-    try {
-      setLoadingPgs(true)
-      const data = await getAllPgs()
-      setPgs(Array.isArray(data) ? data : [])
-    } catch (e) {
-      setPgs([])
-    } finally {
-      setLoadingPgs(false)
+  /* ---------- State ---------- */
+  const [showConfirm, setShowConfirm] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [pgs, setPgs] = useState([])
+  const [loadingPgs, setLoadingPgs] = useState(false)
+  const [showTenantPgs, setShowTenantPgs] = useState(false)
+const [businessName, setBusinessName] = useState('ManageMyPg')
+
+useEffect(() => {
+  const syncName = () => {
+    const name = localStorage.getItem('businessName')
+    if (name) {
+      setBusinessName(name)
     }
   }
 
-  loadPgs()
-}, [])
+  syncName() // initial load
 
+  window.addEventListener('businessNameUpdated', syncName)
+  return () =>
+    window.removeEventListener('businessNameUpdated', syncName)
+}, [])
+  /* ---------- Load PGs ---------- */
+  useEffect(() => {
+    const loadPgs = async () => {
+      try {
+        setLoadingPgs(true)
+        const data = await getAllPgs()
+        setPgs(Array.isArray(data) ? data : [])
+      } finally {
+        setLoadingPgs(false)
+      }
+    }
+    loadPgs()
+  }, [])
+
+  /* ---------- Auto-open Tenants ---------- */
+  useEffect(() => {
+    if (isTenantsRoute) setShowTenantPgs(true)
+  }, [isTenantsRoute])
+
+  /* ---------- Close mobile on resize ---------- */
   useEffect(() => {
     if (window.innerWidth >= 768 && mobileOpen) setMobileOpen(false)
   }, [mobileOpen, setMobileOpen])
-useEffect(() => {
-  const name = localStorage.getItem('businessName')
-  setBusinessName(name)
-}, [])
+
+  /* ================= NAV ITEM ================= */
+
+  const NavItem = ({ to, label, Icon, adminOnly }) => {
+    if (adminOnly && localStorage.getItem('isAdmin') !== 'true') return null
+
+    return (
+      <div>
+        <NavLink
+          to={to}
+          className={({ isActive }) =>
+            cx(
+              'group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all',
+              collapsed ? 'justify-center' : 'justify-start',
+              isActive
+                ? 'bg-indigo-600 text-white shadow'
+                : 'text-slate-200 hover:bg-white/10'
+            )
+          }
+          onClick={() => {
+            if (to === '/tenants') {
+              setShowTenantPgs((v) => !v)
+              return // ✅ keep mobile open
+            }
+            setShowTenantPgs(false)
+            if (mobileOpen) setMobileOpen(false)
+          }}
+        >
+          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-white/15 text-white">
+            <Icon size={20} />
+          </div>
+
+          {!collapsed && (
+            <span className="text-sm font-medium whitespace-nowrap">
+              {label}
+            </span>
+          )}
+        </NavLink>
+
+        {/* -------- TENANTS → PG LIST -------- */}
+        {to === '/tenants' && !collapsed && showTenantPgs && (
+          <div className="ml-14 mt-1 space-y-1 border-l border-white/20 pl-3">
+            {loadingPgs && (
+              <div className="text-xs text-slate-300 px-2">
+                Loading PGs...
+              </div>
+            )}
+
+            {!loadingPgs &&
+              pgs.map((pg) => {
+                const isSelected = String(pg.id) === String(selectedPgId)
+
+                return (
+                  <button
+                    key={pg.id}
+                    onClick={() => {
+                      navigate(`/tenants?pgId=${pg.id}`)
+                      if (mobileOpen) setMobileOpen(false)
+                    }}
+                    className={cx(
+                      'w-full text-left text-sm px-3 py-2 rounded-md transition',
+                      isSelected
+                        ? 'bg-white/20 text-white font-medium'
+                        : 'text-slate-200 hover:bg-white/10'
+                    )}
+                  >
+                    {pg.pgName}
+                  </button>
+                )
+              })}
+
+            {!loadingPgs && pgs.length === 0 && (
+              <div className="text-xs text-slate-300 px-2">
+                No PGs found
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  /* ================= RENDER ================= */
+
   return (
     <>
       {/* Overlay */}
@@ -102,226 +209,60 @@ useEffect(() => {
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* Desktop sidebar */}
+      {/* Desktop */}
       <aside
         className={cx(
-          'hidden md:flex flex-col bg-white border-r shadow-sm transition-all duration-300 ease-in-out',
+          'hidden md:flex flex-col transition-all duration-300',
           collapsed ? 'w-20' : 'w-72',
-          'sticky top-0 h-screen'
+          'sticky top-0 h-screen z-30',
+          'bg-gradient-to-b from-indigo-700 via-indigo-800 to-slate-900'
         )}
       >
-        {/* Header */}
-     <div className="flex items-center justify-between px-4 py-4">
-        {!collapsed && (
-          <span className="text-lg font-bold tracking-tight">
-            {businessName?.trim() || 'ManageMyPg'}
-          </span>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-md hover:bg-gray-100"
-          aria-label="Toggle sidebar"
-        >
-          ☰
-        </button>
-      </div>
+        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+          {!collapsed && (
+            <span className="text-lg font-bold text-white">
+              {businessName}
+            </span>
+          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-2 rounded-md hover:bg-white/10 text-white"
+          >
+            ☰
+          </button>
+        </div>
 
-
-        {/* Nav */}
-        <nav className="flex-1 px-2 space-y-1 overflow-visible">
-            {NAV.map(({ to, label, icon: Icon, adminOnly }) => {
-              if (adminOnly && localStorage.getItem('isAdmin') !== 'true')
-                return null
-
-              return (
-                <div key={to}>
-                  {/* MAIN MENU ITEM */}
-                  <NavLink
-                    to={to}
-                    className={({ isActive }) =>
-                      cx(
-                        'relative group flex items-center gap-3 rounded-md px-3 py-2 transition-all',
-                        collapsed ? 'justify-center' : 'justify-start',
-                        isActive
-                          ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      )
-                    }
-                    onClick={() => {
-                      if (to === '/tenants') {
-                        setShowTenantPgs((v) => !v)
-                      } else {
-                        setShowTenantPgs(false)
-                      }
-                    }}
-                  >
-                    {/* Active indicator */}
-                    <span
-                      className={cx(
-                        'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r bg-indigo-600',
-                        'opacity-0 group-[.active]:opacity-100'
-                      )}
-                    />
-
-                    <div className="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100">
-                      <Icon size={20} />
-                    </div>
-
-                    {!collapsed && (
-                      <span className="text-sm font-medium whitespace-nowrap">
-                        {label}
-                      </span>
-                    )}
-                  </NavLink>
-
-                  {/* TENANTS → PG LIST (DESKTOP) */}
-                  {to === '/tenants' && !collapsed && showTenantPgs && (
-                   <div className="ml-14 mt-1 space-y-1 border-l border-gray-200 pl-3 w-[calc(100%-3.5rem)] relative z-10 bg-white">
-                      {loadingPgs && (
-                        <div className="text-xs text-gray-400 px-2">
-                          Loading PGs...
-                        </div>
-                      )}
-
-                      {!loadingPgs && pgs.map((pg) => (
-                       <button
-                        key={pg.id}
-                        onClick={() => {
-                          navigate(`/tenants?pgId=${pg.id}`);
-                          setShowTenantPgs(false);
-                        }}
-                        className="
-                          w-full text-left text-sm
-                          px-3 py-2 rounded-md
-                          text-gray-800
-                          bg-white indicating
-                          hover:bg-indigo-50 hover:text-indigo-700
-                          transition
-                        "
-                      >
-                        {pg.pgName}
-                      </button>
-
-
-                      ))}
-
-                      {!loadingPgs && pgs.length === 0 && (
-                        <div className="text-xs text-gray-400 px-2">
-                          No PGs found
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </nav>
-
-
-        {/* Profile */}
-       <SidebarProfile
-            collapsed={collapsed}
-            onLogoutClick={() => setShowConfirm(true)}
-          />
-      </aside>
-
-      {/* Mobile drawer */}
-      <aside
-        className={cx(
-          'fixed left-0 top-0 bottom-0 z-50 w-72 bg-white shadow-xl md:hidden transition-transform',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
-        <div className="px-4 py-4 border-b font-bold">ManageMyPg</div>
-
-        <nav className="px-3 py-4 space-y-2">
-          {NAV.map(({ to, label, icon: Icon, adminOnly }) => {
-            if (adminOnly && localStorage.getItem('isAdmin') !== 'true')
-              return null
-
-            return (
-              <div key={to}>
-                {/* MAIN MENU ITEM */}
-                <NavLink
-                  to={to}
-                  className={({ isActive }) =>
-                    cx(
-                      'relative group flex items-center gap-3 rounded-md px-3 py-2 transition-all',
-                      collapsed ? 'justify-center' : 'justify-start',
-                      isActive
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    )
-                  }
-                  onClick={() => {
-                    if (to === '/tenants') {
-                      setShowTenantPgs((v) => !v)
-                    } else {
-                      setShowTenantPgs(false)
-                    }
-                  }}
-                >
-                  {/* Active indicator */}
-                  <span
-                    className={cx(
-                      'absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r bg-indigo-600',
-                      'opacity-0 group-[.active]:opacity-100'
-                    )}
-                  />
-
-                  <div className="h-10 w-10 flex items-center justify-center rounded-md bg-gray-100">
-                    <Icon size={20} />
-                  </div>
-
-                  {!collapsed && (
-                    <span className="text-sm font-medium whitespace-nowrap">
-                      {label}
-                    </span>
-                  )}
-                </NavLink>
-
-                {/* TENANTS → PG LIST */}
-                {to === '/tenants' && !collapsed && showTenantPgs && (
-                 <div className="ml-14 mt-1 space-y-1 border-l border-gray-200 pl-3 w-[calc(100%-3.5rem)] relative z-10 bg-white">
-                    {loadingPgs && (
-                      <div className="text-xs text-gray-400 px-2">
-                        Loading PGs...
-                      </div>
-                    )}
-
-                    {!loadingPgs && pgs.map((pg) => (
-                     <button
-                        key={pg.id}
-                        onClick={() => navigate(`/tenants?pgId=${pg.id}`)}
-                        className="
-                          w-full text-left text-sm
-                          px-3 py-2 rounded-md
-                          text-gray-800
-                          bg-white indicating
-                          hover:bg-indigo-50 hover:text-indigo-700
-                          transition
-                        "
-                      >
-                        {pg.pgName}
-                      </button>
-
-
-                    ))}
-
-                    {!loadingPgs && pgs.length === 0 && (
-                      <div className="text-xs text-gray-400 px-2">
-                        No PGs found
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          {NAV.map((item) => (
+            <NavItem key={item.to} {...item} Icon={item.icon} />
+          ))}
         </nav>
 
-        <div className="border-t px-3 py-3">
+        <SidebarProfile
+          collapsed={collapsed}
+          onLogoutClick={() => setShowConfirm(true)}
+        />
+      </aside>
+
+      {/* Mobile */}
+      <aside
+        className={cx(
+          'fixed left-0 top-0 bottom-0 z-50 w-72 transition-transform',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          'bg-gradient-to-b from-indigo-700 via-indigo-800 to-slate-900'
+        )}
+      >
+        <div className="px-4 py-4 border-b border-white/10 font-bold text-white">
+          {businessName}
+        </div>
+
+        <nav className="px-3 py-4 space-y-1">
+          {NAV.map((item) => (
+            <NavItem key={item.to} {...item} Icon={item.icon} />
+          ))}
+        </nav>
+
+        <div className="border-t border-white/10 px-3 py-3">
           <SidebarProfile
             mobile
             onLogoutClick={() => {
@@ -329,65 +270,61 @@ useEffect(() => {
               setMobileOpen(false)
             }}
           />
-
         </div>
       </aside>
+
       <ConfirmModal
-          open={showConfirm}
-          title="Logout"
-          message="Are you sure you want to logout?"
-          confirmText="Logout"
-          loading={loggingOut}
-          onCancel={() => setShowConfirm(false)}
-       onConfirm={async () => {
+        open={showConfirm}
+        title="Logout"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+        loading={loggingOut}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={async () => {
           setLoggingOut(true)
           try {
             await ownerLogout()
           } finally {
             localStorage.clear()
             window.location.replace('/signin')
-            setLoggingOut(false)
-            setShowConfirm(false)
           }
         }}
-
-        />
+      />
     </>
   )
 }
 
+/* ---------------- Profile ---------------- */
+
 function SidebarProfile({ collapsed, mobile, onLogoutClick }) {
-  const fullName = typeof window !== 'undefined' ? localStorage.getItem('fullName') : null;
-  const username = typeof window !== 'undefined' ? localStorage.getItem('username') : null;
-  const displayName = fullName || username || 'PG Owner';
+  const fullName = localStorage.getItem('fullName')
+  const username = localStorage.getItem('username')
+  const displayName = fullName || username || 'PG Owner'
 
   return (
     <div
       className={cx(
-        'flex items-center gap-3 px-3 py-3 hover:bg-gray-50 cursor-pointer',
+        'flex items-center gap-3 px-4 py-3 border-t border-white/10 hover:bg-white/10',
         collapsed && !mobile ? 'justify-center' : 'justify-start'
       )}
     >
-      <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold">
+      <div className="h-10 w-10 rounded-full bg-white/20 text-white flex items-center justify-center font-semibold">
         {displayName.charAt(0).toUpperCase()}
       </div>
 
       {(!collapsed || mobile) && (
         <div className="flex-1">
-          <div className="text-sm font-semibold">{displayName}</div>
+          <div className="text-sm font-semibold text-white">
+            {displayName}
+          </div>
           <button
             onClick={onLogoutClick}
-            className="flex items-center gap-1 text-xs text-gray-500 mt-0.5 hover:text-red-600"
-            aria-label="Logout"
-            type="button"
+            className="text-xs text-slate-300 hover:text-red-400"
           >
             Logout
           </button>
         </div>
       )}
     </div>
-  );
+  )
 }
-
-
-
