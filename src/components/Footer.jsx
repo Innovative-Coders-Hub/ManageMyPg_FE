@@ -58,7 +58,7 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-indigo-700/40 py-5 text-center text-xs text-indigo-300">
-        © {new Date().getFullYear()}Copyright © 2026 ManageMyPg. All rights reserved.
+        © {new Date().getFullYear()} Copyright By © ManageMyPg. All rights reserved.
       </div>
     </footer>
   )

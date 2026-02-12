@@ -8,20 +8,106 @@ const QUALIFICATIONS = [
 ]
 
 export default function TenantRegistration() {
+  
   const { pgId } = useParams();
   const [step, setStep] = useState(1)
   const [saving, setSaving] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-const navigate = useNavigate()
+  const navigate = useNavigate()
   const [pinLoading, setPinLoading] = useState(false)
   const [pinError, setPinError] = useState('')
   const [areas, setAreas] = useState([])
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  const DISPOSABLE_EMAIL_DOMAINS = [
+    'mailinator.com',
+    'tempmail.com',
+    '10minutemail.com',
+    'guerrillamail.com',
+    'yopmail.com',
+    'throwawaymail.com'
+  ];
+
+  const COMMON_DISPOSABLE_PATTERNS = [
+    'mailinator',
+    'tempmail',
+    '10minute',
+    'guerrilla',
+    'yopmail',
+    'throwaway'
+  ];
+
+  function isSuspiciousEmailDomain(email) {
+    const domain = email.split('@')[1]
+    if (!domain) return true
+
+    // must contain at least one dot
+    if (!domain.includes('.')) return true
+
+    const parts = domain.split('.')
+    if (parts.some(p => p.length === 0)) return true
+
+    // TLD too short or too long is suspicious
+    const tld = parts[parts.length - 1]
+    if (tld.length < 2 || tld.length > 15) return true
+
+    return false
+  }
+
  const [documents, setDocuments] = useState({
   PHOTO: null,
   AADHAAR: null,
   PAN: null,
   ID: null
 })
+
+const [errors, setErrors] = useState({})
+function validateStep1() {
+  const e = {}
+
+  if (!form.username) e.username = 'Username is required'
+  if (!form.password) e.password = 'Password is required'
+  if (!form.name) e.name = 'Full name is required'
+  // if (!form.email) e.email = 'Email is required'
+  if (!form.email) {
+  e.email = 'Email is required';
+
+} else if (!EMAIL_REGEX.test(form.email)) {
+  e.email = 'Enter a valid email address';
+
+} else {
+  const domain = form.email.split('@')[1]?.toLowerCase();
+
+  if (!domain) {
+    e.email = 'Enter a valid email address';
+
+  } else if (DISPOSABLE_EMAIL_DOMAINS.includes(domain)) {
+    e.email = 'Disposable email addresses are not allowed';
+
+  } else if (
+    COMMON_DISPOSABLE_PATTERNS.some(pattern => domain.includes(pattern))
+  ) {
+    e.email = 'Disposable email addresses are not allowed';
+
+  } else if (isSuspiciousEmailDomain(form.email)) {
+    e.email = 'Email domain looks invalid';
+  }
+}
+  if (!form.mobileNumber) e.mobileNumber = 'Mobile number is required'
+  if (!form.aadhaarNumber) e.aadhaarNumber = 'Aadhaar is required'
+  if (!form.panNumber) e.panNumber = 'PAN is required'
+  if (!form.sonOf) e.sonOf = 'Father name is required'
+  if (!form.dob) e.dob = 'Date of birth is required'
+  if (!form.qualification) e.qualification = 'Qualification is required'
+  // if (!form.vehicleNumber) e.vehicleNumber = 'Vehicle number is required'
+  if (!form.parentNumber) e.parentNumber = 'Parent mobile is required'
+  if (!form.workCompany) e.workCompany = 'Work company is required'
+  if (!form.dateOfJoining) e.dateOfJoining = 'Joining date is required'
+
+  setErrors(e)
+  return Object.keys(e).length === 0
+}
+
   const today = dayjs().format('YYYY-MM-DD')
 
   const emptyForm = {
@@ -52,18 +138,43 @@ const navigate = useNavigate()
     }
   }
 
-  const [form, setForm] = useState(emptyForm)
+   const [form, setForm] = useState(emptyForm)
 
-  function updateField(path, value) {
-    setForm(prev => {
-      const copy = structuredClone(prev)
-      let obj = copy
-      const keys = path.split('.')
-      keys.slice(0, -1).forEach(k => (obj = obj[k]))
-      obj[keys.at(-1)] = value
-      return copy
-    })
+function updateField(path, value) {
+  setForm(prev => {
+    const copy = structuredClone(prev)
+    let obj = copy
+    const keys = path.split('.')
+    keys.slice(0, -1).forEach(k => (obj = obj[k]))
+    obj[keys.at(-1)] = value
+    return copy
+  })
+
+  // ✅ LIVE EMAIL VALIDATION
+  if (path === 'email') {
+    let error
+
+    if (!value) {
+      error = 'Email is required'
+    } else if (!EMAIL_REGEX.test(value)) {
+      error = 'Enter a valid email address'
+    } else {
+      const domain = value.split('@')[1]?.toLowerCase()
+      if (DISPOSABLE_EMAIL_DOMAINS.includes(domain)) {
+        error = 'Disposable email addresses are not allowed'
+      } else if (isSuspiciousEmailDomain(value)) {
+        error = 'Email domain looks invalid'
+      }
+    }
+
+    setErrors(prev => ({ ...prev, email: error }))
+    return
   }
+
+  // clear error for other fields
+  setErrors(prev => ({ ...prev, [path]: undefined }))
+}
+
 useEffect(() => {
   if (showSuccess) {
     const timer = setTimeout(() => {
@@ -142,49 +253,61 @@ useEffect(() => {
   //     setSaving(false)
   //   }
   // }
-      async function handleSubmit() {
-  // basic validation
-  if (
-    !documents.PHOTO ||
-    !documents.AADHAAR ||
-    !documents.PAN ||
-    !documents.ID
-  ) {
-    alert("Please upload all documents")
-    return
-  }
 
-  setSaving(true)
-  try {
-    const payload = {
-      ...form,
-      pgId,
-      dateOfJoining: new Date(form.dateOfJoining).toISOString()
-    }
-    delete payload.dob
 
-    const formData = new FormData()
+    async function handleSubmit() {
+      // basic validation
+          if (
+            !form.addressDto.address ||
+            !form.addressDto.pinCode ||
+            !form.addressDto.city ||
+            !form.addressDto.state ||
+            !form.addressDto.country
+          ) {
+            alert('Please fill all address fields')
+            return
+          }
+          // if (
+          //   !documents.PHOTO ||
+          //   !documents.AADHAAR ||
+          //   !documents.PAN ||
+          //   !documents.ID
+          // ) {
+          //   alert("Please upload all documents")
+          //   return
+          // }
 
-    // JSON part (MUST be named "request")
-    formData.append(
-      "request",
-      new Blob([JSON.stringify(payload)], {
-        type: "application/json"
-      })
-    )
+          setSaving(true)
+          try {
+            const payload = {
+              ...form,
+              pgId,
+              dateOfJoining: new Date(form.dateOfJoining).toISOString()
+            }
+            delete payload.dob
 
-    // FILE parts (must match backend)
-    formData.append("photo", documents.PHOTO)
-    formData.append("aadhaar", documents.AADHAAR)
-    formData.append("pan", documents.PAN)
-    formData.append("idCard", documents.ID)
+            const formData = new FormData()
 
-    await registerTenant(formData)
-    setShowSuccess(true)
-  } finally {
-    setSaving(false)
-  }
-}
+            // JSON part (MUST be named "request")
+            formData.append(
+              "request",
+              new Blob([JSON.stringify(payload)], {
+                type: "application/json"
+              })
+            )
+
+            // FILE parts (must match backend)
+            // formData.append("photo", documents.PHOTO)
+            // formData.append("aadhaar", documents.AADHAAR)
+            // formData.append("pan", documents.PAN)
+            // formData.append("idCard", documents.ID)
+
+            await registerTenant(formData)
+            setShowSuccess(true)
+          } finally {
+            setSaving(false)
+          }
+     }
 
 
   /* ---------- UI ---------- */
@@ -205,57 +328,69 @@ useEffect(() => {
 
         {step === 1 && (
           <Section title="Basic Details">
-            <Input label="Username" value={form.username} onChange={v => updateField('username', v)} />
+            <Input label="Username" value={form.username} onChange={v => updateField('username', v)} error={errors.username} />
             <div className="relative">
-                            <Input
+            <Input
                 label="Password"
                 type="password"
                 value={form.password}
                 onChange={v => updateField('password', v)}
+                error={errors.password}
                 />
 
             </div>
-            <Input label="Full Name" value={form.name} onChange={v => updateField('name', v)} />
-            <Input label="Email" value={form.email} onChange={v => updateField('email', v)} />
-            <Input label="Mobile" numeric maxLength={10} value={form.mobileNumber} onChange={v => updateField('mobileNumber', v)} />
-            <Input label="Aadhaar" numeric maxLength={12} value={form.aadhaarNumber} onChange={v => updateField('aadhaarNumber', v)} />
-            <Input label="PAN" value={form.panNumber} onChange={v => updateField('panNumber', v)} />
-            <Input label="Son Of" value={form.sonOf} onChange={v => updateField('sonOf', v)} />
+            <Input label="Full Name" value={form.name} onChange={v => updateField('name', v)} error={errors.name} />
+            <Input label="Email" value={form.email} onChange={v => updateField('email', v)} error={errors.email} />
+            <Input label="Mobile" numeric maxLength={10} value={form.mobileNumber} onChange={v => updateField('mobileNumber', v)} error={errors.mobileNumber} />
+            <Input label="Aadhaar" numeric maxLength={12} value={form.aadhaarNumber} onChange={v => updateField('aadhaarNumber', v)} error={errors.aadhaarNumber} />
+            <Input label="PAN" value={form.panNumber} onChange={v => updateField('panNumber', v)} error={errors.panNumber} />
+            <Input label="Son Of" value={form.sonOf} onChange={v => updateField('sonOf', v)} error={errors.sonOf} />
 
-            <Input label="Date of Birth" type="date" value={form.dob} onChange={onDobChange} />
+            <Input label="Date of Birth" type="date" value={form.dob} onChange={onDobChange} error={errors.dob} />
             <Input label="Age" value={form.age} disabled />
 
             <label className="block">
-              <span className="text-sm font-medium">Qualification</span>
+              <span className="text-sm font-medium">Qualification *</span>
               <select
                 value={form.qualification}
                 onChange={e => updateField('qualification', e.target.value)}
-                className="mt-1 w-full rounded-xl border px-3 py-2"
+                className={`mt-1 w-full rounded-xl border px-3 py-2 ${
+                  errors.qualification ? 'border-red-500' : ''
+                }`}
               >
                 <option value="">Select</option>
                 {QUALIFICATIONS.map(q => (
                   <option key={q} value={q}>{q}</option>
                 ))}
               </select>
+              {errors.qualification && (
+                <p className="mt-1 text-xs text-red-600">{errors.qualification}</p>
+              )}
             </label>
 
-            <Input label="Vehicle Number" value={form.vehicleNumber} onChange={v => updateField('vehicleNumber', v)} />
-            <Input label="Parent Mobile" numeric maxLength={10} value={form.parentNumber} onChange={v => updateField('parentNumber', v)} />
-            <Input label="Work Company" value={form.workCompany} onChange={v => updateField('workCompany', v)} />
+            <Input label="Vehicle Number" value={form.vehicleNumber} onChange={v => updateField('vehicleNumber', v)} error={errors.vehicleNumber} />
+            <Input label="Parent Mobile" numeric maxLength={10} value={form.parentNumber} onChange={v => updateField('parentNumber', v)} error={errors.parentNumber} />
+            <Input label="Work Company" value={form.workCompany} onChange={v => updateField('workCompany', v)} error={errors.workCompany} />
 
             <Input
               label="Date Of Joining"
               type="date"
               min={today}
               value={form.dateOfJoining}
-              onChange={v => updateField('dateOfJoining', v)}
+              onChange={v => updateField('dateOfJoining', v)} error={errors.dateOfJoining}
             />
 
             <div className="flex justify-end gap-2 mt-4">
               <button
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  if (validateStep1()) {
+                    setStep(2)
+                  }
+                }}
                 className="px-6 py-2 rounded-xl bg-indigo-600 text-white"
-              >Next →</button>
+              >
+                Next →
+              </button>
             </div>
           </Section>
         )}
@@ -263,14 +398,14 @@ useEffect(() => {
         {step === 2 && (
            <div className="space-y-8">
               {/* DOCUMENTS SECTION */}
-              <Section title="Upload Documents">
+              {/* <Section title="Upload Documents">
                 <div className="sm:col-span-2">
                   <DocumentUpload
                     documents={documents}
                     setDocuments={setDocuments}
                   />
                 </div>
-              </Section>
+              </Section> */}
                 <Section title="Address Details">
                   <Input label="Address" value={form.addressDto.address} onChange={v => updateField('addressDto.address', v)} />
                   <Input label="Landmark" value={form.addressDto.landmark} onChange={v => updateField('addressDto.landmark', v)} />
@@ -356,16 +491,7 @@ function Section({ title, children }) {
   )
 }
 
-function Input({
-  label,
-  value,
-  onChange,
-  disabled,
-  numeric,
-  maxLength,
-  type = 'text',
-  min
-}) {
+function Input({ label, value, onChange, disabled, numeric, maxLength, type = 'text', min, error }) {
   const [show, setShow] = useState(false)
   const isPassword = type === 'password'
 
@@ -387,22 +513,30 @@ function Input({
           value={value}
           disabled={disabled}
           onChange={handleChange}
-          onBlur={() => setShow(false)}
-          className="w-full rounded-xl border px-3 py-2 pr-10 disabled:bg-gray-100"
+          className={`w-full rounded-xl border px-3 py-2 pr-10 disabled:bg-gray-100 ${
+            error
+              ? 'border-red-500 focus:ring-2 focus:ring-red-300'
+              : 'border-gray-300 focus:ring-2 focus:ring-indigo-300'
+          }`}
         />
 
         {isPassword && (
           <button
             type="button"
-            aria-label={show ? 'Hide password' : 'Show password'}
-            title={show ? 'Hide password' : 'Show password'}
             onClick={() => setShow(!show)}
-            className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-indigo-600"
+            className="absolute inset-y-0 right-3 flex items-center text-gray-500"
           >
             {show ? '🙈' : '👁️'}
           </button>
         )}
       </div>
+
+      {/* ✅ THIS IS THE MISSING PART */}
+      {error && (
+        <p className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </label>
   )
 }

@@ -24,7 +24,7 @@ const BedDetail = lazy(() => import('./pages/BedDetail'))
 const Reports = lazy(() => import('./pages/Reports'))
 const Tenants = lazy(() => import('./pages/Tenants'))
 const Offers = lazy(() => import('./pages/Offers'))
-const Complaints = lazy(() => import('./pages/Complaints'))
+const OwnerComplaints = lazy(() => import('./pages/OwnerComplaints'))
 const TenantDashboard = lazy(() => import('./pages/TenantDashboard'))
 const SidebarFresh = lazy(() => import('./pages/Sidebar'))
 
@@ -235,7 +235,7 @@ useEffect(() => {
             <Route path="/reports" element={<Reports />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/tenants" element={<Tenants />} />
-            <Route path="/complaints" element={<Complaints />} />
+            <Route path="/complaints" element={<OwnerComplaints />} />
             <Route path="/ownerProfile" element={<RequireOwner><OwnerProfile mode="profile" /></RequireOwner>} />
             <Route path="/owner/onboarding" element={<RequireOwner><OwnerProfile mode="onboarding" /></RequireOwner>} />
             <Route path="/mmp/register/:pgId" element={<TenantRegistration />} />
