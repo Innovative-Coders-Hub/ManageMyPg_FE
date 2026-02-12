@@ -358,10 +358,10 @@ export function SignUpPage() {
         </span>
       }>
       <form onSubmit={handleSubmit} className="space-y-4">
-         <Input label="UserName" value={username} onChange={setUserName} placeholder="VENKATESH" />
-        <Input label="Full name" value={fullName} onChange={setName} placeholder="Venkatest Chowdary" />
-        <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@example.com" />
-        <Input label="Phone" type="tel"   value={phone} onChange={setPhone} placeholder="9876543210" numeric maxLength={10} />
+         <Input label="UserName" value={username} onChange={setUserName} placeholder="SHIVA" />
+        <Input label="Full name" value={fullName} onChange={setName} placeholder="Shiva Krishna" />
+        <Input label="Email" type="email" value={email} onChange={setEmail} placeholder="you@gmail.com" />
+        <Input label="Phone" type="tel"   value={phone} onChange={setPhone} placeholder="9000000000" numeric maxLength={10} />
         {/* <Input label="Password" type="password" value={password} onChange={setPassword} placeholder="Minimum 12 characters" /> */}
         <Input label="Password" type="password" value={password}
             onChange={(value) => {

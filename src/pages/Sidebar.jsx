@@ -43,7 +43,7 @@ export default function Sidebar({
   }, [location.search])
 
   const isTenantsRoute = location.pathname === '/tenants'
-
+  const isComplaintsRoute = location.pathname === '/complaints'
   /* ---------- Collapse ---------- */
   const [internalCollapsed, setInternalCollapsed] = useState(() => {
     try {
@@ -75,7 +75,19 @@ export default function Sidebar({
   const [pgs, setPgs] = useState([])
   const [loadingPgs, setLoadingPgs] = useState(false)
   const [showTenantPgs, setShowTenantPgs] = useState(false)
-const [businessName, setBusinessName] = useState('ManageMyPg')
+  const [showComplaintPgs, setShowComplaintPgs] = useState(false)
+  const [businessName, setBusinessName] = useState('ManageMyPg')
+
+useEffect(() => {
+  if (
+    isComplaintsRoute &&
+    !selectedPgId &&
+    pgs &&
+    pgs.length > 0
+  ) {
+    navigate(`/complaints?pgId=${pgs[0].id}`, { replace: true })
+  }
+}, [isComplaintsRoute, selectedPgId, pgs, navigate])
 
 useEffect(() => {
   const syncName = () => {
@@ -110,6 +122,9 @@ useEffect(() => {
     if (isTenantsRoute) setShowTenantPgs(true)
   }, [isTenantsRoute])
 
+    useEffect(() => {
+    if (isComplaintsRoute) setShowComplaintPgs(true)
+  }, [isComplaintsRoute])
   /* ---------- Close mobile on resize ---------- */
   useEffect(() => {
     if (window.innerWidth >= 768 && mobileOpen) setMobileOpen(false)
@@ -136,7 +151,14 @@ useEffect(() => {
           onClick={() => {
             if (to === '/tenants') {
               setShowTenantPgs((v) => !v)
-              return // ✅ keep mobile open
+              setShowComplaintPgs(false)
+              return
+            }
+
+            if (to === '/complaints') {
+              setShowComplaintPgs((v) => !v)
+              setShowTenantPgs(false)
+              return
             }
             setShowTenantPgs(false)
             if (mobileOpen) setMobileOpen(false)
@@ -192,6 +214,47 @@ useEffect(() => {
             )}
           </div>
         )}
+
+        {/* -------- COMPLAINTS → PG LIST -------- */}
+          {to === '/complaints' && !collapsed && showComplaintPgs && (
+            <div className="ml-14 mt-1 space-y-1 border-l border-white/20 pl-3">
+              {loadingPgs && (
+                <div className="text-xs text-slate-300 px-2">
+                  Loading PGs...
+                </div>
+              )}
+
+              {!loadingPgs &&
+                pgs.map((pg) => {
+                  const isSelected = String(pg.id) === String(selectedPgId)
+
+                  return (
+                    <button
+                      key={pg.id}
+                      onClick={() => {
+                        navigate(`/complaints?pgId=${pg.id}`)
+                        if (mobileOpen) setMobileOpen(false)
+                      }}
+                      className={cx(
+                        'w-full text-left text-sm px-3 py-2 rounded-md transition',
+                        isSelected
+                          ? 'bg-white/20 text-white font-medium'
+                          : 'text-slate-200 hover:bg-white/10'
+                      )}
+                    >
+                      {pg.pgName}
+                    </button>
+                  )
+                })}
+
+              {!loadingPgs && pgs.length === 0 && (
+                <div className="text-xs text-slate-300 px-2">
+                  No PGs found
+                </div>
+              )}
+            </div>
+          )}
+
       </div>
     )
   }

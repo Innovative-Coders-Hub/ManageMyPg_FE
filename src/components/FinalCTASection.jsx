@@ -70,7 +70,7 @@ export default function FinalCTASection() {
         </div>
 
         <div className="mt-4 sm:mt-6 text-xs sm:text-sm text-indigo-200">
-          No credit card required • Cancel anytime
+          No credit card required• Secure data storage • 99.9% uptime
         </div>
       </motion.div>
     </section>

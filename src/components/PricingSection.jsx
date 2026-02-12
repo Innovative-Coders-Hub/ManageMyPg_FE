@@ -79,7 +79,7 @@ export default function PricingSection() {
           </Link>
 
           <div className="mt-4 text-sm text-gray-600">
-            No credit card required • Cancel anytime
+            No credit card required 
           </div>
         </div>
       </motion.div>

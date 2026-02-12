@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom'
 import { getTenantDetails, ownerLogout } from '../api/ownerAuth'
+import TenantComplaints from '../components/TenantComplaints'
 
 export default function TenantDashboard() {
   const [tenant, setTenant] = useState(null)
@@ -131,7 +132,7 @@ const maskPan = (val) =>
   </div>
 </div>
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Summary title="Total Paid" value={totalPaid} />
         <Summary title="Advance" value={totalAdvance} />
         <Summary title="Refund" value={totalRefund} />
@@ -210,7 +211,11 @@ const maskPan = (val) =>
             </div>
             </div>
 
-
+                  {/* Complaints */}
+              <TenantComplaints
+                tenantId={tenant.id}
+                pgId={tenant.pgId}
+              />
     </div>
   )
 }
