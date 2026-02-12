@@ -43,7 +43,7 @@ export default function HeroSection() {
               to="/signup"
               className="px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700 text-center"
             >
-              Get started free
+              Get started here
             </Link>
             <Link
               to="/signin"
@@ -60,7 +60,7 @@ export default function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.35 }}
           >
-            No credit card required • Secure data • Cancel anytime
+            No credit card required • Secure data storage • 99.9% uptime
           </motion.div>
         </motion.div>
 

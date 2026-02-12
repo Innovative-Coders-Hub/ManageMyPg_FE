@@ -140,3 +140,42 @@ export async function updateVacatingDate(tenantId, payload) {
   )
   return res.data
 }
+
+export async function getTenantComplaints(page = 0, size = 5) {
+  const res = await api.get('/mmp/complaints/my-complaints', {
+    params: {
+      page,
+      size,
+      sort: 'createdDate,desc'
+    }
+  })
+  return res.data
+}
+
+/**
+ * Create complaint (JSON only)
+ */
+export async function createComplaint(payload) {
+  const res = await api.post('/mmp/complaints', {
+    pgId: payload.pgId,
+    title: payload.title,
+    description: payload.description || null,
+    category: payload.category,
+    complaintImageUrl: payload.complaintImageUrl || null
+  })
+  return res.data
+}
+
+export async function getOwnerComplaints(pgId, page = 0, size = 10) {
+  const res = await api.get(`/mmp/complaints/pg/${pgId}`, {
+    params: { page, size }
+  })
+  return res.data
+}
+
+export async function updateComplaintStatus(complaintId, payload) {
+  return api.put(
+    `/mmp/complaints/${complaintId}/status`,
+    payload
+  ).then(res => res.data)
+}
