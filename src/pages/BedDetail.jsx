@@ -97,9 +97,9 @@ function printAndDownloadSlip({ tenant, period, payment, bed }) {
   const fileName = `${tenant.name}_${dayjs(period.from).format('MMM_YYYY')}.pdf`
 
   win.document.write(`
-<!DOCTYPE html>
-<html>
-<head>
+  <!DOCTYPE html>
+  <html>
+  <head>
   <title>${fileName}</title>
   <style>
     @page {
@@ -185,9 +185,9 @@ function printAndDownloadSlip({ tenant, period, payment, bed }) {
       font-size: 10px;
     }
   </style>
-</head>
+  </head>
 
-<body>
+  <body>
 
   <div class="header">
     <h1>BLISS MEN'S PG HOSTEL</h1>
@@ -211,7 +211,7 @@ function printAndDownloadSlip({ tenant, period, payment, bed }) {
 
   <div class="row"><span class="label">Room No</span>
   <span class="value">${bed?.roomName || '-'} / Bed ${bed?.bedName || '-'}</span>
-</div>
+ </div>
 
   <div class="row">
     <div class="label">Valid From</div>
@@ -248,8 +248,8 @@ function printAndDownloadSlip({ tenant, period, payment, bed }) {
     }
   </script>
 
-</body>
-</html>
+  </body>
+  </html>
   `)
 
   win.document.close()
