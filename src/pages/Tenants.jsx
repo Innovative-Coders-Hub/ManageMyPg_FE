@@ -183,7 +183,7 @@ const filtered = useMemo(() => {
       <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filtered.length === 0 ? (
           <div className="col-span-full rounded-xl border border-dashed p-6 text-center text-gray-600">
-            No tenants found. Adjust filters or search term.
+            Tenants are not registered yet for this PG.
           </div>
         ) : (
           current.map(item => {

@@ -2,72 +2,117 @@ import React, { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import dayjs from 'dayjs'
 
-function fmt(d) { return dayjs(d).isValid() ? dayjs(d).format('DD MMM YYYY') : '—' }
+/* =====================================================
+   Helpers
+===================================================== */
+const fmt = (d) => dayjs(d).isValid() ? dayjs(d).format('DD MMM YYYY') : '—'
 
-function useLocalOffers(key = 'offers') {
+function useLocalOffers(key = 'offers_v2') {
   const [offers, setOffers] = useState(() => {
     try { return JSON.parse(localStorage.getItem(key)) ?? [] } catch { return [] }
   })
-  useEffect(() => { try { localStorage.setItem(key, JSON.stringify(offers)) } catch {} }, [key, offers])
+  useEffect(() => {
+    try { localStorage.setItem(key, JSON.stringify(offers)) } catch {}
+  }, [offers])
   return [offers, setOffers]
 }
 
-function OfferForm({ open, initial = null, onClose, onSave }) {
-  const [title, setTitle] = useState(initial?.title ?? '')
-  const [mode, setMode] = useState(initial?.mode ?? 'text') // text | image
-  const [content, setContent] = useState(initial?.content ?? '')
-  const [expireAt, setExpireAt] = useState(initial?.expireAt ? dayjs(initial.expireAt).format('YYYY-MM-DD') : '')
+/* =====================================================
+   Offer Types
+===================================================== */
+const OFFER_TYPES = [
+  { key: 'DISCOUNT', label: 'Rent Discount', color: 'bg-emerald-50 text-emerald-700' },
+  { key: 'CASHBACK', label: 'Cashback', color: 'bg-indigo-50 text-indigo-700' },
+  { key: 'FREEMONTH', label: 'Free Month', color: 'bg-amber-50 text-amber-700' },
+  { key: 'REFERRAL', label: 'Referral Bonus', color: 'bg-purple-50 text-purple-700' },
+  { key: 'CUSTOM', label: 'Custom Offer', color: 'bg-gray-100 text-gray-700' }
+]
+
+/* =====================================================
+   Offer Form (Create / Edit)
+===================================================== */
+function OfferForm({ open, initial, onClose, onSave }) {
+  const [title, setTitle] = useState('')
+  const [type, setType] = useState('DISCOUNT')
+  const [description, setDescription] = useState('')
+  const [value, setValue] = useState('')
+  const [expireAt, setExpireAt] = useState('')
 
   useEffect(() => {
     if (!open) return
     setTitle(initial?.title ?? '')
-    setMode(initial?.mode ?? 'text')
-    setContent(initial?.content ?? '')
+    setType(initial?.type ?? 'DISCOUNT')
+    setDescription(initial?.description ?? '')
+    setValue(initial?.value ?? '')
     setExpireAt(initial?.expireAt ? dayjs(initial.expireAt).format('YYYY-MM-DD') : '')
   }, [open, initial])
 
   if (!open) return null
 
   return (
-    <div className="space-y-6">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative w-full max-w-xl mx-4 rounded-2xl border bg-white shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+
+      <div className="relative w-full max-w-lg mx-4 rounded-2xl bg-white shadow-xl">
         <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-2xl">
-          <div className="text-lg font-semibold">{initial ? 'Edit Offer' : 'Create Offer'}</div>
+          <div className="text-lg font-semibold">{initial ? 'Edit Offer' : 'Create New Offer'}</div>
+          <div className="text-xs text-gray-500">Design an attractive promotion for tenants</div>
         </div>
 
         <div className="p-6 space-y-4">
-          <label className="block text-sm">
-            <span className="font-medium text-gray-700">Title</span>
-            <input value={title} onChange={e=>setTitle(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500" />
-          </label>
+          <input
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="Offer title (eg. ₹2000 off on first month)"
+            className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
 
-          <label className="block text-sm">
-            <span className="font-medium text-gray-700">Type</span>
-            <select value={mode} onChange={e=>setMode(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500">
-              <option value="text">Text</option>
-              <option value="image">Image (URL)</option>
-            </select>
-          </label>
+          <select
+            value={type}
+            onChange={e => setType(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            {OFFER_TYPES.map(t => (
+              <option key={t.key} value={t.key}>{t.label}</option>
+            ))}
+          </select>
 
-          {mode === 'text' ? (
-            <label className="block text-sm"><span className="font-medium text-gray-700">Text</span>
-              <textarea value={content} onChange={e=>setContent(e.target.value)} rows={4} className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500" />
-            </label>
-          ) : (
-            <label className="block text-sm"><span className="font-medium text-gray-700">Image URL</span>
-              <input value={content} onChange={e=>setContent(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500" />
-            </label>
-          )}
+          <textarea
+            rows={3}
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="Explain the offer clearly to tenants"
+            className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
 
-          <label className="block text-sm">
-            <span className="font-medium text-gray-700">Expiry date</span>
-            <input type="date" value={expireAt} onChange={e=>setExpireAt(e.target.value)} className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500" />
-          </label>
+          <input
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            placeholder="Value (eg. 2000, 10%, 1 month)"
+            className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
 
-          <div className="flex items-center justify-end gap-2">
-            <button onClick={onClose} className="px-4 py-2 rounded-lg border hover:bg-gray-50">Cancel</button>
-            <button onClick={()=>onSave({ title: title.trim(), mode, content: content.trim(), expireAt: expireAt ? dayjs(expireAt).endOf('day').toISOString() : null })} className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">{initial ? 'Save' : 'Create'}</button>
+          <input
+            type="date"
+            value={expireAt}
+            onChange={e => setExpireAt(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button onClick={onClose} className="px-4 py-2 rounded-lg border">Cancel</button>
+            <button
+              onClick={() => onSave({
+                title: title.trim(),
+                type,
+                description: description.trim(),
+                value,
+                expireAt: expireAt ? dayjs(expireAt).endOf('day').toISOString() : null
+              })}
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+            >
+              {initial ? 'Save Changes' : 'Create Offer'}
+            </button>
           </div>
         </div>
       </div>
@@ -75,110 +120,103 @@ function OfferForm({ open, initial = null, onClose, onSave }) {
   )
 }
 
-export default function Offers(){
+/* =====================================================
+   OFFERS PAGE
+===================================================== */
+export default function Offers() {
   const [offers, setOffers] = useLocalOffers()
   const [openForm, setOpenForm] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [snack, setSnack] = useState(null)
 
-  const showSnack = (t) => { setSnack(t); setTimeout(()=>setSnack(null), 2500) }
-
-  function createOffer(payload){
-    const now = new Date().toISOString()
-    const offer = { id: `offer_${Date.now()}`, ...payload, createdAt: now }
-    setOffers(prev => [offer, ...prev])
-    setOpenForm(false); showSnack('Offer created')
-  }
-
-  function updateOffer(id, payload){
-    setOffers(prev => prev.map(o => o.id === id ? { ...o, ...payload } : o))
-    setEditing(null); setOpenForm(false); showSnack('Offer updated')
-  }
-
-  function repostOffer(id, payload){
-    const now = new Date().toISOString()
-    const offer = { id: `offer_${Date.now()}`, ...payload, createdAt: now }
-    setOffers(prev => [offer, ...prev])
-    showSnack('Offer reposted')
-  }
-
-  function deleteOffer(id){
-    if (!confirm('Delete this offer?')) return
-    setOffers(prev => prev.filter(o => o.id !== id))
-    showSnack('Offer deleted')
-  }
-
-  const list = useMemo(()=>{
+  const enriched = useMemo(() => {
     return offers.map(o => {
       const exp = o.expireAt ? dayjs(o.expireAt) : null
       const now = dayjs()
-      const expired = exp ? exp.isBefore(now, 'day') : false
-      const days = exp ? exp.diff(now, 'day') : null
-      return { ...o, expired, days }
+      return {
+        ...o,
+        expired: exp ? exp.isBefore(now, 'day') : false,
+        daysLeft: exp ? exp.diff(now, 'day') : null
+      }
     })
   }, [offers])
 
-  return (
-    <div className="w-full max-w-screen-2xl px-4 py-6 space-y-4">
-      <PageHeader title="Tenant Offers" subtitle="Create and manage offers for tenants" />
+  function saveOffer(payload) {
+    if (editing) {
+      setOffers(prev => prev.map(o => o.id === editing.id ? { ...o, ...payload } : o))
+    } else {
+      setOffers(prev => [{ id: `offer_${Date.now()}`, createdAt: new Date().toISOString(), ...payload }, ...prev])
+    }
+    setEditing(null)
+    setOpenForm(false)
+  }
 
-      <div className="flex items-center justify-end">
-        <button onClick={()=>{ setEditing(null); setOpenForm(true) }} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Create Offer</button>
+  return (
+    <div className="max-w-screen-2xl mx-auto px-4 py-6 space-y-6">
+      <PageHeader title="Promotions & Offers" subtitle="Create attractive deals to acquire and retain tenants" />
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => { setEditing(null); setOpenForm(true) }}
+          className="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700"
+        >
+          + Create Offer
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {list.length === 0 && (
-          <div className="rounded-2xl border border-dashed p-6 text-center text-sm text-gray-600">No offers yet. Create your first offer.</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {enriched.length === 0 && (
+          <div className="col-span-full border border-dashed rounded-xl p-8 text-center text-gray-500">
+            No offers yet. Create your first promotion to attract tenants.
+          </div>
         )}
 
-        {list.map(o=> (
-          <div key={o.id} className={`rounded-2xl border p-4 ${o.expired ? 'opacity-70' : ''}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="font-semibold">{o.title}</div>
-                <div className="text-xs text-gray-500 mt-1">Expires: {o.expireAt ? fmt(o.expireAt) : '—'}</div>
+        {enriched.map(o => {
+          const t = OFFER_TYPES.find(x => x.key === o.type)
+          return (
+            <div key={o.id} className={`rounded-2xl border shadow-sm p-4 flex flex-col ${o.expired ? 'opacity-70' : ''}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="font-semibold text-gray-800">{o.title}</div>
+                  <div className="text-xs text-gray-500 mt-1">Expires: {fmt(o.expireAt)}</div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${t?.color}`}>{t?.label}</span>
               </div>
-              <div className="text-right">
-                <div className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs ${o.expired ? 'bg-red-50 text-red-700 border border-red-100' : 'bg-green-50 text-green-700 border border-green-100'}`}>{o.expired ? 'Expired' : 'Active'}</div>
-                <div className="text-xs text-gray-500 mt-2">{o.days !== null ? (o.days >= 0 ? `Expires in ${o.days}d` : `Expired ${Math.abs(o.days)}d ago`) : 'No expiry'}</div>
+
+              <div className="mt-3 text-sm text-gray-700 flex-1">
+                {o.description}
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <div className="text-xs text-gray-500">
+                  {o.expired
+                    ? 'Expired'
+                    : o.daysLeft !== null
+                      ? `Expires in ${o.daysLeft} days`
+                      : 'No expiry'}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setEditing(o); setOpenForm(true) }}
+                    className="px-3 py-1 text-sm rounded border hover:bg-gray-50"
+                  >Edit</button>
+                  <button
+                    onClick={() => setOffers(prev => prev.filter(x => x.id !== o.id))}
+                    className="px-3 py-1 text-sm rounded border text-rose-600 hover:bg-rose-50"
+                  >Delete</button>
+                </div>
               </div>
             </div>
-
-            <div className="mt-3 text-sm text-gray-700">
-              {o.mode === 'image' ? (
-                o.content ? <img src={o.content} alt={o.title} className="w-full rounded" /> : <div className="text-xs text-gray-400">No image URL</div>
-              ) : (
-                <div className="whitespace-pre-wrap">{o.content}</div>
-              )}
-            </div>
-
-            <div className="mt-4 flex items-center gap-2 justify-end">
-              <button onClick={()=>{ setEditing(o); setOpenForm(true) }} className="px-3 py-1 rounded border text-sm hover:bg-gray-50">Edit</button>
-              <button onClick={()=>{ setEditing({ ...o, __repost: true }); setOpenForm(true) }} className="px-3 py-1 rounded border text-sm hover:bg-gray-50">Repost</button>
-              <button onClick={()=>deleteOffer(o.id)} className="px-3 py-1 rounded border text-sm text-red-600 hover:bg-red-50">Delete</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <OfferForm
         open={openForm}
         initial={editing}
         onClose={() => { setOpenForm(false); setEditing(null) }}
-        onSave={(payload) => {
-           if (editing && editing.__repost) {
-             // repost (create new based on existing data)
-             repostOffer(editing.id, payload)
-             setEditing(null)
-             setOpenForm(false)
-             return
-           }
-          // create new
-          createOffer(payload)
-        }}
+        onSave={saveOffer}
       />
-
-      {snack && <div className="fixed bottom-4 right-4 px-4 py-2 rounded-lg bg-gray-900 text-white text-sm">{snack}</div>}
     </div>
   )
 }

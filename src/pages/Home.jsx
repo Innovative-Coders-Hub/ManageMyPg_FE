@@ -1,211 +1,283 @@
-// src/pages/Home.jsx
-import React, { useEffect, useState } from "react";
-import PageHeader from '../components/PageHeader'
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import PageHeader from "../components/PageHeader";
 
-// Inline icons (no package required)
-const UpIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
-    viewBox="0 0 24 24">
-    <path d="M17 7l-5-5-5 5M12 2v20" />
+/* =====================================================
+   BRAND THEME (single source of truth)
+===================================================== */
+const BRAND = {
+  primary: "indigo",
+  accent: "blue",
+};
+
+/* =====================================================
+   ICONS (inline, no external libs)
+===================================================== */
+const ChevronDown = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M19 9l-7 7-7-7" />
   </svg>
 );
 
-const DownIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"
-    viewBox="0 0 24 24">
-    <path d="M7 17l5 5 5-5M12 22V2" />
+const BedIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+    <path d="M3 7v10M21 7v10M3 12h18M7 7h10a4 4 0 014 4v1" />
   </svg>
 );
 
-// Simple sparkline component
-function Sparkline({ data = [], width = 80, height = 26 }) {
-  if (!data.length) return <span className="text-gray-400 text-xs">—</span>;
+const MoneyIcon = () => (
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+    <path d="M12 1v22M5 6h10a4 4 0 010 8H9a4 4 0 000 8h10" />
+  </svg>
+);
 
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const step = width / (data.length - 1);
+const AlertIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M12 9v4M12 17h.01M10.29 3.86l-8.58 14.85A2 2 0 003.42 22h17.16a2 2 0 001.71-3.29L13.71 3.86a2 2 0 00-3.42 0z" />
+  </svg>
+);
 
-  const points = data
-    .map((v, i) => {
-      const x = i * step;
-      const y = height - ((v - min) / (max - min || 1)) * height;
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  const rising = data[data.length - 1] >= data[0];
-
+/* =====================================================
+   MINI LINE CHART (Monthly Revenue)
+===================================================== */
+function ForecastBar({ forecast }) {
+  const max = Math.max(...forecast);
   return (
-    <svg width={width} height={height}>
-      <polyline
-        fill="none"
-        stroke={rising ? "#22c55e" : "#ef4444"}
-        strokeWidth="2"
-        points={points}
-      />
-    </svg>
+    <div className="space-y-3">
+      {forecast.map((v, i) => (
+        <div key={i}>
+          <div className="flex justify-between text-xs mb-1">
+            <span>Month +{i + 1}</span>
+            <span className="font-medium">{v}%</span>
+          </div>
+          <div className="w-full h-2 bg-gray-200 rounded">
+            <div
+              className={`h-2 rounded ${v >= 80 ? "bg-emerald-500" : v >= 60 ? "bg-amber-500" : "bg-rose-500"}`}
+              style={{ width: `${v}%` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
-function Tile({ title, value, to, color, meta, sparkline }) {
+function RevenueChart({ data }) {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+
+  return (
+    <div className="flex items-end gap-2 h-32">
+      {data.map((v, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center justify-end">
+          <div
+            className="w-full rounded-t-md bg-indigo-500"
+            style={{ height: `${((v - min) / (max - min || 1)) * 100}%` }}
+          />
+          <div className="text-[10px] text-gray-500 mt-1">M{i + 1}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* =====================================================
+   KPI TILE
+===================================================== */
+function Tile({ title, value, to, icon, color, subtitle }) {
   return (
     <Link to={to} className="block">
-      <div
-        className={`rounded-2xl p-4 text-white shadow-md hover:scale-105 transition ${color}`}
-        style={{ minHeight: 120 }}
-      >
-        <div className="flex justify-between">
+      <div className={`rounded-2xl p-4 shadow hover:scale-[1.02] transition ${color}`}>
+        <div className="flex justify-between items-start">
           <div>
-            <div className="text-sm opacity-90">{title}</div>
-            <div className="text-2xl font-bold mt-2">{value ?? "—"}</div>
+            <div className="text-xs opacity-90">{title}</div>
+            <div className="text-xl font-bold mt-1">{value}</div>
+            {subtitle && <div className="text-[11px] opacity-80 mt-1">{subtitle}</div>}
           </div>
-
-          {meta && (
-            <div className="text-xs flex items-center gap-1">
-              {meta.trend === "up" && <UpIcon />}
-              {meta.trend === "down" && <DownIcon />}
-              {meta.label}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-3 flex justify-between">
-          <div className="text-xs text-white/90">{meta?.subtitle}</div>
-          {sparkline && <Sparkline data={sparkline} />}
+          {icon}
         </div>
       </div>
     </Link>
   );
 }
 
+/* =====================================================
+   MOCK DATA (per PG)
+===================================================== */
+const PG_DATA = {
+  "Green Homes": {
+    beds: { total: 20, filled: 15 },
+    rent: { expected: 120000, pending: 12000 },
+    revenueHistory: [80, 90, 95, 100, 110, 108],
+    occupancyForecast: [78, 82, 85],
+    alerts: ["2 beds vacating this month", "3 tenants pending rent"],
+  },
+  "Blue Residency": {
+    beds: { total: 12, filled: 10 },
+    rent: { expected: 72000, pending: 8000 },
+    revenueHistory: [60, 65, 68, 70, 72, 70],
+    occupancyForecast: [70, 74, 76],
+    alerts: ["1 bed vacating this month"],
+  },
+};
+
+/* =====================================================
+   HOME – OWNER DASHBOARD
+===================================================== */
 export default function Home() {
-  // 📌 SAMPLE DASHBOARD DATA
-  const sampleStats = {
-    totalBeds: 20,
-    filledBeds: 15,
-    upcomingVacatingBeds: 2,
-    currentMonthJoined: 3,
-    last3MonthsJoined: 8,
-    lastMonthVacated: 1,
-    last3MonthsVacated: 4,
-    upcomingVacationsThisMonth: 2,
+  const pgNames = Object.keys(PG_DATA);
+  const [selectedPG, setSelectedPG] = useState(pgNames[0]);
+  const [openPG, setOpenPG] = useState(false);
 
-    history: {
-      filledBeds: [12, 13, 13, 14, 15, 15, 15],
-      joined: [0, 1, 0, 2, 1, 0, 3],
-      vacated: [0, 0, 1, 0, 0, 1, 1],
-    },
-  };
+  const data = PG_DATA[selectedPG];
 
-  const [stats, setStats] = useState(null);
-
-  useEffect(() => {
-    // simulate loading
-    setTimeout(() => {
-      setStats(sampleStats);
-    }, 500);
-  }, []);
-
-  if (!stats) return <div className="p-4">Loading dashboard...</div>;
+  const occupancy = useMemo(() => {
+    return Math.round((data.beds.filled / data.beds.total) * 100);
+  }, [data]);
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Dashboard" />
+    <div className="space-y-6 px-3 sm:px-4">
+      {/* HEADER + PG SWITCHER */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <PageHeader title="Owner Dashboard" />
 
-      {/* GRID TILES */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="relative">
+          <button
+            onClick={() => setOpenPG(!openPG)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm shadow"
+          >
+            {selectedPG}
+            <ChevronDown />
+          </button>
+
+          {openPG && (
+            <div className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow z-20">
+              {pgNames.map(pg => (
+                <div
+                  key={pg}
+                  onClick={() => {
+                    setSelectedPG(pg);
+                    setOpenPG(false);
+                  }}
+                  className="px-4 py-2 text-sm hover:bg-indigo-50 cursor-pointer"
+                >
+                  {pg}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* KPI GRID */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Tile
-          title="Total beds"
-          value={stats.totalBeds}
+          title="Total Beds"
+          value={data.beds.total}
           to="/my-pgs"
-          color="bg-blue-600"
+          icon={<BedIcon />}
+          color="bg-indigo-600 text-white"
         />
-
         <Tile
-          title="Filled beds"
-          value={stats.filledBeds}
+          title="Occupied"
+          value={`${data.beds.filled} (${occupancy}%)`}
           to="/my-pgs"
-          sparkline={stats.history.filledBeds}
-          color="bg-green-600"
-          meta={{
-            label: `${Math.round((stats.filledBeds / stats.totalBeds) * 100)}%`,
-            subtitle: "Occupancy rate",
-            trend: "up",
-          }}
+          icon={<BedIcon />}
+          color="bg-emerald-600 text-white"
+          subtitle="Occupancy rate"
         />
-
         <Tile
-          title="Upcoming vacating beds"
-          value={stats.upcomingVacatingBeds}
-          to="/my-pgs"
-          sparkline={stats.history.vacated}
-          color="bg-yellow-400 text-black"
-          meta={{ label: stats.upcomingVacatingBeds, trend: "down" }}
+          title="Expected Rent"
+          value={`₹${data.rent.expected.toLocaleString()}`}
+          to="/payments"
+          icon={<MoneyIcon />}
+          color="bg-blue-600 text-white"
         />
-
         <Tile
-          title="Joined (this month)"
-          value={stats.currentMonthJoined}
-          to="/tenants"
-          color="bg-purple-600"
-          sparkline={stats.history.joined}
-          meta={{ label: stats.currentMonthJoined }}
-        />
-
-        <Tile
-          title="Joined (last 3 months)"
-          value={stats.last3MonthsJoined}
-          to="/tenants"
-          color="bg-indigo-600"
-          sparkline={stats.history.joined}
-          meta={{ label: stats.last3MonthsJoined }}
-        />
-
-        <Tile
-          title="Last month vacated"
-          value={stats.lastMonthVacated}
-          to="/tenants"
-          sparkline={stats.history.vacated}
-          color="bg-red-600"
-          meta={{ label: stats.lastMonthVacated }}
-        />
-
-        <Tile
-          title="Last 3 months vacated"
-          value={stats.last3MonthsVacated}
-          to="/tenants"
-          sparkline={stats.history.vacated}
-          color="bg-orange-500"
-          meta={{ label: stats.last3MonthsVacated }}
-        />
-
-        <Tile
-          title="Upcoming vacations (this month)"
-          value={stats.upcomingVacationsThisMonth}
-          to="/my-pgs"
-          color="bg-pink-600"
-          meta={{ label: stats.upcomingVacationsThisMonth }}
+          title="Pending Rent"
+          value={`₹${data.rent.pending.toLocaleString()}`}
+          to="/payments"
+          icon={<MoneyIcon />}
+          color="bg-rose-600 text-white"
+          subtitle="Needs attention"
         />
       </div>
 
-      {/* QUICK SUMMARY BAR */}
-      <div className="bg-white rounded-lg p-4 shadow flex justify-between items-center">
-        <div className="flex flex-col">
-          <div className="text-sm font-medium text-gray-700">Overall Occupancy</div>
-          <div className="text-xs text-gray-500">
-            {Math.round((stats.filledBeds / stats.totalBeds) * 100)}% occupied
-          </div>
+      {/* REVENUE + ALERTS */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="bg-white rounded-2xl p-4 shadow lg:col-span-2">
+          <div className="font-semibold mb-3">Monthly Revenue Trend</div>
+          <RevenueChart data={data.revenueHistory} />
         </div>
 
-        <div className="flex gap-3">
-          <Link to="/complaints" className="px-3 py-2 bg-yellow-100 text-yellow-800 rounded-md">
-            View complaints
-          </Link>
-          <Link to="/tenants" className="px-3 py-2 bg-indigo-600 text-white rounded-md">
-            Manage tenants
-          </Link>
+        {/* OCCUPANCY FORECAST */}
+        <div className="bg-white rounded-2xl p-4 shadow">
+          <div className="font-semibold mb-3">Occupancy Forecast (Next 3 Months)</div>
+          <ForecastBar forecast={data.occupancyForecast} />
         </div>
+
+        <div className="bg-white rounded-2xl p-4 shadow">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="font-semibold text-gray-800">Alerts & Reminders</div>
+            <div className="text-xs text-gray-500">
+              Things that need your attention
+            </div>
+          </div>
+
+          <span className="text-xs bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full">
+            {data.alerts.length} active
+          </span>
+        </div>
+
+        {/* Alerts List */}
+        <ul className="space-y-3">
+          {data.alerts.map((a, i) => (
+            <li
+              key={i}
+              className="flex gap-3 items-start p-3 rounded-xl bg-amber-50 border-l-4 border-amber-400"
+            >
+              <div className="mt-0.5 text-amber-600">
+                <AlertIcon />
+              </div>
+
+              <div className="flex-1">
+                <div className="text-sm font-medium text-gray-800">
+                  {a}
+                </div>
+                <div className="text-xs text-gray-500 mt-0.5">
+                  Review and take action
+                </div>
+              </div>
+
+              {/* Optional action hook */}
+              <Link
+                to="/my-pgs"
+                className="text-xs text-indigo-600 font-medium whitespace-nowrap"
+              >
+                View →
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* Empty state (future-proof) */}
+        {data.alerts.length === 0 && (
+          <div className="text-sm text-gray-500 text-center py-6">
+            🎉 No alerts right now. Everything looks good!
+          </div>
+        )}
+      </div>
+
+      </div>
+
+      {/* QUICK ACTIONS – MOBILE FIRST */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Link to="/tenants" className="rounded-xl bg-indigo-50 p-3 text-center text-sm font-medium">Tenants</Link>
+        <Link to="/payments" className="rounded-xl bg-blue-50 p-3 text-center text-sm font-medium">Payments</Link>
+        <Link to="/complaints" className="rounded-xl bg-amber-50 p-3 text-center text-sm font-medium">Complaints</Link>
+        <Link to="/my-pgs" className="rounded-xl bg-emerald-50 p-3 text-center text-sm font-medium">My PGs</Link>
       </div>
     </div>
   );
