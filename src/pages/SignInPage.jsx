@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Shield,
   Lock,
   Mail,
   Eye,
@@ -11,10 +10,12 @@ import {
   AlertCircle,
   Loader2,
   ChevronLeft,
+  Fingerprint,
   Activity,
-  Fingerprint
+  ShieldCheck
 } from 'lucide-react'
-import { adminLogin } from '../api/adminAuth'
+import { ownerLogin } from '../api/ownerAuth'
+import toast from 'react-hot-toast'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -34,59 +35,78 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 }
 
-export default function AdminLogin() {
+export default function SignInPage() {
   const navigate = useNavigate()
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [isCapsLock, setIsCapsLock] = useState(false)
-
-  // System Health Simulation
-  const [systemStatus, setSystemStatus] = useState('Online')
-  useEffect(() => {
-    const statuses = ['Stable', 'Online', 'Secure', 'Synced']
-    const interval = setInterval(() => {
-      setSystemStatus(statuses[Math.floor(Math.random() * statuses.length)])
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
 
   const checkCapsLock = (e) => {
     if (e.getModifierState('CapsLock')) setIsCapsLock(true)
     else setIsCapsLock(false)
   }
 
-  const submit = async (e) => {
+  async function handleSubmit(e) {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      const response = await adminLogin({ email, password })
-      const apiResponse = response.data
-      const loginData = apiResponse.data || apiResponse
+      const data = await ownerLogin({ email, password })
 
-      if (!loginData?.accessToken) throw new Error('Invalid response format')
+      const isBlocked = data.isBlocked === true || data.isBlocked === 'true'
+      const isApproved = data.isApproved === true || data.isApproved === 'true'
+      const role = data.role
+      const businessName = data.pgName || ''
 
-      const { accessToken, refreshToken, expiresIn } = loginData
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('tokenType', 'Bearer')
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken)
-      if (expiresIn) {
-        const expiryMs = expiresIn > 10000 ? expiresIn : expiresIn * 1000
-        localStorage.setItem('tokenExpiry', Date.now() + expiryMs)
+      if (isBlocked) {
+        setError("Your account has been blocked. Please contact support.")
+        return
       }
 
-      localStorage.setItem('role', 'ADMIN')
-      localStorage.setItem('isAdmin', 'true')
+      if (role === 'OWNER' && !isApproved) {
+        setError("Your account is under verification. Please wait until admin approval.")
+        return
+      }
 
-      navigate('/admin/dashboard', { replace: true })
+      localStorage.setItem('accessToken', data.accessToken)
+      localStorage.setItem('refreshToken', data.refreshToken)
+      localStorage.setItem('tokenType', data.tokenType || 'Bearer')
+      localStorage.setItem('role', role)
+
+      if (role === 'OWNER') {
+        localStorage.setItem('isOwner', 'true')
+        localStorage.setItem('isApproved', isApproved)
+        localStorage.setItem('isBlocked', isBlocked)
+        localStorage.setItem('businessName', businessName)
+
+        const hasAddress = Boolean(data.hasAddress)
+        if (hasAddress) {
+          toast.success('Signed in successfully!')
+          navigate('/home', { replace: true })
+        } else {
+          toast.success('Welcome! Please complete your onboarding.')
+          navigate('/owner/onboarding', { replace: true })
+        }
+      }
+
+      if (role === 'TENANT') {
+        localStorage.setItem('tenantId', data.id)
+        localStorage.setItem('isTenant', 'true')
+        toast.success('Signed in successfully!')
+        navigate('/tenant/dashboard', { replace: true })
+      }
     } catch (err) {
-      const apiError = err?.response?.data
-      setError(apiError?.message || err?.message || 'Authentication failed. Please check credentials.')
+      if (err.status === 401) {
+        setError("Invalid email or password")
+      } else if (err.status === 403) {
+        setError("Your account has been blocked. Please contact support.")
+      } else {
+        setError(err.message || "Something went wrong. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
@@ -95,7 +115,7 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30">
       <style dangerouslySetInnerHTML={{ __html: `body { background-color: #020617 !important; }` }} />
-      {/* Dynamic Background Elements */}
+      {/* Background Decor */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/10 rounded-full blur-[120px] animate-pulse delay-700" />
@@ -108,42 +128,36 @@ export default function AdminLogin() {
         animate="visible"
         className="w-full max-w-[460px] px-6 relative z-10"
       >
-        {/* Top Navigation */}
-        <div className="mb-6 flex items-center justify-between">
+        {/* Back Link */}
+        <div className="mb-6">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 text-slate-500 hover:text-white transition-all group"
           >
             <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Site</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Home</span>
           </button>
-
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/20">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{systemStatus}</span>
-          </div>
         </div>
 
-        {/* Main Card */}
+        {/* Login Card */}
         <div className="bg-slate-900/40 backdrop-blur-2xl rounded-[2.5rem] border border-slate-800/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] p-8 md:p-12 relative overflow-hidden group">
-          {/* Subtle top light effect */}
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-50" />
 
           {/* Header */}
           <motion.div variants={itemVariants} className="text-center mb-10">
             <div className="inline-flex relative mb-6">
-               <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-               <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-indigo-700 p-0.5 relative z-10 shadow-2xl">
-                  <div className="h-full w-full rounded-[1.4rem] bg-slate-900 flex items-center justify-center">
-                    <Shield className="text-indigo-500" size={36} strokeWidth={1.5} />
-                  </div>
-               </div>
-               <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-xl z-20">
-                 <Fingerprint size={14} />
-               </div>
+              <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 relative z-10 shadow-2xl">
+                <div className="h-full w-full rounded-[1.4rem] bg-slate-900 flex items-center justify-center text-indigo-400">
+                  <ShieldCheck size={36} strokeWidth={1.5} />
+                </div>
+              </div>
+              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-xl z-20">
+                <Fingerprint size={14} />
+              </div>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Internal Access</h1>
-            <p className="text-slate-400 text-sm font-medium tracking-wide">Enter master credentials to establish connection</p>
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Welcome Back</h1>
+            <p className="text-slate-400 text-sm font-medium tracking-wide">Secure access to your PG Management portal</p>
           </motion.div>
 
           {/* Error Message */}
@@ -161,11 +175,11 @@ export default function AdminLogin() {
             )}
           </AnimatePresence>
 
-          {/* Form */}
-          <form onSubmit={submit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Field */}
             <motion.div variants={itemVariants} className="space-y-2">
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] ml-1">
-                Operator ID
+                Email Address
               </label>
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={18} />
@@ -173,17 +187,18 @@ export default function AdminLogin() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@managemypg.com"
+                  placeholder="name@example.com"
                   className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
                   required
                 />
               </div>
             </motion.div>
 
+            {/* Password Field */}
             <motion.div variants={itemVariants} className="space-y-2">
               <div className="flex items-center justify-between ml-1">
                 <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">
-                  Security Key
+                  Password
                 </label>
                 {isCapsLock && (
                   <span className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1">
@@ -199,7 +214,7 @@ export default function AdminLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyUp={checkCapsLock}
                   placeholder="••••••••••••"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl pl-12 pr-12 py-4 text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all font-mono"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl pl-12 pr-12 py-4 text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
                   required
                 />
                 <button
@@ -210,8 +225,14 @@ export default function AdminLogin() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              <div className="flex justify-end pr-1">
+                <Link to="/forgot" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors">
+                  Forgot Security Key?
+                </Link>
+              </div>
             </motion.div>
 
+            {/* Submit Button */}
             <motion.button
               variants={itemVariants}
               whileHover={{ scale: 1.01, translateY: -2 }}
@@ -224,7 +245,7 @@ export default function AdminLogin() {
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   <>
-                    Initialize Session
+                    Sign In
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -233,23 +254,23 @@ export default function AdminLogin() {
             </motion.button>
           </form>
 
-          {/* Footer Info */}
-          <motion.div variants={itemVariants} className="mt-10 flex items-center justify-between border-t border-slate-800 pt-8">
-             <div className="flex flex-col">
-               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Protocol</span>
-               <span className="text-[10px] font-bold text-slate-300">TLS 1.3 / AES-256</span>
-             </div>
-             <div className="flex flex-col text-right">
-               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Build ID</span>
-               <span className="text-[10px] font-bold text-slate-300">ADMIN_v2.4.0</span>
-             </div>
+          {/* New to platform */}
+          <motion.div variants={itemVariants} className="mt-8 text-center">
+            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+              New to ManageMyPg?{" "}
+              <Link to="/manage/mypg/signup" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                Create Account
+              </Link>
+            </p>
           </motion.div>
         </div>
 
-        {/* Support Link */}
-        <motion.p variants={itemVariants} className="mt-8 text-center text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-          Forgot credentials? Contact <a href="#" className="text-indigo-400 hover:underline">System Security</a>
-        </motion.p>
+        {/* Branding Footer */}
+        <motion.div variants={itemVariants} className="mt-10 flex items-center justify-center gap-4 text-slate-500">
+           <div className="h-px w-8 bg-slate-800" />
+           <span className="text-[9px] font-black uppercase tracking-[0.3em]">ManageMyPg Ecosystem</span>
+           <div className="h-px w-8 bg-slate-800" />
+        </motion.div>
       </motion.div>
     </div>
   )

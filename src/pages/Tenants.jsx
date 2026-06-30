@@ -1,10 +1,58 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs'
-import { getAllTenants } from '../api/ownerAuth'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
-import { useSearchParams } from 'react-router-dom'
-// Utility to get initials
+import {
+  Users,
+  UserCheck,
+  UserMinus,
+  Search,
+  Filter,
+  ArrowRight,
+  Phone,
+  Mail,
+  Calendar,
+  Layers,
+  MapPin,
+  TrendingUp,
+  CheckCircle2,
+  X,
+  Plus,
+  Loader2,
+  Building2,
+  Bed as BedIcon
+} from 'lucide-react'
+import { getAllTenants, getAllPgs } from '../api/ownerAuth'
+
+function TopStat({ label, value, icon, isAccent = false }) {
+  return (
+    <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
+      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
+        {React.cloneElement(icon, { size: 10 })}
+        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+      </div>
+      <div className="text-sm font-black leading-none">{value}</div>
+    </div>
+  )
+}
+
+function FilterPill({ active, onClick, label, icon: Icon, activeClass }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+        active
+          ? `${activeClass} shadow-md`
+          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+      }`}
+    >
+      <Icon size={12} />
+      {label}
+    </button>
+  )
+}
+
 const initials = (name = '') =>
   name
     .split(' ')
@@ -15,316 +63,248 @@ const initials = (name = '') =>
 
 export default function Tenants() {
   const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const q = query.trim().toLowerCase()
-  const [tenantsRaw, setTenantsRaw] = useState([])
-  const [showActive, setShowActive] = useState(false)
-  const [showVacated, setShowVacated] = useState(false)
   const [searchParams] = useSearchParams()
-const pgId = searchParams.get('pgId')
-useEffect(() => {
-  if (!pgId) return
+  const pgId = searchParams.get('pgId')
 
-  async function fetchTenants() {
-    try {
-      const data = await getAllTenants(pgId)
-      setTenantsRaw(Array.isArray(data) ? data : [])
-    } catch (e) {
-      console.error(e)
-      setTenantsRaw([])
+  const [tenantsRaw, setTenantsRaw] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filters, setFilters] = useState({
+    active: true,
+    vacated: false,
+    newlyJoined: false
+  })
+
+  useEffect(() => {
+    async function init() {
+      if (!pgId) {
+        try {
+          setLoading(true)
+          const pgs = await getAllPgs()
+          if (pgs && pgs.length > 0) {
+            // Select the first PG by default and redirect
+            navigate(`?pgId=${pgs[0].id}`, { replace: true })
+          } else {
+            setLoading(false)
+          }
+        } catch (e) {
+          console.error('Failed to fetch initial PGs:', e)
+          setLoading(false)
+        }
+        return
+      }
+
+      // If pgId is available, fetch tenants
+      try {
+        setLoading(true)
+        const data = await getAllTenants(pgId)
+        setTenantsRaw(Array.isArray(data) ? data : [])
+      } catch (e) {
+        console.error(e)
+        setTenantsRaw([])
+      } finally {
+        setLoading(false)
+      }
     }
-  }
 
-  fetchTenants()
-}, [pgId])
+    init()
+  }, [pgId, navigate])
 
-const tenants = useMemo(() => {
-  return tenantsRaw.map(t => {
-    const isVacated = t.vacated === true
+  const tenants = useMemo(() => {
+    return tenantsRaw.map(t => {
+      const isVacated = t.vacated === true
+      const isNewlyJoined = dayjs().diff(dayjs(t.dateOfJoining), 'day') <= 7
 
-    return {
-      id: t.id,
-      tenant: {
+      return {
+        id: t.id,
         name: t.name,
         phone: t.mobileNumber,
         email: t.email,
         start: t.dateOfJoining,
         end: t.dateOfVacate,
-      },
-      bedId: t.bedId,
-      vacated: isVacated,          // ✅ source of truth
-      rent: t.rentResponse?.[0] || null,
-    }
-  })
-}, [tenantsRaw])
+        bedId: t.bedId,
+        vacated: isVacated,
+        newlyJoined: isNewlyJoined,
+        rent: t.rentResponse?.[0] || null,
+      }
+    })
+  }, [tenantsRaw])
 
+  const filtered = useMemo(() => {
+    return tenants.filter(t => {
+      if (filters.active && !t.vacated) return true
+      if (filters.vacated && t.vacated) return true
+      if (filters.newlyJoined && t.newlyJoined) return true
+      if (!filters.active && !filters.vacated && !filters.newlyJoined) return true
+      return false
+    })
+  }, [tenants, filters])
 
+  const stats = useMemo(() => {
+    const total = tenants.length
+    const active = tenants.filter(t => !t.vacated).length
+    const vacated = tenants.filter(t => t.vacated).length
+    const newJoins = tenants.filter(t => t.newlyJoined).length
 
-  // Filters + search
-const filtered = useMemo(() => {
-  const afterFilter = tenants.filter(it => {
-    const isVacated = it.vacated
+    return { total, active, vacated, newJoins }
+  }, [tenants])
 
-    if (!showActive && !showVacated) return true
-    if (!isVacated && showActive) return true   // Active
-    if (isVacated && showVacated) return true      // Vacated
-
-    return false
-  })
-
-  if (!q) return afterFilter
-
-  return afterFilter.filter(t => {
-    const name = (t.tenant?.name || '').toLowerCase()
-    const phone = (t.tenant?.phone || '').toLowerCase()
-    return name.includes(q) || phone.includes(q)
-  })
-}, [q, tenants, showActive, showVacated])
-
-
-  // Pagination
-  const ITEMS_PER_PAGE = 20
-  const [page, setPage] = useState(1)
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE))
-
-  useEffect(() => {
-    setPage(1)
-  }, [q, showActive, showVacated, filtered.length])
-
-  const current = filtered.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  )
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-600" size={40} />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <PageHeader
-        title="Tenants"
-        subtitle={
-          <span className="hidden sm:inline">
-            Search by name or mobile number.
-          </span>
-        }
-      >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:max-w-md sm:justify-end">
-          {/* Desktop search */}
-          <label className="relative flex-1 hidden sm:block">
-            <span className="sr-only">Search</span>
-            <input
-              className="placeholder:italic placeholder:text-gray-400 block bg-white w-full border border-gray-200 rounded-md py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-              placeholder="Search name or mobile…"
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-            />
-            <svg
-              className="w-4 h-4 absolute left-3 top-2.5 text-gray-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              aria-hidden
-            >
-              <path d="M21 21l-4.35-4.35" />
-              <circle cx="11" cy="11" r="6" />
-            </svg>
-          </label>
-
-          {/* Filters – unchanged */}
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showActive}
-                onChange={e => setShowActive(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-400"
-              />
-              <span className="text-gray-700">Active</span>
-            </label>
-
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showVacated}
-                onChange={e => setShowVacated(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-400"
-              />
-              <span className="text-gray-700">Vacated</span>
-            </label>
-          </div>
-        </div>
-      </PageHeader>
-
-      {/* Mobile Search (above tenants) */}
-      <div className="sm:hidden">
-        <label className="relative block">
-          <span className="sr-only">Search</span>
-          <input
-            className="placeholder:italic placeholder:text-gray-400 block bg-white w-full border border-gray-200 rounded-md py-2 pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
-            placeholder="Search name or mobile…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-          <svg
-            className="w-4 h-4 absolute left-3 top-2.5 text-gray-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            aria-hidden
+    <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      {/* Header Section */}
+      <div className="bg-white border-b border-slate-200 pt-2 pb-1">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <PageHeader
+            title="Tenant Registry"
+            subtitle="Enterprise resident community management"
           >
-            <path d="M21 21l-4.35-4.35" />
-            <circle cx="11" cy="11" r="6" />
-          </svg>
-        </label>
+            <div className="flex flex-wrap items-center justify-end gap-1.5">
+              <TopStat label="Total" value={stats.total} icon={<Users />} />
+              <TopStat label="Active" value={stats.active} icon={<UserCheck />} isAccent />
+              <TopStat label="Vacated" value={stats.vacated} icon={<UserMinus />} />
+              <TopStat label="New" value={stats.newJoins} icon={<TrendingUp />} />
+            </div>
+          </PageHeader>
+        </div>
       </div>
 
-      {/* Tenant Cards */}
-      <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.length === 0 ? (
-          <div className="col-span-full rounded-xl border border-dashed p-6 text-center text-gray-600">
-            Tenants are not registered yet for this PG.
-          </div>
-        ) : (
-          current.map(item => {
-            const t = item.tenant || {}
-            const isCurrent = !item.history
-
-            return (
-              <div
-                key={item.id}
-                className="
-                  group rounded-2xl border border-slate-200
-                  bg-white/80 backdrop-blur
-                  p-4 shadow-sm
-                  transition-all duration-300
-                  hover:shadow-lg hover:-translate-y-0.5
-                  hover:border-emerald-300
-                "
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div className="flex flex-col gap-6">
+          {/* Toolbar */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-slate-400 mr-1">
+              <Filter size={12} />
+              <span className="text-[9px] font-black uppercase tracking-widest">Filters</span>
+            </div>
+            <FilterPill
+              label="Active"
+              icon={UserCheck}
+              active={filters.active}
+              onClick={() => setFilters(f => ({ ...f, active: !f.active }))}
+              activeClass="bg-indigo-600 border-indigo-500 text-white"
+            />
+            <FilterPill
+              label="Vacated"
+              icon={UserMinus}
+              active={filters.vacated}
+              onClick={() => setFilters(f => ({ ...f, vacated: !f.vacated }))}
+              activeClass="bg-slate-900 border-slate-800 text-white"
+            />
+            <FilterPill
+              label="Newly Joined"
+              icon={TrendingUp}
+              active={filters.newlyJoined}
+              onClick={() => setFilters(f => ({ ...f, newlyJoined: !f.newlyJoined }))}
+              activeClass="bg-emerald-600 border-emerald-500 text-white"
+            />
+            {(filters.active || filters.vacated || filters.newlyJoined) && (
+              <button
+                onClick={() => setFilters({ active: false, vacated: false, newlyJoined: false })}
+                className="text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-rose-100 transition-colors ml-2 border border-rose-100"
               >
-                <div className="flex gap-4">
-                  {/* Avatar */}
-                  <div
-                    className={`
-                      h-12 w-12 shrink-0 flex items-center justify-center
-                      rounded-xl font-semibold text-white
-                      ring-2 ring-white
-                      ${
-                        item.vacated
-                          ? 'bg-slate-400'
-                          : 'bg-gradient-to-br from-emerald-500 to-teal-600'
-                      }
-                    `}
-                  >
-                    {initials(t.name)}
+                Clear
+              </button>
+            )}
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-6">
+            <AnimatePresence mode="popLayout">
+              {filtered.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="col-span-full bg-white rounded-xl border-2 border-dashed border-slate-200 py-32 text-center"
+                >
+                  <div className="mx-auto w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 mb-6">
+                    <Users size={40} />
                   </div>
-
-                  <div className="flex-1 min-w-0">
-                    {/* Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="font-semibold text-slate-900 truncate">
-                          {t.name || '—'}
+                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">No Residents Found</h2>
+                  <p className="mt-4 text-slate-500 font-medium max-w-sm mx-auto px-4">
+                    Adjust your filters to see more tenants or register new ones via the PG view.
+                  </p>
+                </motion.div>
+              ) : (
+                filtered.map(t => (
+                  <motion.div
+                    key={t.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="group bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden h-full flex flex-col"
+                  >
+                    {/* Header Section */}
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-300 shrink-0 shadow-sm ${
+                          t.vacated ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-indigo-600 text-white border-indigo-500'
+                        }`}>
+                          <div className="text-sm font-black">{initials(t.name)}</div>
                         </div>
-                        <div className="text-xs text-slate-500 truncate">
-                          {t.mobileNumber || t.email || '—'}
-                        </div>
-                      </div>
-
-                      {/* Status */}
-                      <span
-                        className={`
-                          shrink-0 px-3 py-1 rounded-full text-xs font-medium border
-                          ${
-                            item.vacated
-                              ? 'bg-slate-100 text-slate-600 border-slate-200'
-                              : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          }
-                        `}
-                      >
-                        {item.vacated ? 'Vacated' : 'Active'}
-                      </span>
-                    </div>
-
-                    {/* Dates */}
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="rounded-lg bg-slate-50 p-2">
-                        <div className="text-slate-500">Joined</div>
-                        <div className="font-medium text-emerald-700">
-                          {t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-none truncate">{t.name}</h3>
+                          <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">ID: {String(t.id).slice(-8)}</p>
                         </div>
                       </div>
-
-                      {item.vacated && (
-                        <div className="rounded-lg bg-rose-50 p-2">
-                          <div className="text-slate-500">Vacated</div>
-                          <div className="font-medium text-rose-700">
-                            {t.end ? dayjs(t.end).format('DD MMM YYYY') : '—'}
-                          </div>
-                        </div>
-                      )}
+                      <div className={`shrink-0 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${t.vacated ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                        {t.vacated ? 'Vacated' : 'Active'}
+                      </div>
                     </div>
 
-                    {/* Footer */}
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">
-                        {item.vacated ? 'Past Tenant' : 'Current Tenant'}
-                      </span>
+                    {/* Contact Bar */}
+                    <div className="flex flex-col gap-1.5 mb-5 px-0.5">
+                      <div className="flex items-center gap-2 text-slate-400">
+                        <Phone size={11} className="shrink-0" />
+                        <span className="text-[10px] font-bold text-slate-600 tracking-tight">{t.phone || 'No Phone'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-400">
+                        <Mail size={11} className="shrink-0" />
+                        <span className="text-[10px] font-bold text-slate-500 truncate">{t.email || 'No Email'}</span>
+                      </div>
+                    </div>
 
+                    {/* High Density Info Bar */}
+                    <div className="flex items-center justify-between bg-slate-50/50 rounded-xl px-4 py-2 border border-slate-100 mb-6">
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Joined</span>
+                        <span className="text-[11px] font-black text-slate-900 mt-0.5">{t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}</span>
+                      </div>
+                      <div className="flex flex-col text-right">
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Bed</span>
+                        <span className="text-[11px] font-black text-slate-900 mt-0.5">{t.bedId || 'N/A'}</span>
+                      </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="mt-auto flex items-center justify-between gap-1.5 pt-1">
+                      <div className="flex items-center gap-1.5 text-slate-400">
+                         <Building2 size={12} />
+                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resident</span>
+                      </div>
                       <button
-                        onClick={() => item.bedId && navigate(`/beds/${item.bedId}`)}
-                        className="
-                          px-4 py-1.5 rounded-lg text-xs font-semibold
-                          bg-gradient-to-br from-emerald-600 to-teal-600
-                          text-white
-                          transition
-                          hover:from-emerald-700 hover:to-teal-700
-                          focus:outline-none focus:ring-2 focus:ring-emerald-500
-                        "
+                        onClick={() => navigate(`/tenant/${t.id}`)}
+                        className="ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 min-w-[80px] whitespace-nowrap"
                       >
-                        View
+                        Profile <ArrowRight size={14} />
                       </button>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-
-      {/* Pagination */}
-      {filtered.length > ITEMS_PER_PAGE && (
-        <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="text-sm text-gray-600">
-            Showing {(page - 1) * ITEMS_PER_PAGE + 1}–
-            {Math.min(page * ITEMS_PER_PAGE, filtered.length)} of{' '}
-            {filtered.length} tenants
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 rounded-lg border text-sm disabled:opacity-50"
-            >
-              Previous
-            </button>
-
-            <div className="text-sm">
-              Page {page} / {totalPages}
-            </div>
-
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1 rounded-lg border text-sm disabled:opacity-50"
-            >
-              Next
-            </button>
+                  </motion.div>
+                ))
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

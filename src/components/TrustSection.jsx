@@ -1,76 +1,101 @@
 import { motion } from "framer-motion"
+import { ShieldCheck, Eye, Zap, ScrollText, Building2, HeartHandshake } from "lucide-react"
 
 const trustPoints = [
   {
     title: "Secure Access & Authentication",
     desc: "Modern login, token-based authentication, and role-controlled access keep your PG data protected.",
-    icon: "🔐"
+    icon: <ShieldCheck className="w-5 h-5" />,
+    color: "text-blue-600",
+    bg: "bg-blue-50"
   },
   {
-  title: "Transparent Data Access",
-  desc: "We handle your PG data responsibly. Data access or export requests are supported in accordance with our terms and applicable policies.",
-  icon: "📂"
+    title: "Transparent Data Access",
+    desc: "We handle your PG data responsibly. Data access or export requests are supported in accordance with our policies.",
+    icon: <Eye className="w-5 h-5" />,
+    color: "text-purple-600",
+    bg: "bg-purple-50"
   },
   {
     title: "Designed for Daily Reliability",
     desc: "Built using proven architecture so the app remains stable even as your PG grows.",
-    icon: "🏗️"
+    icon: <Zap className="w-5 h-5" />,
+    color: "text-amber-600",
+    bg: "bg-amber-50"
   },
   {
     title: "Audit-Friendly & Transparent",
     desc: "Every important action is traceable, helping you stay organized and accountable.",
-    icon: "🧾"
+    icon: <ScrollText className="w-5 h-5" />,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50"
   },
   {
-  title: "Operate Your PG Under Your Own Name",
-  desc: "Register your PG and manage all operations under your business name, while ManageMyPg securely powers everything behind the scenes.",
-  icon: "🏢"
-},
+    title: "Own Your Business Identity",
+    desc: "Register your PG and manage all operations under your business name, while ManageMyPg powers the backend.",
+    icon: <Building2 className="w-5 h-5" />,
+    color: "text-rose-600",
+    bg: "bg-rose-50"
+  },
   {
     title: "Support That Understands PGs",
-    desc: "Get help from people who understand PG operations, not just software.",
-    icon: "🤝"
+    desc: "Get help from people who understand PG operations, not just software. We're here for you.",
+    icon: <HeartHandshake className="w-5 h-5" />,
+    color: "text-indigo-600",
+    bg: "bg-indigo-50"
   }
 ]
 
 export default function TrustSection() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-20 bg-indigo-50 rounded-3xl">
-      <div className="text-center mb-12">
-        <div className="text-xs uppercase tracking-widest text-indigo-700 font-semibold">
-          Trust & reliability
-        </div>
-        <h2 className="text-3xl font-extrabold mt-2">
-          Built to run your PG with confidence
-        </h2>
-        <p className="mt-3 text-indigo-700 max-w-2xl mx-auto">
-          Your operations depend on this system. We’ve designed it to be secure,
-          reliable, and transparent from day one.
-        </p>
-      </div>
+    <section className="w-full bg-slate-900 py-24 overflow-hidden relative">
+      {/* Background Accents */}
+      <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-indigo-500/5 to-transparent pointer-events-none" />
+      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {trustPoints.map((item, index) => (
+      <div className="mx-auto max-w-7xl px-4 relative z-10">
+        <div className="text-center mb-16">
           <motion.div
-            key={item.title}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: index * 0.1, duration: 0.5 }}
-            className="p-6 bg-white rounded-2xl border hover:shadow-lg transition"
+            className="text-xs uppercase tracking-[0.2em] text-indigo-400 font-black mb-3"
           >
-            <div className="mb-4 h-10 w-10 rounded-xl bg-indigo-100 flex items-center justify-center text-xl">
-              {item.icon}
-            </div>
-            <h3 className="font-semibold text-gray-800">
-              {item.title}
-            </h3>
-            <p className="mt-2 text-gray-600 text-sm">
-              {item.desc}
-            </p>
+            Enterprise Security
           </motion.div>
-        ))}
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+            Built to run your PG with <br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">absolute confidence</span>
+          </h2>
+          <p className="mt-6 text-slate-400 text-lg max-w-2xl mx-auto font-medium">
+            Your operations depend on this system. We’ve designed it to be secure, reliable, and transparent from day one.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {trustPoints.map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
+              className="p-8 rounded-3xl bg-slate-800/40 border border-slate-700/50 hover:border-slate-500/50 hover:bg-slate-800/60 transition-all group"
+            >
+              <div className={`mb-6 h-12 w-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300 ${item.bg} ${item.color}`}>
+                {item.icon}
+              </div>
+              <h3 className="text-lg font-black text-white mb-3">
+                {item.title}
+              </h3>
+              <p className="text-slate-400 text-sm leading-relaxed font-medium">
+                {item.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   )
 }
+

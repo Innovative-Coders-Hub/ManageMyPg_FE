@@ -43,7 +43,7 @@ export default function ConfirmModal({
           <button
             onClick={onCancel}
             disabled={loading}
-            className="px-4 py-2 text-sm rounded-lg border hover:bg-gray-50 disabled:opacity-60"
+            className="px-4 py-1.5 rounded-xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50 disabled:opacity-50 transition-all"
           >
             {cancelText}
           </button>
@@ -51,9 +51,9 @@ export default function ConfirmModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-60"
+            className="px-4 py-1.5 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 disabled:opacity-50 transition-all shadow-lg shadow-red-100"
           >
-            {loading ? 'Logging out…' : confirmText}
+            {loading ? 'Processing…' : confirmText}
           </button>
         </div>
       </div>

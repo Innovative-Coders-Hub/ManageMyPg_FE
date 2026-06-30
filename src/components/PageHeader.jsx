@@ -1,20 +1,31 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React from 'react';
 
-export default function PageHeader({ title, subtitle, showBack = true, children }){
-  const navigate = useNavigate()
+/**
+ * PageHeader Component
+ * Standardized High-Density Enterprise Header
+ */
+export default function PageHeader({ title, subtitle, backButton, children }) {
   return (
-    <div className="mb-4 flex items-center gap-4">
-      {showBack && (
-        <button onClick={() => navigate(-1)} className="p-2 rounded-md hover:bg-gray-100">
-          <svg className="h-5 w-5 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-        </button>
-      )}
-      <div>
-        <div className="text-2xl font-bold">{title}</div>
-        {subtitle && <div className="text-sm text-gray-500">{subtitle}</div>}
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-1">
+      <div className="min-w-0 text-center md:text-left flex items-center gap-2">
+        {backButton}
+        <div>
+          <div className="flex items-center justify-center md:justify-start gap-3">
+            <div className="h-5 w-1 bg-indigo-600 rounded-full hidden md:block" />
+            <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase truncate leading-none">
+              {title}
+            </h1>
+          </div>
+          {subtitle && (
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mt-2 opacity-80 px-0.5">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      <div className="ml-auto">{children}</div>
+      <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 md:gap-3">
+        {children}
+      </div>
     </div>
-  )
+  );
 }

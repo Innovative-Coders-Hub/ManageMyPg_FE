@@ -11,34 +11,61 @@ export default function ProfileImageCropper({ image, onCancel, onSave }) {
   }, [])
 
   async function handleSave() {
-    const canvas = document.createElement('canvas')
-    const img = new Image()
-    img.src = image
-    await img.decode()
+    try {
+      const img = new Image()
+      img.src = image
+      await img.decode()
 
-    const size = Math.min(croppedAreaPixels.width, croppedAreaPixels.height)
-    canvas.width = size
-    canvas.height = size
+      const canvas = document.createElement('canvas')
+      // Limit max dimension to 800px - plenty for profile pictures
+      const MAX_DIM = 800
+      const originalSize = Math.min(croppedAreaPixels.width, croppedAreaPixels.height)
+      const size = Math.min(originalSize, MAX_DIM)
 
-    const ctx = canvas.getContext('2d')
-    ctx.beginPath()
-    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
-    ctx.closePath()
-    ctx.clip()
+      canvas.width = size
+      canvas.height = size
 
-    ctx.drawImage(
-      img,
-      croppedAreaPixels.x,
-      croppedAreaPixels.y,
-      croppedAreaPixels.width,
-      croppedAreaPixels.height,
-      0,
-      0,
-      size,
-      size
-    )
+      const ctx = canvas.getContext('2d')
 
-    onSave(canvas.toDataURL('image/png'))
+      // Use a white background for JPEGs (otherwise transparent areas become black)
+      ctx.fillStyle = 'white'
+      ctx.fillRect(0, 0, size, size)
+
+      ctx.beginPath()
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2)
+      ctx.closePath()
+      ctx.clip()
+
+      ctx.drawImage(
+        img,
+        croppedAreaPixels.x,
+        croppedAreaPixels.y,
+        croppedAreaPixels.width,
+        croppedAreaPixels.height,
+        0,
+        0,
+        size,
+        size
+      )
+
+      // Start with high quality JPEG
+      let quality = 0.9
+      let dataUrl = canvas.toDataURL('image/jpeg', quality)
+
+      // Max size: 1048576 bytes. Base64 length is approx 1.33x binary size.
+      // 1048576 * 1.33 = 1,394,606. We'll aim for 1,300,000 to be safe.
+      const MAX_B64_LENGTH = 1300000
+
+      while (dataUrl.length > MAX_B64_LENGTH && quality > 0.1) {
+        quality -= 0.1
+        dataUrl = canvas.toDataURL('image/jpeg', quality)
+      }
+
+      onSave(dataUrl)
+    } catch (err) {
+      console.error('Error processing image:', err)
+      alert('Failed to process image. Please try another one.')
+    }
   }
 
   return (
