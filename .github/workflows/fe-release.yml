@@ -36,7 +36,7 @@ jobs:
           username: ${{ secrets.FE_SERVER_USER }}
           key: ${{ secrets.FE_SERVER_SSH_KEY }}
           source: "fe-build.tar.gz"
-          target: "/var/www"
+          target: "/home/deploy/apps/managemypg/frontend"
 
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
@@ -45,5 +45,5 @@ jobs:
           username: ${{ secrets.FE_SERVER_USER }}
           key: ${{ secrets.FE_SERVER_SSH_KEY }}
           script: |
-            cd /var/www
-            ~/apps/managemypg-fe/scripts/deploy_fe.sh
+            cd /home/deploy/apps/managemypg/frontend
+            bash /home/deploy/apps/managemypg/scripts/deploy_fe.sh
