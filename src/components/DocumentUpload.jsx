@@ -6,7 +6,6 @@ const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
 const DOCUMENT_TYPES = [
   { key: "PHOTO", label: "Photo" },
   { key: "AADHAAR", label: "Aadhaar Card" },
-  { key: "PAN", label: "PAN Card" },
   { key: "ID", label: "ID Card" }
 ]
 

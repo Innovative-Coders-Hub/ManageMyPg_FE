@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
+// Import mock to enable mock endpoints
+import './mock.js'
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

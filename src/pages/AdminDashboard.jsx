@@ -1,29 +1,58 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, lazy, Suspense, memo } from 'react'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
-
-dayjs.extend(isBetween)
-import { sampleData } from '../sampleData'
 import { useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts'
-import { lazy, Suspense } from 'react'
+  Users,
+  CheckCircle2,
+  Clock,
+  PauseCircle,
+  TrendingUp,
+  Search,
+  Filter,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Download,
+  Activity
+} from 'lucide-react'
+import { getAdminDashboard } from '../api/adminAuth'
+import useDebounce from '../hooks/useDebounce'
 
-const OwnersByCityChart = lazy(() =>
+dayjs.extend(isBetween)
+
+/* =======================
+   Animation Variants
+======================= */
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 }
+}
+
+/* =======================
+   Charts (Lazy + Memo)
+======================= */
+
+const OwnersByCityChart = memo(lazy(() =>
   import('../components/OwnersByCityChart')
-)
+))
 
-const OwnersByStateChart = lazy(() =>
+const OwnersByStateChart = memo(lazy(() =>
   import('../components/OwnersByStateChart')
-)
+))
+
 /* =======================
    Utilities
 ======================= */
@@ -33,40 +62,48 @@ const getGrowth = (current, previous) => {
   return Math.round(((current - previous) / previous) * 100)
 }
 
-/* Dark mode removed — UI stays in normal mode */
-
 /* =======================
-   UI Components
+   Enterprise Stat Card
 ======================= */
 
-function StatCard({ title, value, subtitle, growth, onClick }) {
+const StatCard = memo(function StatCard({ title, value, subtitle, growth, icon: Icon, gradient, onClick }) {
   return (
-    <div
+    <motion.div
+      variants={itemVariants}
       onClick={onClick}
-      className={`rounded-xl border p-4 bg-white border-gray-200 transition ${
-        onClick ? 'cursor-pointer hover:shadow-md' : ''
+      className={`relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ${
+        onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-1 hover:border-indigo-300 group' : ''
       }`}
     >
-      <div className="text-sm text-gray-500">{title}</div>
-      <div className="mt-2 text-3xl font-bold text-gray-900">
-        {value}
+      <div className="relative flex items-start justify-between">
+        <div>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{title}</p>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none">{value}</h3>
+        </div>
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-lg shadow-current/20`}>
+          <Icon size={18} strokeWidth={2.5} />
+        </div>
       </div>
-      <div className="mt-1 flex items-center justify-between">
-        <span className="text-xs text-gray-400">{subtitle}</span>
-        {growth !== undefined && (
-          <span
-            className={`text-xs font-semibold ${
-              growth >= 0 ? 'text-green-600' : 'text-red-600'
-            }`}
-          >
-            {growth >= 0 ? '+' : ''}
-            {growth}%
-          </span>
+
+      <div className="relative mt-4 flex items-center justify-between border-t border-slate-50 pt-3">
+        <div className="flex items-center gap-2">
+          {growth !== undefined && (
+            <div className={`flex items-center text-[9px] font-black px-1.5 py-0.5 rounded-lg ${
+              growth >= 0 ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-600 border border-rose-100'
+            }`}>
+              {growth >= 0 ? '↑' : '↓'} {Math.abs(growth)}%
+            </div>
+          )}
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{subtitle}</span>
+        </div>
+
+        {onClick && (
+          <ArrowRight size={14} className="text-slate-300 group-hover:text-indigo-500 group-hover:translate-x-1 transition-all" />
         )}
       </div>
-    </div>
+    </motion.div>
   )
-}
+})
 
 /* =======================
    Page
@@ -75,64 +112,89 @@ function StatCard({ title, value, subtitle, growth, onClick }) {
 export default function AdminDashboard() {
   const navigate = useNavigate()
 
-  const owners = sampleData.owners || []
+  // State for API data
+  const [dashboardData, setDashboardData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Fetch dashboard data
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await getAdminDashboard(10) // Pass limit=10 for recent owners
+        
+        // Handle backend response structure: { success: true, data: {...} }
+        if (response.data && response.data.data) {
+          setDashboardData(response.data.data)
+        } else if (response.data) {
+          setDashboardData(response.data)
+        } else {
+          throw new Error('Invalid response format')
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to load dashboard data')
+        console.error('Dashboard error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadDashboard()
+  }, [])
+
   const ownersPerPage = 10
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [statusFilter, setStatusFilter] = useState('all')
+
+  // Extract data from API response
+  const kpis = dashboardData?.kpis || {}
+  const ownersByCity = dashboardData?.ownersByCity || []
+  const ownersByState = dashboardData?.ownersByState || []
+  const recentOwners = dashboardData?.recentOwners || []
 
   /* =======================
      Stats
   ======================= */
 
-  const totals = useMemo(() => {
-    const now = dayjs()
-    const startOfMonth = now.startOf('month')
-    const prevMonth = startOfMonth.subtract(1, 'month')
-
-    const currentMonth = owners.filter(o =>
-      dayjs(o.registeredAt).isAfter(startOfMonth)
-    ).length
-
-    const lastMonth = owners.filter(o =>
-      dayjs(o.registeredAt).isBetween(prevMonth, startOfMonth)
-    ).length
-
-    return {
-      total: owners.length,
-      approved: owners.filter(o => o.status === 'approved').length,
-      pending: owners.filter(o => o.status === 'pending').length,
-      currentMonth,
-      growth: getGrowth(currentMonth, lastMonth),
-    }
-  }, [owners])
+  const totals = useMemo(() => ({
+    total: kpis.totalOwners || 0,
+    approved: kpis.approvedOwners || 0,
+    pending: kpis.pendingOwners || 0,
+    onHold: kpis.onHoldOwners || 0,  // ✅ New field
+    currentMonth: kpis.currentMonthRegistrations || 0,
+    growth: getGrowth(kpis.currentMonthRegistrations || 0, kpis.previousMonthRegistrations || 0),
+  }), [kpis])
 
   /* =======================
      Charts
   ======================= */
 
-  const ownersByCity = useMemo(() => {
-    const map = {}
-    owners.forEach(o => (map[o.city] = (map[o.city] || 0) + 1))
-    return Object.entries(map).map(([city, count]) => ({ city, count }))
-  }, [owners])
+  const chartCityData = useMemo(() => ownersByCity.map(item => ({
+    city: item.city,
+    count: item.count
+  })), [ownersByCity])
 
-  const ownersByState = useMemo(() => {
-    const map = {}
-    owners.forEach(o => (map[o.state] = (map[o.state] || 0) + 1))
-    return Object.entries(map).map(([state, count]) => ({ state, count }))
-  }, [owners])
+  const chartStateData = useMemo(() => ownersByState.map(item => ({
+    state: item.state,
+    count: item.count
+  })), [ownersByState])
 
   /* =======================
-     Filters
+     Filters (Table only)
   ======================= */
 
   const filteredOwners = useMemo(() => {
-    return owners.filter(o => {
-      const q = search.toLowerCase()
+    return recentOwners.filter(o => {
+      const q = debouncedSearch.toLowerCase()
       const matchSearch =
-        (o.name || '').toLowerCase().includes(q) ||
+        (o.fullName || '').toLowerCase().includes(q) ||
+        (o.username || '').toLowerCase().includes(q) ||
         (o.email || '').toLowerCase().includes(q) ||
+        (o.phone || '').includes(q) ||
         (o.city || '').toLowerCase().includes(q)
 
       const matchStatus =
@@ -140,11 +202,13 @@ export default function AdminDashboard() {
 
       return matchSearch && matchStatus
     })
-  }, [owners, search, statusFilter])
+  }, [recentOwners, debouncedSearch, statusFilter])
 
-  // Ensure current page is valid when filters change
   useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(filteredOwners.length / ownersPerPage))
+    const totalPages = Math.max(
+      1,
+      Math.ceil(filteredOwners.length / ownersPerPage)
+    )
     if (page > totalPages) setPage(1)
   }, [filteredOwners.length])
 
@@ -153,142 +217,257 @@ export default function AdminDashboard() {
     page * ownersPerPage
   )
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-500">Loading dashboard...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-500">Error: {error}</div>
+      </div>
+    )
+  }
+
   /* =======================
      Render
   ======================= */
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <PageHeader
-          title="Admin Dashboard"
-          subtitle="ManageMyPg analytics & control"
-        />
-        {/* Normal mode only — dark toggle removed */}
+    <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="bg-white border-b border-slate-200 pt-2 pb-1">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <PageHeader
+            title="System Overview"
+            subtitle="Enterprise Administration & Control Center"
+          >
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button className="flex items-center justify-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition shadow-sm">
+                <Download size={14} />
+                Export
+              </button>
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest">
+                <Activity size={14} />
+                Healthy
+              </div>
+            </div>
+          </PageHeader>
+        </div>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Owners" value={totals.total} />
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-2 pb-10 space-y-6 md:space-y-8"
+      >
+        {/* KPIs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <StatCard
+          title="Total Owners"
+          value={totals.total}
+          subtitle="System Wide"
+          icon={Users}
+          gradient="from-indigo-600 to-blue-700"
+          onClick={() => navigate('/admin/owners')}
+        />
         <StatCard
           title="Approved"
           value={totals.approved}
+          subtitle="Verified Active"
+          icon={CheckCircle2}
+          gradient="from-emerald-500 to-teal-600"
           onClick={() => navigate('/admin/owners?filter=approved')}
         />
         <StatCard
           title="Pending"
           value={totals.pending}
+          subtitle="Awaiting Review"
+          icon={Clock}
+          gradient="from-amber-400 to-orange-500"
           onClick={() => navigate('/admin/owners?filter=pending')}
         />
         <StatCard
-          title="This Month"
+          title="Restricted"
+          value={totals.onHold}
+          subtitle="Deleted/Blocked"
+          icon={PauseCircle}
+          gradient="from-slate-600 to-slate-800"
+          onClick={() => navigate('/admin/owners?filter=deleted')}
+        />
+        <StatCard
+          title="Monthly Growth"
           value={totals.currentMonth}
-          subtitle="MoM growth"
+          subtitle="New Registrations"
+          icon={TrendingUp}
+          gradient="from-violet-600 to-fuchsia-700"
           growth={totals.growth}
         />
       </div>
-<div className="bg-white border border-gray-200 rounded-xl p-5">
-  <h3 className="font-semibold mb-4">
-    Owners by City
-  </h3>
 
-  <Suspense
-    fallback={
-      <div className="h-[250px] flex items-center justify-center text-sm text-gray-400">
-        Loading chart…
-      </div>
-    }
-  >
-    <OwnersByCityChart data={ownersByCity} />
-  </Suspense>
-</div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        {/* Main Content: Recent Owners Table */}
+        <motion.div variants={itemVariants} className="xl:col-span-2 space-y-6">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Recent Onboarding</h3>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Monitor latest registrations</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                  <input
+                    placeholder="Search owners…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest w-full sm:w-64 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
+                  />
+                </div>
+                <div className="relative">
+                  <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                    className="appearance-none w-full pl-4 pr-10 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition cursor-pointer"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                  </select>
+                  <Filter className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                </div>
+              </div>
+            </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-center">
-        <input
-          placeholder="Search owners…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="px-3 py-2 border rounded w-64 bg-white border-gray-200"
-        />
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border rounded bg-white border-gray-200"
-        >
-          <option value="all">All</option>
-          <option value="approved">Approved</option>
-          <option value="pending">Pending</option>
-        </select>
-      </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50/50 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    <th className="px-6 py-4">Partner Details</th>
+                    <th className="hidden sm:table-cell px-6 py-4">Location</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {paginatedOwners.map(o => (
+                    <tr
+                      key={o.id}
+                      className="group hover:bg-slate-50/80 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/admin/owner/${o.id}`)}
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center font-black shrink-0 text-sm">
+                            {(o.fullName || o.username || 'O')?.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 truncate text-[11px] uppercase tracking-tight">{o.fullName || o.username}</div>
+                            <div className="text-[9px] font-medium text-slate-500 truncate lowercase">{o.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-6 py-4">
+                        <div className="text-slate-900 font-bold text-[11px] uppercase tracking-tight">{o.city}</div>
+                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{o.state || 'Region'}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${
+                          o.status?.toLowerCase() === 'approved'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            : 'bg-amber-50 text-amber-800 border-amber-100'
+                        }`}>
+                          <span className={`h-1.5 w-1.5 rounded-full mr-1.5 ${o.status?.toLowerCase() === 'approved' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-xl transition-all ml-auto border border-indigo-100 group-hover:shadow-sm">
+                          View
+                          <ArrowRight size={14} className="hidden sm:inline" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {paginatedOwners.length === 0 && (
+                    <tr>
+                      <td colSpan="4" className="px-6 py-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        No partners matching criteria
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-      {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm table-auto">
-            <thead className="bg-indigo-50">
-              <tr className="text-indigo-700">
-                <th className="text-left py-2 px-3 w-2/5 text-xs font-semibold uppercase tracking-wide">Name</th>
-                <th className="text-left py-2 px-3 w-2/5 text-xs font-semibold uppercase tracking-wide">Email</th>
-                <th className="text-left py-2 px-3 w-1/5 text-xs font-semibold uppercase tracking-wide">City</th>
-                <th className="text-right py-2 px-3 w-1/5 text-xs font-semibold uppercase tracking-wide">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedOwners.map(o => (
-                <tr
-                  key={o.id}
-                  className="border-t hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/admin/owner/${o.id}`)}
+            {/* Pagination */}
+            <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Displaying <span className="text-slate-900">{paginatedOwners.length}</span> of <span className="text-slate-900">{filteredOwners.length}</span> records
+              </p>
+              <div className="flex items-center gap-1.5">
+                <button
+                  disabled={page === 1}
+                  onClick={(e) => { e.stopPropagation(); setPage(p => p - 1); }}
+                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition shadow-sm"
                 >
-                  <td className="py-3 px-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex-shrink-0 flex items-center justify-center font-semibold">
-                        {((o.name||'').split(' ').map(n => n?.[0] || '').join('').slice(0,2)).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="font-medium truncate">{o.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-3">
-                    <div className="text-gray-500 text-xs truncate max-w-[200px]">{o.email}</div>
-                  </td>
-                  <td className="py-3 px-3 text-sm">{o.city}</td>
-                  <td className="py-3 px-3 text-right">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs ${o.status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                      {o.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {filteredOwners.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="py-6 text-center text-gray-500">No owners found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="px-3 text-[10px] font-black text-slate-900 uppercase tracking-widest">
+                  Page {page}
+                </div>
+                <button
+                  disabled={page * ownersPerPage >= filteredOwners.length}
+                  onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }}
+                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition shadow-sm"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
-        {/* Pagination */}
-        <div className="flex justify-between mt-4">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage(p => p - 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <button
-            disabled={page * ownersPerPage >= filteredOwners.length}
-            onClick={() => setPage(p => p + 1)}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        {/* Sidebar Analytics */}
+        <motion.div variants={itemVariants} className="space-y-6">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                Regional Distribution
+              </h3>
+              <MoreVertical size={16} className="text-slate-400" />
+            </div>
+            <div className="space-y-8">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Top Cities</span>
+                  <span className="text-[9px] text-indigo-600 font-black px-2 py-0.5 bg-indigo-50 rounded-lg border border-indigo-100">LIVE DATA</span>
+                </div>
+                <div className="h-64">
+                  <Suspense fallback={<div className="h-full flex items-center justify-center text-[9px] font-black text-slate-400 uppercase tracking-widest animate-pulse bg-slate-50 rounded-xl border border-slate-100">Analyzing...</div>}>
+                    <OwnersByCityChart data={chartCityData} />
+                  </Suspense>
+                </div>
+              </div>
+              <div className="pt-6 border-t border-slate-100">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">State Analysis</span>
+                </div>
+                <div className="h-64">
+                  <Suspense fallback={<div className="h-full flex items-center justify-center text-[9px] font-black text-slate-400 uppercase tracking-widest animate-pulse bg-slate-50 rounded-xl border border-slate-100">Analyzing...</div>}>
+                    <OwnersByStateChart data={chartStateData} />
+                  </Suspense>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
+    </motion.div>
     </div>
   )
 }

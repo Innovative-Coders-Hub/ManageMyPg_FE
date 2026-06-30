@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { memo } from 'react'
 import {
   BarChart,
   Bar,
@@ -9,7 +9,7 @@ import {
   CartesianGrid,
 } from 'recharts'
 
-export default function OwnersByCityChart({ data = [] }) {
+const OwnersByCityChart = memo(function OwnersByCityChart({ data = [] }) {
   if (!data.length) {
     return (
       <div className="h-[250px] flex items-center justify-center text-sm text-gray-400">
@@ -29,4 +29,6 @@ export default function OwnersByCityChart({ data = [] }) {
       </BarChart>
     </ResponsiveContainer>
   )
-}
+})
+
+export default OwnersByCityChart

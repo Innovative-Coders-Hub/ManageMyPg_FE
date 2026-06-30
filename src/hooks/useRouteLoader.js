@@ -5,16 +5,24 @@ import { useLocation } from 'react-router-dom'
 export default function useRouteLoader({ minVisible = 300 } = {}) {
   const { pathname, search } = useLocation()
   const [loading, setLoading] = useState(false)
-  const prevRef = useRef(pathname + search)
+
+  // Helper to get path without volatile search params like 'q'
+  const getSignificantPath = (p, s) => {
+    const sp = new URLSearchParams(s)
+    sp.delete('q')
+    const searchStr = sp.toString()
+    return p + (searchStr ? '?' + searchStr : '')
+  }
+
+  const prevRef = useRef(getSignificantPath(pathname, search))
   const timeoutRef = useRef(null)
 
   useEffect(() => {
-    const current = pathname + search
-    if (current !== prevRef.current) {
-      prevRef.current = current
-      // show loader
+    const significantPath = getSignificantPath(pathname, search)
+
+    if (significantPath !== prevRef.current) {
+      prevRef.current = significantPath
       setLoading(true)
-      // ensure it's visible for at least `minVisible` ms
       clearTimeout(timeoutRef.current)
       timeoutRef.current = setTimeout(() => setLoading(false), minVisible)
     }

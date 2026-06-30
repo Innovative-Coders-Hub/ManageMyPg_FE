@@ -3,7 +3,6 @@ import {
   fmt,
   vacatingBadge
 } from '../utills/dateUtils'
-
 /* local helper */
 const InfoRow = ({ label, value }) => (
   <div className="flex items-start justify-between gap-4 py-1.5">
@@ -13,6 +12,7 @@ const InfoRow = ({ label, value }) => (
     </div>
   </div>
 )
+
 
 export default function TenantCard({
   bed,
@@ -24,6 +24,7 @@ export default function TenantCard({
   onCreateTenant,
   onQuickAssign,
   onOpenVacateEdit,
+  onTransferTenant
 }) {
   return (
     <div className="rounded-2xl border bg-white p-6 shadow-sm relative col-span-1 xl:col-span-2 min-w-0">
@@ -67,14 +68,35 @@ export default function TenantCard({
                 )}
 
                 {/* Vacate action */}
-                {!isVacated && (
-                 <button
-                        type="button"
-                        onClick={onOpenVacateEdit}
-                        className="mt-1 px-3 py-1.5 rounded-lg border text-xs font-medium text-indigo-700 hover:bg-indigo-50 whitespace-nowrap"
-                        >
-                    {current?.end ? 'Update Vacating Date' : 'Set Vacating Date'}
-                  </button>
+            {!isVacated && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onOpenVacateEdit}
+                      className="mt-1 px-3 py-1.5 rounded-lg border text-xs font-medium text-indigo-700 hover:bg-indigo-50 whitespace-nowrap"
+                    >
+                      {current?.end ? 'Update Vacating Date' : 'Set Vacating Date'}
+                    </button>
+
+                    <button
+                      type="button"
+                     onClick={() =>
+                        onTransferTenant?.({
+                          floorId: bed.floorId,
+                          floorName: bed.floorName,
+                          roomId: bed.roomId,
+                          roomName: bed.roomName,
+                          bedId: bed.id,
+                          bedName: bed.bedName,
+                          tenantId: current?.id,
+                          tenantName: current?.name
+                        })
+                      }
+                      className="mt-1 px-3 py-1.5 rounded-lg border text-xs font-medium text-rose-700 hover:bg-rose-50 whitespace-nowrap"
+                    >
+                      Transfer Tenant
+                    </button>
+                  </>
                 )}
               </div>
             )}
