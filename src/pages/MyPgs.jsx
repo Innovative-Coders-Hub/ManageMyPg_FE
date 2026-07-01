@@ -1,44 +1,44 @@
-// src/pages/MyPgs.jsx
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
+import { createPg, getAllPgs, updatePgPricing, uploadPgTerms } from '../api/ownerAuth'
 import PageHeader from '../components/PageHeader'
-import { createPg, getAllPgs } from '../api/ownerAuth'
-// import { sampleData } from '../sampleData' 
-// --- tiny inline icons ---
-const PlusIcon = ({ className = 'h-4 w-4' }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-    <path d="M11 11V5a1 1 0 1 1 2 0v6h6a1 1 0 1 1 0 2h-6v6a1 1 0 1 1-2 0v-6H5a1 1 0 1 1 0-2h6Z" />
-  </svg>
-)
-
-const MapPinIcon = ({ className = 'h-4 w-4' }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" />
-  </svg>
-)
-
-const ChevronRightIcon = ({ className = 'h-4 w-4' }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-    <path d="M9 6l6 6-6 6" />
-  </svg>
-)
-
-const BuildingsIcon = ({ className="mx-auto mb-3 text-indigo-600 h-10 w-10" }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
-    <path d="M3 21h18v-2H3v2Zm2-4h4V7H5v10Zm6 0h4V3h-4v14Zm6 0h4V9h-4v8Z"/>
-  </svg>
-)
+import {
+  Plus,
+  MapPin,
+  ChevronRight,
+  Building2,
+  QrCode,
+  IndianRupee,
+  FileText,
+  X,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  FileSearch,
+  Sparkles,
+  ArrowRight,
+  LayoutGrid,
+  TrendingUp,
+  Percent,
+  Users
+} from 'lucide-react'
 
 export default function MyPgs() {
-  // DATA (local only)
   const [pgs, setPgs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const [showQrFor, setShowQrFor] = useState(null)
-  const selectedPg = pgs.find(p => p.id === showQrFor)
-  // (no search/sort — simplified list view)
 
-  // create modal (local only)
+  // Pricing & Terms State
+  const [showPricingModal, setShowPricingModal] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [selectedPgForPricing, setSelectedPgForPricing] = useState(null)
+  const [pricingForm, setPricingForm] = useState({ charges: 0, pricingList: [] })
+  const [updatingPricing, setUpdatingPricing] = useState(false)
+  const [uploadingTerms, setUploadingTerms] = useState(false)
+
+  // Create modal state
   const [showCreate, setShowCreate] = useState(false)
   const [businessName, setBusinessName] = useState('')
   const [pgName, setPgName] = useState('')
@@ -57,589 +57,670 @@ export default function MyPgs() {
   const [totalFloors, setTotalFloors] = useState('')
   const [totalBeds, setTotalBeds] = useState('')
 
-       useEffect(() => {
-        const load = async () => {
-          try {
-            setLoading(true)
-            const data = await getAllPgs()
-            setError('')
-            setPgs(Array.isArray(data) ? data : [])
-          } catch (e) {
-           //setError('Failed to load PGs')
-          } finally {
-            setLoading(false)
-          }
-        }
-        load()
-      }, [])
-
-        const formatDate = (iso) => {
-          if (!iso) return ''
-          return new Date(iso).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-          })
-        }
-
-// const composeAddress = () =>
-//   [
-//     address,
-//     landmark,
-//     area,
-//     city,
-//     district,
-//     stateName,
-//     country,
-//     pincode
-//   ].filter(Boolean).join(', ')
-
-
-   const create = async (e) => {
-          e.preventDefault()
-          if (!pgName.trim()) return
-          setCreating(true)
-
-          try {
-            const body = {
-              businessName: businessName.trim(),
-              pgName: pgName.trim(),
-              totalFloors: totalFloors.trim(),
-              totalBeds: totalBeds.trim(),
-              address: {
-                address: address.trim(),
-                areaLocality: area,
-                city,
-                state: stateName,
-                district,
-                pinCode: pincode,
-                country,
-                landmark
-              }
-            }
-
-           const createdPg = await createPg(body)
-            setPgs(prev => [...prev, createdPg])
-
-            // reset form
-            setBusinessName('')
-            setPgName('')
-            setTotalFloors('')
-            setTotalBeds('')
-            setAddress('')
-            setLandmark('')
-            setCity('')
-            setStateName('')
-            setPincode('')
-            setArea('')
-            setDistrict('')
-            setCountry('')
-            setAreas([])
-
-            setShowCreate(false)
-          } catch (err) {
-            console.error(err)
-            alert('Failed to create PG')
-          } finally {
-            setCreating(false)
-          }
-        }
-
-
-  const fetchAddressFromPincode = async (pin) => {
-        if (pin.length !== 6) return
-
-        setPinLoading(true)
-        setPinError('')
-        setAreas([])
-        setArea('')
-        setCity('')
-        setDistrict('')
-        setStateName('')
-        setCountry('')
-
-        try {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`)
-          const data = await res.json()
-
-          if (data[0]?.Status === 'Success' && data[0].PostOffice?.length) {
-            const list = data[0].PostOffice
-
-            setAreas(list)
-            setDistrict(list[0].District || '')
-            setStateName(list[0].State || '')
-            setCountry('India')
-
-            // ✅ AUTO-SELECT when only ONE area exists
-            if (list.length === 1) {
-              const po = list[0]
-              setArea(po.Name || '')
-              setCity(po.Block || po.District || '')
-            }
-          } else {
-            setPinError('Invalid pincode')
-          }
-        } catch {
-          setPinError('Failed to fetch pincode details')
-        } finally {
-          setPinLoading(false)
-        }
-      }
-
-    const onAreaSelect = (areaName) => {
-      const selected = areas.find(a => a.Name === areaName)
-      if (!selected) return
-
-      setArea(selected.Name)
-      setCity(selected.Block || selected.District || '')
+  const load = async () => {
+    try {
+      setLoading(true)
+      const data = await getAllPgs()
+      setPgs(Array.isArray(data) ? data : [])
+    } catch (e) {
+      toast.error('Failed to load PGs')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
+    load()
+  }, [])
 
-  const filtered = useMemo(() => {
-    return Array.isArray(pgs) ? pgs : []
+  const stats = useMemo(() => {
+    const total = pgs.length
+    const totalBeds = pgs.reduce((acc, p) => acc + (Number(p.totalBeds) || 0), 0)
+    const filledBeds = pgs.reduce((acc, p) => acc + (Number(p.filledBeds) || 0), 0)
+    const occupancy = totalBeds > 0 ? Math.round((filledBeds / totalBeds) * 100) : 0
+    return { total, totalBeds, filledBeds, occupancy }
   }, [pgs])
 
+
+
+  const handleOpenPricing = (pg) => {
+    setSelectedPgForPricing(pg)
+    setPricingForm({
+      charges: pg.charges || 0,
+      pricingList: pg.pricingList ? [...pg.pricingList] : []
+    })
+    setShowPricingModal(true)
+  }
+
+  const handleOpenTerms = (pg) => {
+    setSelectedPgForPricing(pg)
+    setShowTermsModal(true)
+  }
+
+  const handleUpdatePricing = async () => {
+    try {
+      setUpdatingPricing(true)
+      await updatePgPricing(selectedPgForPricing.id, pricingForm)
+      await load()
+      setShowPricingModal(false)
+      toast.success('Pricing model updated')
+    } catch {
+      toast.error('Failed to update pricing')
+    } finally {
+      setUpdatingPricing(false)
+    }
+  }
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.type !== 'application/pdf') return toast.error('PDF files only')
+    if (file.size > 5 * 1024 * 1024) return toast.error('File too large (>5MB)')
+
+    try {
+      setUploadingTerms(true)
+      await uploadPgTerms(selectedPgForPricing.id, file)
+      await load()
+      setShowTermsModal(false)
+      toast.success('Terms uploaded successfully')
+    } catch {
+      toast.error('Upload failed')
+    } finally {
+      setUploadingTerms(false)
+    }
+  }
+
+  const fetchAddressFromPincode = async (pin) => {
+    if (pin.length !== 6) return
+    setPinLoading(true)
+    setPinError('')
+    try {
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`)
+      const data = await res.json()
+      if (data[0]?.Status === 'Success') {
+        const list = data[0].PostOffice
+        setAreas(list)
+        setDistrict(list[0].District)
+        setStateName(list[0].State)
+        setCountry('India')
+        if (list.length === 1) {
+          setArea(list[0].Name)
+          setCity(list[0].Block || list[0].District)
+        }
+      } else {
+        setPinError('Invalid Pincode')
+      }
+    } catch {
+      setPinError('Service unavailable')
+    } finally {
+      setPinLoading(false)
+    }
+  }
+
+  const create = async (e) => {
+    e.preventDefault()
+    setCreating(true)
+    try {
+      const body = {
+        businessName, pgName, totalFloors, totalBeds,
+        address: { address, areaLocality: area, city, state: stateName, district, pinCode: pincode, country, landmark }
+      }
+      await createPg(body)
+      toast.success('PG Added!')
+      setShowCreate(false)
+      load()
+    } catch {
+      toast.error('Error creating PG')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const groupedPricing = useMemo(() => {
+    const groups = {}
+    pricingForm.pricingList.forEach((item, index) => {
+      const s = item.sharing || 1
+      if (!groups[s]) groups[s] = []
+      groups[s].push({ ...item, originalIndex: index })
+    })
+    return groups
+  }, [pricingForm.pricingList])
+
   return (
-    <div className="space-y-6">
-     <PageHeader title="My PGs">
-      {filtered.length !== 0 && (
-        <div className="flex items-center justify-end w-full sm:w-auto">
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 shadow"
+    <div className="min-h-screen bg-[#F8FAFC]">
+      {/* Dynamic Header & Stats Section */}
+      <div className="bg-white border-b border-slate-200 pt-2 pb-1">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <PageHeader
+            title="Portfolio Units"
+            subtitle="Asset inventory & operational oversight"
           >
-            <PlusIcon />
-            Create new PG
-          </button>
-        </div>
-      )}
-    </PageHeader>
+            <div className="flex flex-wrap items-center justify-end gap-1">
+              <TopStat label="PGs" value={stats.total} icon={<Building2 />} />
+              <TopStat label="Total Beds" value={stats.totalBeds} icon={<Users />} />
+              <TopStat label="Filled" value={stats.filledBeds} icon={<TrendingUp />} />
+              <TopStat label="Occupancy" value={`${stats.occupancy}%`} icon={<Percent />} isAccent />
 
-      {/* Error */}
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 text-red-800 px-4 py-2 text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[...Array(6)].map((_,i)=>(
-            <div key={i} className="rounded-2xl border p-4 animate-pulse bg-white">
-              <div className="h-4 w-3/4 bg-gray-200 rounded mb-4" />
-              <div className="h-3 w-1/2 bg-gray-200 rounded mb-3" />
-              <div className="flex gap-2 mt-3">
-                <div className="h-8 w-8 bg-gray-200 rounded" />
-                <div className="h-8 w-8 bg-gray-200 rounded" />
-                <div className="h-8 w-8 bg-gray-200 rounded" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Empty */}
-      {!loading && filtered.length === 0 && (
-        <div className="min-h-[65vh] flex items-center justify-center px-4">
-          <div className="w-full max-w-2xl text-center">
-            {/* Soft visual anchor */}
-            <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-50">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
-                <PlusIcon className="h-6 w-6" />
-              </div>
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
-              Create your first PG
-            </h1>
-
-            {/* Supporting copy */}
-            <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
-              Once you create PGs, you’ll be able to
-              manage tenants, beds, floors, and payments — all from one place.
-            </p>
-
-            {/* CTA */}
-            <div className="mt-10">
               <button
                 onClick={() => setShowCreate(true)}
-                className="
-                  inline-flex items-center gap-2
-                  px-10 py-3.5
-                  rounded-xl
-                  bg-indigo-600
-                  text-white text-base font-semibold
-                  shadow
-                  transition
-                  hover:bg-indigo-700
-                  focus:outline-none focus:ring-2 focus:ring-indigo-500
-                "
+                className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-200 ml-2"
               >
-                <PlusIcon className="h-5 w-5" />
-                Create PG
+                <Plus size={14} /> Add PG
               </button>
             </div>
-
-            {/* Subtle hint */}
-            <p className="mt-6 text-xs text-slate-400">
-              You can add more PGs anytime from this page
-            </p>
-          </div>
+          </PageHeader>
         </div>
-      )}
+      </div>
 
-{/* List */}
-{!loading && filtered.length > 0 && (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-    {filtered.map((pg) => {
-      const isApproved = Boolean(pg.approved)
-
-      return (
-        <Link
-          key={pg.id}
-          to={isApproved ? `/pg/${pg.id}` : '#'}
-          onClick={(e) => {
-            if (!isApproved) {
-              e.preventDefault()
-              e.stopPropagation()
-            }
-          }}
-          className={`
-            group rounded-2xl border p-4 transition
-            ${isApproved
-              ? 'bg-white hover:shadow-md hover:-translate-y-0.5 cursor-pointer'
-              : 'bg-gray-50 opacity-60 cursor-not-allowed'}
-          `}
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3">
-            {/* Left content */}
-            <div className="min-w-0">
-              <div className="text-base font-semibold tracking-tight text-slate-900">
-                {pg.pgName}
-              </div>
-
-              <div className="text-xs text-gray-500">
-                Created on {formatDate(pg.createdAt)}
-              </div>
-
-              <div className="mt-1 text-xs text-gray-600 inline-flex items-start gap-1">
-                <MapPinIcon />
-                <span className="truncate block max-w-xs">
-                  {pg.address?.address}, {pg.address?.areaLocality}, {pg.address?.city}
-                </span>
-              </div>
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+        {/* PG Grid */}
+        <div className="mt-1">
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => <div key={i} className="h-80 rounded-xl bg-white border border-slate-100 animate-pulse" />)}
             </div>
+          ) : pgs.length === 0 ? (
+            <EmptyState onAdd={() => setShowCreate(true)} />
+          ) : (
+            <motion.div
+              layout
+              className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6"
+            >
+              <AnimatePresence mode='popLayout'>
+                {pgs.map((pg) => (
+                  <PgCard
+                    key={pg.id}
+                    pg={pg}
+                    onPricing={() => handleOpenPricing(pg)}
+                    onTerms={() => handleOpenTerms(pg)}
+                    onQr={() => setShowQrFor(pg.id)}
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
+      </div>
 
-            {/* Right actions */}
-            <div className="flex flex-col items-end gap-2 shrink-0">
-              {/* Approval Status */}
-              <span
-                className={`
-                  inline-flex items-center rounded-full px-3 py-1
-                  text-xs font-medium
-                  ${isApproved
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'bg-amber-100 text-amber-700'}
-                `}
-              >
-                {isApproved ? '✔ Approved' : '⏳ Pending'}
-              </span>
-
-              {/* Arrow */}
-              {/* <div
-                className={`
-                  h-8 w-8 rounded-xl border flex items-center justify-center
-                  ${isApproved
-                    ? 'bg-gradient-to-br from-indigo-100 to-blue-100 text-indigo-700'
-                    : 'bg-gray-200 text-gray-400'}
-                `}
-              >
-                <ChevronRightIcon />
-              </div> */}
-            </div>
-          </div>
-
-          {/* QR Button */}
-          <button
-            type="button"
-            disabled={!isApproved}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              if (isApproved) {
-                setShowQrFor(pg.id)
-              }
-            }}
-            className={`
-              mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg
-              text-xs font-medium transition
-              ${isApproved
-                ? 'border border-indigo-200 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-300'
-                : 'border border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'}
-            `}
+      {/* Modals */}
+      <AnimatePresence>
+        {showPricingModal && (
+          <Modal
+            onClose={() => setShowPricingModal(false)}
+            title="Price Settings"
+            subtitle={selectedPgForPricing?.pgName}
+            icon={<IndianRupee />}
+            className="max-w-lg"
           >
-            <span>📲</span>
-            <span>QR</span>
-          </button>
+            <div className="space-y-6">
+              <section>
+                <div className="bg-slate-50 px-5 py-3 rounded-xl border border-slate-200">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 block ml-1">Admission Fee</label>
+                  <div className="relative flex items-center">
+                    <span className="text-sm font-black text-slate-400 mr-1.5">₹</span>
+                    <input
+                      type="number"
+                      value={pricingForm.charges}
+                      onChange={(e) => setPricingForm({ ...pricingForm, charges: Number(e.target.value) })}
+                      className="w-full bg-transparent border-none p-0 text-base font-black text-slate-900 outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                  </div>
+                </div>
+              </section>
 
-          {/* Stats */}
-          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-            <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
-              <div className="font-semibold">Floors</div>
-              <div className="text-sm">{pg.pgFloors}</div>
-            </div>
-
-            <div className="rounded-lg border px-2 py-1 text-gray-700 bg-indigo-50">
-              <div className="font-semibold">Beds</div>
-              <div className="text-sm">{pg.totalBeds}</div>
-            </div>
-
-            <div className="rounded-lg border px-2 py-1 text-gray-700 bg-green-50">
-              <div className="font-semibold">Filled</div>
-              <div className="text-sm">{pg.filledBeds}</div>
-            </div>
-          </div>
-        </Link>
-      )
-    })}
-  </div>
-)}
-
-
-
-
-      {/* Create PG Modal (local only) */}
-      {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={()=>!creating && setShowCreate(false)} />
-          <div className="relative w-full max-w-2xl mx-4 rounded-2xl border bg-white shadow-xl">
-            <div className="px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-blue-50 rounded-t-2xl">
-              <div className="text-lg font-semibold">Create New PG</div>
-              <div className="text-xs text-gray-600">FIll all below details</div>
-            </div>
-
-            <form onSubmit={create} className="p-6 space-y-5">
-              <label className="block text-sm">
-                <span className="font-medium text-gray-700">Business Name</span>
-                <input
-                  required
-                  value={businessName}
-                  onChange={e=>setBusinessName(e.target.value)}
-                  placeholder="e.g., Bliss Mens PG"
-                  className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="font-medium text-gray-700">PG Name</span>
-                <input
-                  required
-                  value={pgName}
-                  onChange={e=>setPgName(e.target.value)}
-                  placeholder="e.g., Bliss Mens PG"
-                  className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </label>
-              <div className="grid grid-cols-2 gap-4">
-              <label className="block text-sm">
-                <span className="font-medium text-gray-700">Total Floors</span>
-                <input
-                  type="number"
-                  min="0"
-                  required
-                  value={totalFloors}
-                  onChange={e => setTotalFloors(e.target.value)}
-                  placeholder="e.g., 5"
-                  className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </label>
-
-              <label className="block text-sm">
-                <span className="font-medium text-gray-700">Total Beds</span>
-                <input
-                  type="number"
-                  min="0"
-                  required
-                  value={totalBeds}
-                  onChange={e => setTotalBeds(e.target.value)}
-                  placeholder="e.g., 120"
-                  className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </label>
-            </div>
-
-              <div className="grid sm:grid-cols-2 gap-4">
-                <label className="block text-sm">
-                  <span className="font-medium text-gray-700">Address</span>
-                  <input
-                    required
-                    value={address}
-                    onChange={e=>setAddress(e.target.value)}
-                    placeholder="House/Flat, Building, Street"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </label>
-              {/* 
-                <label className="block text-sm">
-                  <span className="font-medium text-gray-700">Address Line 2</span>
-                  <input
-                    value={address2}
-                    onChange={e=>setAddress2(e.target.value)}
-                    placeholder="Area/Locality (optional)"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </label> */}
-                   <label className="block text-sm">
-                  <span className="font-medium text-gray-700">Landmark</span>
-                  <input
-                    value={landmark}
-                    onChange={e=>setLandmark(e.target.value)}
-                    placeholder="Near XYZ Temple"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="font-medium text-gray-700">Pincode</span>
-                  <input
-                    value={pincode}
-                    onChange={e => {
-                      const value = e.target.value.replace(/\D/g, '')
-                      setPincode(value)
-                      if (value.length === 6) {
-                        fetchAddressFromPincode(value)
-                      }
+              <section>
+                <div className="flex items-center justify-between mb-6">
+                  <SectionHeader title="Sharing Prices" />
+                  <button
+                    onClick={() => {
+                      const nextS = pricingForm.pricingList.length > 0 ? Math.max(...pricingForm.pricingList.map(p=>p.sharing)) + 1 : 1
+                      setPricingForm(prev => ({
+                        ...prev,
+                        pricingList: [
+                          ...prev.pricingList,
+                          { sharing: nextS, roomType: 'AC', dailyRate: 0, monthlyRate: 0 },
+                          { sharing: nextS, roomType: 'NON_AC', dailyRate: 0, monthlyRate: 0 }
+                        ]
+                      }))
                     }}
-                    placeholder="6-digit"
-                    inputMode="numeric"
-                    maxLength={6}
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                  {pinLoading && (
-                    <div className="text-xs text-gray-500 mt-1">Fetching address…</div>
-                  )}
-                  {pinError && (
-                    <div className="text-xs text-red-600 mt-1">{pinError}</div>
+                    className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-xl hover:bg-indigo-100"
+                  >
+                    + PRICING
+                  </button>
+                </div>
+
+                <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {Object.entries(groupedPricing).map(([s, items]) => (
+                    <div key={s} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                      <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-b border-slate-200">
+                        <span className="text-[10px] font-black uppercase text-slate-900">{s} Sharing</span>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        {items.map((item) => (
+                          <div key={item.originalIndex} className="flex items-center gap-3">
+                            <select
+                              value={item.roomType}
+                              onChange={(e) => {
+                                const newList = [...pricingForm.pricingList]
+                                newList[item.originalIndex].roomType = e.target.value
+                                setPricingForm({ ...pricingForm, pricingList: newList })
+                              }}
+                              className={`text-[10px] font-black p-2 rounded-xl border-none ring-1 ring-slate-100 ${item.roomType==='AC'?'bg-indigo-50 text-indigo-600 ring-indigo-100':'bg-slate-50 text-slate-600'}`}
+                            >
+                              <option value="AC">AC</option>
+                              <option value="NON_AC">NON-AC</option>
+                            </select>
+                            <div className="flex-1 relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">₹</span>
+                              <input
+                                type="number"
+                                value={item.monthlyRate}
+                                onChange={(e) => {
+                                  const newList = [...pricingForm.pricingList]
+                                  newList[item.originalIndex].monthlyRate = Number(e.target.value)
+                                  setPricingForm({ ...pricingForm, pricingList: newList })
+                                }}
+                                className="w-full bg-slate-50 border-none rounded-xl py-2 pl-6 pr-3 text-xs font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                placeholder="Monthly"
+                              />
+                            </div>
+                            <div className="flex-1 relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">₹</span>
+                              <input
+                                type="number"
+                                value={item.dailyRate}
+                                onChange={(e) => {
+                                  const newList = [...pricingForm.pricingList]
+                                  newList[item.originalIndex].dailyRate = Number(e.target.value)
+                                  setPricingForm({ ...pricingForm, pricingList: newList })
+                                }}
+                                className="w-full bg-slate-50 border-none rounded-xl py-2 pl-6 pr-3 text-xs font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                placeholder="Daily"
+                              />
+                            </div>
+                            <button
+                              onClick={() => setPricingForm(prev => ({ ...prev, pricingList: prev.pricingList.filter((_,i)=>i!==item.originalIndex) }))}
+                              className="p-2 text-slate-300 hover:text-rose-500"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <button
+                onClick={handleUpdatePricing}
+                disabled={updatingPricing}
+                className="w-full px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+              >
+                {updatingPricing ? <Loader2 className="animate-spin" size={14} /> : 'Confirm Pricing Structure'}
+              </button>
+            </div>
+          </Modal>
+        )}
+
+        {showTermsModal && (
+          <Modal
+            onClose={() => setShowTermsModal(false)}
+            title="Legal Hub"
+            subtitle={selectedPgForPricing?.pgName}
+            icon={<FileText />}
+            className="max-w-lg"
+          >
+            <div className="text-center space-y-8">
+              <div className="mx-auto w-24 h-24 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 border border-indigo-100">
+                <FileSearch size={40} />
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-xl font-black text-slate-900 uppercase tracking-tight">Terms & Conditions</h4>
+                <p className="text-slate-500 text-sm font-medium px-8">Upload a PDF document outlining your house rules, refund policies, and legal agreements.</p>
+              </div>
+
+              <div className="bg-slate-900 rounded-xl p-8 text-white relative overflow-hidden group">
+                <div className="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative z-10 space-y-6">
+                  {selectedPgForPricing?.termsAndConditionsUrl ? (
+                    <div className="flex items-center justify-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-400/10 py-2 px-4 rounded-full w-fit mx-auto border border-emerald-400/20">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Document Active
+                    </div>
+                  ) : (
+                    <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest">No Document Found</div>
                   )}
 
-                </label>
-                  {areas.length > 1 && (
-                    <label className="block text-sm">
-                      <span className="font-medium text-gray-700">Area / Locality</span>
+                  <div className="grid grid-cols-1 gap-4">
+                    {selectedPgForPricing?.termsAndConditionsUrl && (
+                      <a
+                        href={selectedPgForPricing.termsAndConditionsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-3 w-full px-4 py-1.5 bg-white/5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                      >
+                        <LayoutGrid size={16} /> View Current PDF
+                      </a>
+                    )}
+                    <label className="flex items-center justify-center gap-3 w-full px-4 py-1.5 bg-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/40">
+                      {uploadingTerms ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                      {selectedPgForPricing?.termsAndConditionsUrl ? 'Replace Agreement' : 'Upload Agreement'}
+                      <input type="file" accept=".pdf" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-[0.2em]">Format: PDF • Limit: 5MB</p>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {showQrFor && (
+          <Modal
+            onClose={() => setShowQrFor(null)}
+            title="Registration Hub"
+            subtitle={pgs.find(p => p.id === showQrFor)?.pgName}
+            icon={<QrCode />}
+            className="max-w-md"
+          >
+            <div className="text-center">
+              <div className="mb-8">
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <div className="h-[2px] w-4 bg-indigo-600 rounded-full" />
+                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Scan to Tenant Register</p>
+                  <div className="h-[2px] w-4 bg-indigo-600 rounded-full" />
+                </div>
+              </div>
+
+              <div className="inline-block p-6 bg-slate-50 rounded-xl border border-slate-200 mb-6 relative group">
+                <div className="absolute inset-0 bg-indigo-600/5 scale-90 rounded-xl group-hover:scale-105 transition-transform" />
+                <img
+                  src={`${import.meta.env.VITE_API_BASE_URL}/mmp/pg/${showQrFor}/qr`}
+                  alt="QR"
+                  className="relative w-48 h-48 mix-blend-multiply"
+                />
+              </div>
+              <div className="space-y-4">
+                <div className="bg-indigo-50/50 p-6 rounded-xl border border-indigo-100">
+                  <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3">Direct Onboarding URL</p>
+                  <div className="text-[11px] font-bold text-indigo-600 break-all select-all leading-relaxed bg-white p-4 rounded-xl border border-indigo-100/50">
+                    {window.location.origin}/mmp/register/{showQrFor}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowQrFor(null)}
+                  className="w-full px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md"
+                >
+                  Dismiss QR
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {showCreate && (
+          <Modal onClose={() => setShowCreate(false)} title="New PG" icon={<Plus />} className="max-w-xl">
+            <form onSubmit={create} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-4">
+                <FormInput label="Business Entity" value={businessName} onChange={setBusinessName} placeholder="Sunrise Enterprises" required />
+                <FormInput label="PG Name" value={pgName} onChange={setPgName} placeholder="Sunrise Mens Luxury PG" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormInput label="Floors" type="number" value={totalFloors} onChange={setTotalFloors} placeholder="0" required />
+                <FormInput label="Capacity (Beds)" type="number" value={totalBeds} onChange={setTotalBeds} placeholder="0" required />
+              </div>
+
+              <div className="pt-6 border-t border-slate-100">
+                <SectionHeader title="Geographic Details" />
+                <div className="grid grid-cols-1 gap-4 mt-4">
+                  <div className="relative">
+                    <FormInput
+                      label="Pincode"
+                      value={pincode}
+                      onChange={(v) => {
+                        const val = v.replace(/\D/g, '').slice(0,6)
+                        setPincode(val)
+                        if (val.length===6) fetchAddressFromPincode(val)
+                      }}
+                      placeholder="600001"
+                      required
+                    />
+                    {pinLoading && <div className="absolute right-4 bottom-4 animate-spin text-indigo-600"><Loader2 size={16} /></div>}
+                    {pinError && <p className="absolute left-1 -bottom-5 text-[9px] font-black text-rose-500 uppercase tracking-widest">{pinError}</p>}
+                  </div>
+
+                  {areas.length > 1 ? (
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Locality</label>
                       <select
                         value={area}
-                        onChange={e => onAreaSelect(e.target.value)}
-                        required
-                        className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
+                        onChange={(e) => {
+                          const a = areas.find(x => x.Name === e.target.value)
+                          setArea(e.target.value)
+                          if(a) setCity(a.Block || a.District)
+                        }}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500"
                       >
-                        <option value="">Select area</option>
-                        {areas.map(a => (
-                          <option key={a.Name} value={a.Name}>
-                            {a.Name}
-                          </option>
-                        ))}
+                        <option value="">Select Area...</option>
+                        {areas.map(a => <option key={a.Name} value={a.Name}>{a.Name}</option>)}
                       </select>
-                    </label>
+                    </div>
+                  ) : (
+                    <FormInput label="Locality" value={area} onChange={setArea} readOnly />
                   )}
 
-                <label className="block text-sm">
-                  <span className="font-medium text-gray-700">City</span>
-                  <input
-                    value={city}
-                    readOnly
-                    placeholder="City"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </label>
-                    <label className="block text-sm">
-                  <span className="font-medium text-gray-700">District</span>
-                  <input
-                    value={district}
-                    readOnly
-                    placeholder="District"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border bg-gray-50"
-                  />
-                </label>
+                  <FormInput label="Complete Address" value={address} onChange={setAddress} placeholder="Street, Door No, Building Name" required />
 
-                <label className="block text-sm">
-                  <span className="font-medium text-gray-700">State</span>
-                  <input
-                    value={stateName}
-                    readOnly
-                    placeholder="State"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </label>
-
-                 <label className="block text-sm">
-                  <span className="font-medium text-gray-700">Country</span>
-                  <input
-                    value={country}
-                    readOnly
-                    placeholder="Country"
-                    className="mt-1 w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormInput label="City" value={city} readOnly />
+                    <FormInput label="District" value={district} readOnly />
+                    <FormInput label="State" value={stateName} readOnly />
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button type="button" disabled={creating} onClick={()=>setShowCreate(false)} className="px-4 py-2 rounded-lg border hover:bg-gray-50">
-                  Cancel
-                </button>
+              <div className="flex gap-4 pt-6">
+                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 px-4 py-1.5 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600">Discard</button>
                 <button
                   type="submit"
-                 disabled={
-                      creating ||
-                      !pgName.trim() ||
-                      !address.trim() ||
-                      pincode.length !== 6 ||
-                      !!pinError ||
-                      (areas.length > 1 && !area)
-                    }
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 disabled:opacity-60"
+                  disabled={creating || !pgName || pincode.length !== 6}
+                  className="flex-[2] px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all"
                 >
-                  {creating ? 'Creating…' : 'Create'}
+                  {creating ? <Loader2 className="animate-spin mx-auto" size={14} /> : 'Save PG'}
                 </button>
               </div>
             </form>
+          </Modal>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function TopStat({ label, value, icon, isAccent = false }) {
+  return (
+    <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
+      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
+        {React.cloneElement(icon, { size: 10 })}
+        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+      </div>
+      <div className="text-sm font-black leading-none">{value}</div>
+    </div>
+  )
+}
+
+const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
+  return (
+    <motion.div
+      ref={ref}
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="group bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden h-full flex flex-col"
+    >
+      {/* Header Section */}
+      <div className="flex items-start justify-between mb-5">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0">
+            <Building2 size={24} />
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none truncate">{pg.pgName}</h3>
+            <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">{pg.businessName || 'Accommodation'}</p>
           </div>
         </div>
-      )}
-      {showQrFor && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setShowQrFor(null)}
-          />
+        <div className={`shrink-0 px-2.5 py-1 rounded-xl text-[8px] font-black uppercase tracking-widest border ${pg.approved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+          {pg.approved ? 'Approved' : 'Verifying'}
+        </div>
+      </div>
 
-          <div className="relative bg-white rounded-2xl p-6 text-center shadow-xl w-80">
-            <h3 className="text-lg font-bold mb-2">
-              Scan to Register for <br />
-              <b>{selectedPg?.pgName}</b>
-            </h3>
+      {/* Location Bar */}
+      <div className="flex items-center gap-1.5 text-slate-400 mb-5 px-0.5">
+        <MapPin size={12} className="shrink-0" />
+        <p className="text-[9px] font-black uppercase tracking-widest truncate">
+          {pg.address?.areaLocality || 'Area'}, {pg.address?.city} {pg.createdAt && ` • ${new Date(pg.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`}
+        </p>
+      </div>
 
-            <img
-              src={`${import.meta.env.VITE_API_BASE_URL}/mmp/pg/${showQrFor}/qr`}
-              alt="PG QR Code"
-              className="mx-auto w-56 h-56"
-            />
-                  
-            <div className="mt-2 text-xs text-gray-600 break-all">
-              {window.location.origin}/mmp/register/{showQrFor}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 gap-2.5 mb-6">
+        <StatItem label="Floors" value={pg.totalFloors || 0} />
+        <StatItem label="Beds" value={pg.totalBeds || 0} />
+        <StatItem label="Occupied" value={pg.filledBeds || 0} isAccent />
+      </div>
+
+      {/* Footer Actions */}
+      <div className="mt-auto flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pt-1">
+        <div className="flex items-center gap-1.5">
+          <ActionButton icon={<QrCode size={13} />} label="QR Code" onClick={onQr} />
+          <ActionButton icon={<IndianRupee size={13} />} label="Pricing" onClick={onPricing} />
+          <ActionButton icon={<FileText size={13} />} label="View T&C" onClick={onTerms} />
+        </div>
+
+        <Link
+          to={`/pg/${pg.id}`}
+          className="ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 min-w-[70px] whitespace-nowrap"
+        >
+          Enter <ArrowRight size={14} />
+        </Link>
+      </div>
+    </motion.div>
+  )
+})
+
+function StatItem({ label, value, isAccent = false }) {
+  return (
+    <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100/50 flex flex-col items-start">
+      <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+      <p className={`text-lg font-black leading-none ${isAccent ? 'text-emerald-600' : 'text-slate-900'}`}>{value}</p>
+    </div>
+  )
+}
+
+function ActionButton({ icon, label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 hover:border-indigo-100 hover:bg-white transition-all group shrink-0"
+    >
+      <span className="text-slate-400 group-hover:text-indigo-600 transition-colors">{icon}</span>
+      <span className="text-[9px] font-black uppercase tracking-tight whitespace-nowrap">{label}</span>
+    </button>
+  )
+}
+
+
+function EmptyState({ onAdd }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-xl border-2 border-dashed border-slate-200 py-24 text-center px-8"
+    >
+      <div className="mx-auto w-24 h-24 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 mb-8 border border-slate-100">
+        <Building2 size={40} />
+      </div>
+      <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">
+        Start your journey
+      </h2>
+      <p className="mt-4 text-slate-500 font-medium max-w-sm mx-auto">
+        Add your first PG to start managing tenants, collections and maintenance.
+      </p>
+      <button
+        onClick={onAdd}
+        className="mt-10 inline-flex items-center gap-3 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all"
+      >
+        Create First PG <ArrowRight size={16} />
+      </button>
+    </motion.div>
+  )
+}
+
+const Modal = React.forwardRef(({ children, onClose, title, subtitle, icon, className = "max-w-2xl" }, ref) => {
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden"
+    >
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-slate-950/40 backdrop-blur-xl"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className={`relative w-full ${className} bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200`}
+      >
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0 border border-indigo-100">
+              {React.cloneElement(icon, { size: 18 })}
             </div>
-
-            <button
-              onClick={() => setShowQrFor(null)}
-              className="mt-4 px-4 py-2 rounded-xl bg-indigo-600 text-white"
-            >
-              Close
-            </button>
+            <div className="min-w-0">
+              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight leading-none truncate">{title}</h3>
+              <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">{subtitle || 'Professional Suite'}</p>
+            </div>
           </div>
+          <button onClick={onClose} className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all shrink-0 ml-2 border border-slate-100">
+            <X size={16} />
+          </button>
         </div>
-      )}  
+        <div className="p-6 overflow-y-auto custom-scrollbar">
+          {children}
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+})
 
+function SectionHeader({ title }) {
+  return (
+    <div className="flex items-center gap-3 mb-5">
+      <div className="h-1 w-6 bg-indigo-600 rounded-full" />
+      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{title}</h4>
+    </div>
+  )
+}
 
+function FormInput({ label, value, onChange, placeholder, type = 'text', readOnly = false, required = false }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label} {required && '*'}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        readOnly={readOnly}
+        placeholder={placeholder}
+        required={required}
+        className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all ${readOnly ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-white'} ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}`}
+      />
     </div>
   )
 }

@@ -1,12 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Wrench,
+  Plus,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  History,
+  Tag,
+  MessageSquare,
+  Building2,
+  User,
+  Calendar,
+  MoreVertical,
+  Activity
+} from 'lucide-react'
 import {
   getTenantComplaints,
   createComplaint
 } from '../api/ownerAuth'
 
 const COMPLAINT_CATEGORIES = [
-  'ELECTRICITY',
+  'ELECTRICAL',
   'WATER',
   'CLEANING',
   'WIFI',
@@ -16,6 +35,11 @@ const COMPLAINT_CATEGORIES = [
   'PARKING',
   'OTHER'
 ]
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 }
+}
 
 export default function TenantComplaints({ pgId }) {
   const [complaints, setComplaints] = useState([])
@@ -36,7 +60,6 @@ export default function TenantComplaints({ pgId }) {
 
   useEffect(() => {
     fetchComplaints(page)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
 
   const fetchComplaints = async (pageNo) => {
@@ -55,299 +78,344 @@ export default function TenantComplaints({ pgId }) {
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
-const submit = async () => {
-  if (!form.title || !form.category) {
-    alert('Title and category are required')
-    return
+  const submit = async () => {
+    if (!form.title || !form.category) {
+      return
+    }
+
+    try {
+      setSubmitting(true)
+      const created = await createComplaint({
+        pgId,
+        title: form.title,
+        description: form.description || null,
+        category: form.category,
+        complaintImageUrl: null
+      })
+
+      setComplaints(prev => [created, ...prev])
+      setForm({ title: '', description: '', category: '' })
+      setShowForm(false)
+    } finally {
+      setSubmitting(false)
+    }
   }
-
-  try {
-    setSubmitting(true)
-
-    const created = await createComplaint({
-      pgId,
-      title: form.title,
-      description: form.description || null,
-      category: form.category,
-      complaintImageUrl: null
-    })
-
-    // 🔥 ADD THIS
-    setComplaints(prev => [created, ...prev])
-
-    setForm({
-      title: '',
-      description: '',
-      category: ''
-    })
-    setShowForm(false)
-  } finally {
-    setSubmitting(false)
-  }
-}
-
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">🛠 Complaints</h2>
+    <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
+      {/* Header Area */}
+      <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <Wrench size={20} className="text-indigo-600" />
+            Support Requests
+          </h3>
+          <p className="text-xs text-slate-500 font-medium mt-1">Track and manage your maintenance issues</p>
+        </div>
         <button
           onClick={() => setShowForm(v => !v)}
-          className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700"
+          className="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white text-xs font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
         >
-          + New Complaint
+          {showForm ? <X size={16} /> : <Plus size={16} />}
+          {showForm ? 'Cancel Request' : 'Raise Concern'}
         </button>
       </div>
 
-      {/* Complaint Form */}
-      {showForm && (
-        <div className="border rounded-xl p-4 mb-6 bg-gray-50 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              name="title"
-              placeholder="Complaint title *"
-              value={form.title}
-              onChange={onChange}
-              className="border rounded-lg px-3 py-2"
-            />
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden bg-slate-50/50"
+          >
+            <div className="p-6 md:p-8 border-b border-slate-100">
+              <div className="max-w-3xl space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Issue Headline</label>
+                    <input
+                      name="title"
+                      placeholder="Brief summary of the issue..."
+                      value={form.title}
+                      onChange={onChange}
+                      className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
+                    />
+                  </div>
 
-            <select
-              name="category"
-              value={form.category}
-              onChange={onChange}
-              className="border rounded-lg px-3 py-2"
-            >
-              <option value="">Select category *</option>
-              {COMPLAINT_CATEGORIES.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          <textarea
-            name="description"
-            rows={3}
-            placeholder="Describe the issue (optional)"
-            value={form.description}
-            onChange={onChange}
-            className="border rounded-lg px-3 py-2 w-full"
-          />
-
-          <div className="flex gap-3">
-            <button
-              onClick={submit}
-              disabled={submitting}
-              className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-60"
-            >
-              {submitting ? 'Submitting…' : 'Submit'}
-            </button>
-
-            <button
-              onClick={() => setShowForm(false)}
-              className="px-4 py-2 rounded-lg bg-gray-200 text-sm"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Complaint List */}
-      {loading ? (
-        <div className="text-sm text-gray-500">Loading complaints…</div>
-      ) : complaints.length === 0 ? (
-        <div className="text-sm text-gray-500">No complaints raised yet.</div>
-      ) : (
-        <>
-          <div className="space-y-3">
-            {/* Complaint List */}
-            <div className="hidden md:block overflow-x-auto">
-             <table className="w-full text-sm border rounded-lg overflow-hidden">
-                <thead className="bg-gray-100">
-                <tr>
-                    <th className="px-3 py-2 border">Title</th>
-                    <th className="px-3 py-2 border">Category</th>
-                    <th className="px-3 py-2 border">Description</th>
-                    <th className="px-3 py-2 border">Created</th>
-                    <th className="px-3 py-2 border">Updated</th>
-                    <th className="px-3 py-2 border">Status</th>
-                    <th className="px-3 py-2 border">Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                    {complaints.map(c => (
-                        <tr key={c.id} className="border-t text-center">
-                        <td className="px-3 py-2">{c.title}</td>
-                        <td className="px-3 py-2">{c.category}</td>
-                        <td className="px-3 py-2 text-left max-w-xs truncate">
-                            {c.description || '—'}
-                        </td>
-                        <td className="px-3 py-2">
-                            {dayjs(c.createdDate).format('DD MMM YYYY')}
-                        </td>
-                        <td className="px-3 py-2">
-                            {dayjs(c.updatedDate).format('DD MMM YYYY')}
-                        </td>
-                        <td className="px-3 py-2">
-                            <StatusBadge status={c.status} />
-                        </td>
-                        <td className="px-3 py-2">
-                            <button
-                            onClick={() => setSelectedComplaint(c)}
-                            className="text-indigo-600 text-sm font-semibold hover:underline"
-                            >
-                            View Details
-                            </button>
-                        </td>
-                        </tr>
-                    ))}
-                    </tbody>
-
-             </table>
-             </div>
-                    {selectedComplaint && (
-                        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-                            <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6 relative">
-                            <button
-                                onClick={() => setSelectedComplaint(null)}
-                                className="absolute top-3 right-3 text-gray-500 hover:text-black"
-                            >
-                                ✕
-                            </button>
-
-                           <h3 className="
-                            text-xl font-semibold
-                            mb-4
-                            text-center
-                            bg-indigo-50
-                            text-indigo-700
-                            py-3
-                            rounded-lg
-                            ">
-                            Complaint Details
-                            </h3>
-
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-                                <Detail label="Title" value={selectedComplaint.title} />
-                                <Detail label="Category" value={selectedComplaint.category} />
-                                <Detail label="Status" value={selectedComplaint.status} />
-                                <Detail label="Tenant" value={selectedComplaint.tenantName} />
-                                <Detail label="PG" value={selectedComplaint.pgName} />
-                                <Detail
-                                label="Created Date"
-                                value={dayjs(selectedComplaint.createdDate).format('DD MMM YYYY HH:mm')}
-                                />
-                                <Detail
-                                label="Updated Date"
-                                value={dayjs(selectedComplaint.updatedDate).format('DD MMM YYYY HH:mm')}
-                                />
-                                <Detail
-                                label="Resolved Date"
-                                value={
-                                    selectedComplaint.resolvedDate
-                                    ? dayjs(selectedComplaint.resolvedDate).format('DD MMM YYYY HH:mm')
-                                    : '—'
-                                }
-                                />
-                            </div>
-
-                            <div className="mt-4">
-                                <div className="text-gray-500 text-sm mb-1">Description</div>
-                                <div className="border rounded-lg p-3 text-sm">
-                                {selectedComplaint.description || '—'}
-                                </div>
-                            </div>
-
-                            {selectedComplaint.resolutionNotes && (
-                                <div className="mt-4">
-                                <div className="text-gray-500 text-sm mb-1">Resolution Notes</div>
-                                <div className="border rounded-lg p-3 text-sm bg-green-50">
-                                    {selectedComplaint.resolutionNotes}
-                                </div>
-                                </div>
-                            )}
-                            </div>
-                        </div>
-                        )}
-
-            </div>
-        {/* Mobile View */}
-                <div className="md:hidden space-y-3">
-                {complaints.map(c => (
-                    <div key={c.id} className="border rounded-xl p-3 space-y-1">
-                    <div className="font-semibold">{c.title}</div>
-                    <div className="text-xs text-gray-500">
-                        {c.category} • {dayjs(c.createdDate).format('DD MMM YYYY')}
-                    </div>
-                    <div className="text-sm truncate">
-                        {c.description || '—'}
-                    </div>
-
-                    <div className="flex justify-between items-center pt-2">
-                        <StatusBadge status={c.status} />
-                        <button
-                        onClick={() => setSelectedComplaint(c)}
-                        className="text-indigo-600 text-sm font-semibold"
-                        >
-                        View Details
-                        </button>
-                    </div>
-                    </div>
-                ))}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                    <select
+                      name="category"
+                      value={form.category}
+                      onChange={onChange}
+                      className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="">Select Department</option>
+                      {COMPLAINT_CATEGORIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <button
-              disabled={page === 0}
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50"
-            >
-              Previous
-            </button>
 
-            <span className="text-sm text-gray-600">
-              Page {page + 1} of {totalPages}
-            </span>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Additional Context</label>
+                  <textarea
+                    name="description"
+                    rows={4}
+                    placeholder="Provide details to help us resolve this faster..."
+                    value={form.description}
+                    onChange={onChange}
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-4 py-3.5 text-sm font-bold text-slate-700 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400 resize-none"
+                  />
+                </div>
 
-            <button
-              disabled={page + 1 >= totalPages}
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1 rounded bg-gray-200 text-sm disabled:opacity-50"
-            >
-              Next
-            </button>
+                <div className="flex justify-end">
+                  <button
+                    onClick={submit}
+                    disabled={submitting || !form.title || !form.category}
+                    className="px-8 py-4 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-all disabled:opacity-30 flex items-center gap-2"
+                  >
+                    {submitting ? <Activity size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                    Submit Report
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* List Area */}
+      <div className="bg-white">
+        {loading ? (
+          <div className="px-8 py-16 text-center space-y-4">
+            <Activity className="h-8 w-8 text-indigo-600 animate-spin mx-auto" />
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Retrieving Records...</p>
           </div>
-        </>
-      )}
+        ) : complaints.length === 0 ? (
+          <div className="px-8 py-20 text-center">
+            <div className="h-20 w-20 rounded-3xl bg-slate-50 flex items-center justify-center text-slate-300 mx-auto mb-6">
+              <CheckCircle2 size={40} />
+            </div>
+            <h4 className="text-lg font-black text-slate-900">All Systems Normal</h4>
+            <p className="text-sm text-slate-500 font-medium mt-1">You haven't reported any issues yet.</p>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50/50 text-left text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                    <th className="px-8 py-5">Incident Detail</th>
+                    <th className="px-4 py-5">Classification</th>
+                    <th className="px-4 py-5">Status</th>
+                    <th className="px-4 py-5">Reported On</th>
+                    <th className="px-8 py-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {complaints.map(c => (
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition-all group">
+                      <td className="px-8 py-5">
+                        <div className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">{c.title}</div>
+                        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight truncate max-w-[200px]">
+                          {c.description || 'No detailed description'}
+                        </div>
+                      </td>
+                      <td className="px-4 py-5">
+                        <span className="text-[10px] font-black text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                          {c.category}
+                        </span>
+                      </td>
+                      <td className="px-4 py-5">
+                        <StatusBadge status={c.status} />
+                      </td>
+                      <td className="px-4 py-5">
+                        <div className="text-xs font-bold text-slate-600">{dayjs(c.createdDate).format('DD MMM, YYYY')}</div>
+                        <div className="text-[9px] text-slate-400 font-bold uppercase">{dayjs(c.createdDate).format('hh:mm A')}</div>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <button
+                          onClick={() => setSelectedComplaint(c)}
+                          className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {complaints.map(c => (
+                <div key={c.id} className="p-6 space-y-4">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-1">
+                      <div className="font-bold text-slate-900">{c.title}</div>
+                      <div className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{c.category}</div>
+                    </div>
+                    <StatusBadge status={c.status} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-[10px] text-slate-500 font-bold">
+                      Reported: {dayjs(c.createdDate).format('DD MMM YYYY')}
+                    </div>
+                    <button
+                      onClick={() => setSelectedComplaint(c)}
+                      className="text-[10px] font-black text-indigo-600 uppercase tracking-widest"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Control */}
+            <div className="p-6 bg-slate-50/30 border-t border-slate-100 flex items-center justify-between">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                Page <span className="text-slate-900">{page + 1}</span> of <span className="text-slate-900">{totalPages || 1}</span>
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={page === 0}
+                  onClick={() => setPage(p => p - 1)}
+                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  disabled={page + 1 >= totalPages}
+                  onClick={() => setPage(p => p + 1)}
+                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all shadow-sm"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Modal Detail View */}
+      <AnimatePresence>
+        {selectedComplaint && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedComplaint(null)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden"
+            >
+              {/* Modal Header */}
+              <div className="bg-slate-900 p-8 text-white relative">
+                <button
+                  onClick={() => setSelectedComplaint(null)}
+                  className="absolute top-6 right-6 p-2 rounded-xl hover:bg-white/10 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <MessageSquare size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">{selectedComplaint.title}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{selectedComplaint.category}</span>
+                      <span className="h-1 w-1 rounded-full bg-slate-600" />
+                      <StatusBadge status={selectedComplaint.status} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <DetailItem icon={User} label="Reporter" value={selectedComplaint.tenantName} />
+                  <DetailItem icon={Building2} label="Premises" value={selectedComplaint.pgName} />
+                  <DetailItem icon={Calendar} label="Date Raised" value={dayjs(selectedComplaint.createdDate).format('DD MMM YYYY')} />
+                  <DetailItem icon={History} label="Last Updated" value={dayjs(selectedComplaint.updatedDate).format('DD MMM YYYY')} />
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <Tag size={14} />
+                    Detailed Description
+                  </h4>
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-sm font-bold text-slate-600 leading-relaxed italic">
+                    "{selectedComplaint.description || 'No additional information provided for this request.'}"
+                  </div>
+                </div>
+
+                {selectedComplaint.resolutionNotes && (
+                  <div className="space-y-4">
+                    <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                      <CheckCircle2 size={14} />
+                      Resolution Narrative
+                    </h4>
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 text-sm font-bold text-emerald-700 leading-relaxed">
+                      {selectedComplaint.resolutionNotes}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+                <button
+                  onClick={() => setSelectedComplaint(null)}
+                  className="px-6 py-3 rounded-xl border border-slate-200 bg-white text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-all"
+                >
+                  Close Archive
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
 
 const StatusBadge = ({ status }) => {
-  const styles = {
-    OPEN: 'bg-yellow-100 text-yellow-700',
-    IN_PROGRESS: 'bg-blue-100 text-blue-700',
-    RESOLVED: 'bg-green-100 text-green-700',
-    CLOSED: 'bg-gray-200 text-gray-700'
+  const configs = {
+    OPEN: { style: 'bg-amber-100 text-amber-700 border-amber-200', icon: AlertCircle },
+    ASSIGNED: { style: 'bg-blue-100 text-blue-700 border-blue-200', icon: Activity },
+    COMPLETED: { style: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2 }
   }
 
+  const config = configs[status] || configs.OPEN
+  const Icon = config.icon
+
   return (
-    <span
-      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-        styles[status] || 'bg-gray-100 text-gray-600'
-      }`}
-    >
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-tight border ${config.style}`}>
+      <Icon size={12} />
       {status}
     </span>
   )
 }
 
-const Detail = ({ label, value }) => (
-  <div className="bg-gray-50 rounded-lg p-2">
-    <div className="text-gray-500 text-xs">{label}</div>
-    <div className="font-medium text-sm truncate">
-      {value || '—'}
+const DetailItem = ({ icon: Icon, label, value }) => (
+  <div className="space-y-1.5">
+    <div className="flex items-center gap-1.5 text-slate-400">
+      <Icon size={12} />
+      <span className="text-[10px] font-black uppercase tracking-widest leading-none">{label}</span>
     </div>
+    <div className="text-xs font-black text-slate-900 truncate">{value || '—'}</div>
   </div>
 )

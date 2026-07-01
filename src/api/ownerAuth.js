@@ -41,6 +41,28 @@ export async function updateOwnerAddress(address) {
   return res.data
 }
 
+export async function uploadOwnerProfileImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await api.post('/mmp/owner/profile/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return res.data
+}
+
+export async function uploadTenantProfileImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await api.post('/mmp/tenants/profile/image', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+  return res.data
+}
+
 // ---------- PG ----------
 
 export async function createPg(body) {
@@ -58,6 +80,22 @@ export async function getPgDetailsById(id) {
     throw new Error('PG id is required')
   }
   const res = await api.get(`/mmp/pg/${id}`)
+  return res.data
+}
+
+export async function updatePgPricing(pgId, payload) {
+  const res = await api.put(`/mmp/pg/${pgId}/pricing`, payload)
+  return res.data
+}
+
+export async function uploadPgTerms(pgId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await api.post(`/mmp/pg/${pgId}/terms`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
   return res.data
 }
 
@@ -111,6 +149,11 @@ export async function getTenantDetails(tenantId) {
     console.error('Failed to fetch tenant details', e)
     throw e
   }
+}
+
+export async function approveTenant(tenantId) {
+  const res = await api.post(`/mmp/tenants/${tenantId}/approve`, {})
+  return res.data
 }
 export async function getTenantHistory(tenantId) {
   try {
@@ -178,4 +221,40 @@ export async function updateComplaintStatus(complaintId, payload) {
     `/mmp/complaints/${complaintId}/status`,
     payload
   ).then(res => res.data)
+}
+
+export async function getOwnerCompleteDetails(ownerId) {
+  return api.get(`/api/admin/owner/${ownerId}`)
+}
+
+export const deleteBed = (bedId) => {
+  return api.delete(`/mmp/beds/${bedId}/delete`)
+}
+
+export const activateBed = (bedId) => {
+  return api.post(`/mmp/beds/${bedId}/activate`)
+}
+
+export async function getFloorsRoomsWithBeds() {
+  return api.get('/mmp/tenants/floors/rooms/with-beds')
+}
+
+export async function transferTenantFromBed(bedId, payload) {
+  return api.put(`/mmp/beds/${bedId}/transfer-tenant`, payload)
+}
+
+export async function transferBed(bedId, payload) {
+  return api.put(`/mmp/beds/${bedId}/transfer`, payload)
+}
+
+// ---------- DASHBOARD & ANALYTICS ----------
+
+export async function getRevenueTrends(pgId) {
+  const res = await api.get(`/mmp/owner/revenue-trends`, { params: { pgId } })
+  return res.data
+}
+
+export async function getRealTimeAlerts(pgId) {
+  const res = await api.get(`/mmp/owner/alerts`, { params: { pgId } })
+  return res.data
 }

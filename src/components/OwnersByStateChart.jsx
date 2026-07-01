@@ -1,3 +1,4 @@
+import React, { memo } from 'react'
 import {
   BarChart,
   Bar,
@@ -7,7 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 
-export default function OwnersByStateChart({ data = [] }) {
+const OwnersByStateChart = memo(function OwnersByStateChart({ data = [] }) {
   if (!data.length) {
     return (
       <div className="h-[250px] flex items-center justify-center text-sm text-gray-400">
@@ -26,4 +27,6 @@ export default function OwnersByStateChart({ data = [] }) {
       </BarChart>
     </ResponsiveContainer>
   )
-}
+})
+
+export default OwnersByStateChart

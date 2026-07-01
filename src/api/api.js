@@ -18,15 +18,27 @@ api.interceptors.response.use(
   res => res,
   error => {
     const status = error.response?.status
+    const url = error.config?.url || ''
 
-    if (status === 401 || status === 403) {
-      // global session expired
+    // All login endpoints (admin / owner / tenant)
+    const LOGIN_ENDPOINTS = [
+      '/api/admin/login',
+      '/api/auth/login'
+    ]
+
+    const isLoginRequest = LOGIN_ENDPOINTS.some(endpoint =>
+      url.includes(endpoint)
+    )
+
+    if ((status === 401 || status === 403) && !isLoginRequest) {
+      const isAdmin = localStorage.getItem('isAdmin') === 'true' || window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/application/administrator')
       localStorage.clear()
-      window.location.href = '/signin'
+      window.location.href = isAdmin ? '/application/administrator/login' : '/manage/mypg/signin'
     }
 
     return Promise.reject(error)
   }
 )
+
 
 export default api

@@ -90,6 +90,17 @@ useEffect(() => {
 }, [isComplaintsRoute, selectedPgId, pgs, navigate])
 
 useEffect(() => {
+  if (
+    isTenantsRoute &&
+    !selectedPgId &&
+    pgs &&
+    pgs.length > 0
+  ) {
+    navigate(`/tenants?pgId=${pgs[0].id}`, { replace: true })
+  }
+}, [isTenantsRoute, selectedPgId, pgs, navigate])
+
+useEffect(() => {
   const syncName = () => {
     const name = localStorage.getItem('businessName')
     if (name) {
@@ -114,7 +125,12 @@ useEffect(() => {
         setLoadingPgs(false)
       }
     }
-    loadPgs()
+    
+    // Only load PGs for owners, not admins
+    const isAdmin = localStorage.getItem('isAdmin') === 'true'
+    if (!isAdmin) {
+      loadPgs()
+    }
   }, [])
 
   /* ---------- Auto-open Tenants ---------- */
@@ -196,10 +212,10 @@ useEffect(() => {
                       if (mobileOpen) setMobileOpen(false)
                     }}
                     className={cx(
-                      'w-full text-left text-sm px-3 py-2 rounded-md transition',
+                      'w-full text-left text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition',
                       isSelected
-                        ? 'bg-white/20 text-white font-medium'
-                        : 'text-slate-200 hover:bg-white/10'
+                        ? 'bg-white/20 text-white shadow-sm'
+                        : 'text-slate-300 hover:bg-white/10'
                     )}
                   >
                     {pg.pgName}
@@ -236,10 +252,10 @@ useEffect(() => {
                         if (mobileOpen) setMobileOpen(false)
                       }}
                       className={cx(
-                        'w-full text-left text-sm px-3 py-2 rounded-md transition',
+                        'w-full text-left text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition',
                         isSelected
-                          ? 'bg-white/20 text-white font-medium'
-                          : 'text-slate-200 hover:bg-white/10'
+                          ? 'bg-white/20 text-white shadow-sm'
+                          : 'text-slate-300 hover:bg-white/10'
                       )}
                     >
                       {pg.pgName}
@@ -349,7 +365,7 @@ useEffect(() => {
             await ownerLogout()
           } finally {
             localStorage.clear()
-            window.location.replace('/signin')
+            window.location.replace('/manage/mypg/signin')
           }
         }}
       />
@@ -382,7 +398,7 @@ function SidebarProfile({ collapsed, mobile, onLogoutClick }) {
           </div>
           <button
             onClick={onLogoutClick}
-            className="text-xs text-slate-300 hover:text-red-400"
+            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-400 transition-colors"
           >
             Logout
           </button>
