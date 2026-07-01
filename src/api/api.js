@@ -1,8 +1,18 @@
 // src/api/api.js
 import axios from 'axios'
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
+
+export const getFullImageUrl = (path) => {
+  if (!path) return null
+  if (path.startsWith('http')) return path
+  const base = API_BASE_URL.replace(/\/$/, '')
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${base}${normalizedPath}`
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL
+  baseURL: API_BASE_URL
 })
 
 api.interceptors.request.use(config => {

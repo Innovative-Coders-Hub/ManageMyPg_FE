@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
-import { getAllPgs, getRevenueTrends, getRealTimeAlerts } from "../api/ownerAuth";
+import { getOwnerDashboard, getRevenueTrends, getRealTimeAlerts } from "../api/ownerAuth";
 import PageHeader from "../components/PageHeader";
 import {
   Building2,
@@ -123,41 +123,48 @@ const Tile = memo(function Tile({ title, value, to, icon: Icon, gradient, subtit
    HOME – OWNER DASHBOARD
 ===================================================== */
 export default function Home() {
-  const [pgs, setPgs] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPG, setSelectedPG] = useState(null);
+  const [selectedPgId, setSelectedPgId] = useState(null);
   const [openPG, setOpenPG] = useState(false);
   const [revenueTrends, setRevenueTrends] = useState([]);
   const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    const fetchPgs = async () => {
+    const fetchDashboard = async () => {
       try {
         setLoading(true);
-        const data = await getAllPgs();
-        const approvedPgs = (Array.isArray(data) ? data : []).filter(p => p.approved);
-        setPgs(approvedPgs);
-        if (approvedPgs.length > 0) {
-          const first = approvedPgs[0];
-          setSelectedPG(first);
-          localStorage.setItem('selectedPgName', first.pgName);
+        const res = await getOwnerDashboard();
+        if (res.success) {
+          setDashboardData(res.data);
+          if (res.data.pgSummaries.length > 0) {
+            const first = res.data.pgSummaries[0];
+            setSelectedPgId(first.pgId);
+            localStorage.setItem('selectedPgName', first.pgName);
+          } else {
+            setSelectedPgId('overall');
+          }
         }
       } catch (error) {
-        console.error("Failed to fetch PGs:", error);
+        console.error("Failed to fetch dashboard:", error);
       } finally {
         setLoading(false);
       }
     };
-    fetchPgs();
+    fetchDashboard();
   }, []);
 
   useEffect(() => {
     const fetchDashboardAddons = async () => {
-      if (!selectedPG?.id) return;
+      if (!selectedPgId || selectedPgId === 'overall') {
+        setRevenueTrends([]);
+        setAlerts([]);
+        return;
+      }
       try {
         const [revRes, alertRes] = await Promise.all([
-          getRevenueTrends(selectedPG.id),
-          getRealTimeAlerts(selectedPG.id)
+          getRevenueTrends(selectedPgId),
+          getRealTimeAlerts(selectedPgId)
         ]);
         if (revRes.success) setRevenueTrends(revRes.data);
         if (alertRes.success) setAlerts(alertRes.data);
@@ -167,54 +174,68 @@ export default function Home() {
     };
 
     fetchDashboardAddons();
-  }, [selectedPG]);
+  }, [selectedPgId]);
 
   const displayData = useMemo(() => {
-    if (!selectedPG) return {
-      pgName: "No PG Selected",
-      totalBeds: 0,
-      filledBeds: 0,
-      rent: { expected: 0, pending: 0 },
-      revenueHistory: [0, 0, 0, 0, 0, 0],
-      occupancyForecast: [0, 0, 0],
-      alerts: [],
-    };
+    if (!dashboardData) return null;
+
+    if (selectedPgId === 'overall') {
+      const m = dashboardData.metrics;
+      return {
+        name: "Overall Portfolio",
+        totalBeds: m.totalBeds,
+        occupiedBeds: m.totalOccupiedBeds,
+        occupancyRate: m.overallOccupancyRate,
+        pendingRents: m.totalPendingRents,
+        rentsCollected: m.totalRentsCollected,
+        openComplaints: m.totalOpenComplaints,
+        vacatings: m.totalTodayVacatings,
+        isOverall: true,
+        revenueHistory: [80, 90, 95, 100, 110, 108],
+        occupancyForecast: [78, 82, 85],
+        alerts: ["Operational sync active"],
+      };
+    }
+
+    const pg = dashboardData.pgSummaries.find(p => p.pgId === selectedPgId);
+    if (!pg) return null;
 
     return {
-      ...selectedPG,
-      rent: selectedPG.rent || { expected: 0, pending: 0 },
-      revenueHistory: revenueTrends.length > 0 ? revenueTrends : [80, 90, 95, 100, 110, 108],
-      occupancyForecast: selectedPG.occupancyForecast || [78, 82, 85],
-      alerts: alerts.length > 0 ? alerts : ["Operational sync active"],
+      name: pg.pgName,
+      totalBeds: pg.totalBeds,
+      occupiedBeds: pg.occupiedBeds,
+      occupancyRate: pg.occupancyRate,
+      pendingRents: pg.pendingRents,
+      openComplaints: pg.openComplaints,
+      vacatings: pg.upcomingVacatings,
+      isOverall: false,
+      revenueHistory: revenueTrends && revenueTrends.length > 0 ? revenueTrends : [80, 90, 95, 100, 110, 108],
+      occupancyForecast: [78, 82, 85],
+      alerts: alerts && alerts.length > 0 ? alerts : ["Operational sync active"],
     };
-  }, [selectedPG, revenueTrends, alerts]);
-
-  const occupancy = useMemo(() => {
-    if (!displayData.totalBeds) return 0;
-    return Math.round((displayData.filledBeds / displayData.totalBeds) * 100);
-  }, [displayData]);
+  }, [dashboardData, selectedPgId, revenueTrends, alerts]);
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="h-12 w-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Syncing Portfolio...</span>
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Loading Data...</span>
       </div>
     );
   }
 
-  if (pgs.length === 0) {
+  if (!dashboardData || (dashboardData.pgSummaries.length === 0 && selectedPgId !== 'overall')) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
         <div className="h-20 w-20 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 border border-slate-100">
            <Building2 size={40} />
         </div>
         <div>
-          <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">No active PGs discovered</h2>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 max-w-sm mx-auto">Create and verify your PG units to activate the enterprise control center.</p>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight uppercase">No PGs found</h2>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2 max-w-sm mx-auto">Add your PG properties to see them here.</p>
         </div>
         <Link to="/my-pgs" className="px-6 py-2 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all">
-          Initialize PG Onboarding
+          Add Your First PG
         </Link>
       </div>
     );
@@ -226,8 +247,8 @@ export default function Home() {
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader
-            title="Command Center"
-            subtitle="Real-time operational overview"
+            title="Dashboard"
+            subtitle="Overview of your PG properties"
           >
             <div className="relative group self-center md:self-auto">
               <button
@@ -235,7 +256,7 @@ export default function Home() {
                 className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black text-slate-700 shadow-sm hover:border-indigo-300 transition-all uppercase tracking-widest"
               >
                 <Building2 size={16} className="text-indigo-600" />
-                {selectedPG?.pgName || "Select Unit"}
+                {displayData?.name || "Select Unit"}
                 <ChevronDown size={14} className={`ml-2 transition-transform duration-300 ${openPG ? 'rotate-180' : ''}`} />
               </button>
 
@@ -248,22 +269,39 @@ export default function Home() {
                     className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden"
                   >
                     <div className="p-2 space-y-1">
-                      {pgs.map(pg => (
+                      <button
+                        onClick={() => {
+                          setSelectedPgId('overall');
+                          localStorage.setItem('selectedPgName', 'Overall Portfolio');
+                          setOpenPG(false);
+                          window.dispatchEvent(new Event('storage'));
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
+                          selectedPgId === 'overall'
+                            ? 'bg-indigo-50 text-indigo-600'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                        }`}
+                      >
+                        <div className={`h-2 w-2 rounded-full ${selectedPgId === 'overall' ? 'bg-indigo-600' : 'bg-slate-300'}`} />
+                        Overall Portfolio
+                      </button>
+
+                      {dashboardData.pgSummaries.map(pg => (
                         <button
-                          key={pg.id}
+                          key={pg.pgId}
                           onClick={() => {
-                            setSelectedPG(pg);
+                            setSelectedPgId(pg.pgId);
                             localStorage.setItem('selectedPgName', pg.pgName);
                             setOpenPG(false);
                             window.dispatchEvent(new Event('storage'));
                           }}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors ${
-                            selectedPG?.id === pg.id
+                            selectedPgId === pg.pgId
                               ? 'bg-indigo-50 text-indigo-600'
                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                           }`}
                         >
-                          <div className={`h-2 w-2 rounded-full ${selectedPG?.id === pg.id ? 'bg-indigo-600' : 'bg-slate-300'}`} />
+                          <div className={`h-2 w-2 rounded-full ${selectedPgId === pg.pgId ? 'bg-indigo-600' : 'bg-slate-300'}`} />
                           {pg.pgName}
                         </button>
                       ))}
@@ -286,36 +324,36 @@ export default function Home() {
       {/* KPI GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <Tile
-          title="Inventory Assets"
-          value={`${displayData.totalBeds} Units`}
+          title="Total Beds"
+          value={`${displayData?.totalBeds || 0} Beds`}
           to="/my-pgs"
           icon={Building2}
           gradient="from-indigo-600 to-blue-700"
           subtitle="Total Capacity"
         />
         <Tile
-          title="Utilization Rate"
-          value={`${occupancy}%`}
+          title="Occupancy"
+          value={`${displayData?.occupancyRate || 0}%`}
           to="/tenants"
           icon={Users}
           gradient="from-emerald-500 to-teal-600"
-          subtitle={`${displayData.filledBeds} Active Tenants`}
+          subtitle={`${displayData?.occupiedBeds || 0} Occupied`}
         />
         <Tile
-          title="Revenue Pipeline"
-          value={`₹${(displayData.rent.expected || 0).toLocaleString()}`}
+          title={displayData?.isOverall ? "Total Collected" : "Pending Rent"}
+          value={`₹${(displayData?.isOverall ? displayData?.rentsCollected : displayData?.pendingRents || 0).toLocaleString()}`}
           to="/reports"
           icon={IndianRupee}
           gradient="from-blue-600 to-indigo-700"
-          subtitle="Monthly Potential"
+          subtitle={displayData?.isOverall ? "Rent Collected" : "Yet to collect"}
         />
         <Tile
-          title="Pending Receivables"
-          value={`₹${(displayData.rent.pending || 0).toLocaleString()}`}
-          to="/reports"
+          title={displayData?.isOverall ? "Total Pending" : "Complaints"}
+          value={displayData?.isOverall ? `₹${(displayData?.pendingRents || 0).toLocaleString()}` : `${displayData?.openComplaints || 0}`}
+          to={displayData?.isOverall ? "/reports" : "/complaints"}
           icon={AlertCircle}
           gradient="from-rose-500 to-red-600"
-          subtitle="Awaiting Collection"
+          subtitle={displayData?.isOverall ? "Yet to collect" : "Active Complaints"}
         />
       </div>
 
@@ -329,11 +367,11 @@ export default function Home() {
               <div className="relative">
                 <div className="flex items-center justify-between mb-8">
                    <div>
-                      <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Financial Velocity</h3>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Monthly collection performance</p>
+                      <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">Rent Collection</h3>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Monthly collection history</p>
                    </div>
                    <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest">
-                      Live Stream
+                      Real-time
                    </div>
                 </div>
                 <RevenueChart data={displayData.revenueHistory} />
@@ -347,11 +385,11 @@ export default function Home() {
                    <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
                       <PieChart size={16} />
                    </div>
-                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Portfolio Prediction</h3>
+                   <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Occupancy Forecast</h3>
                 </div>
                 <ForecastBar forecast={displayData.occupancyForecast} />
                 <div className="mt-8 p-4 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-400 uppercase leading-relaxed text-center tracking-widest">
-                   Predicted demand based on historical churn analytics.
+                   Expected occupancy for coming months.
                 </div>
               </div>
 
@@ -362,29 +400,29 @@ export default function Home() {
                       <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
                          <Activity size={16} />
                       </div>
-                      <h3 className="text-[11px] font-black uppercase tracking-tight">System Status</h3>
+                      <h3 className="text-[11px] font-black uppercase tracking-tight">App Status</h3>
                    </div>
 
                    <div className="space-y-6">
                       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Platform Connectivity</span>
+                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Connection</span>
                          <span className="flex items-center gap-1.5 text-[10px] font-black text-emerald-400 uppercase tracking-widest">
                             <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                            Optimal
+                            Stable
                          </span>
                       </div>
                       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Synchronization</span>
-                         <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">99.8% Accuracy</span>
+                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Data Sync</span>
+                         <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Up to date</span>
                       </div>
                       <div className="flex items-center justify-between">
-                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Support Protocol</span>
-                         <span className="text-[10px] font-black text-white uppercase tracking-widest">24/7 Enabled</span>
+                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Support</span>
+                         <span className="text-[10px] font-black text-white uppercase tracking-widest">Available 24/7</span>
                       </div>
                    </div>
 
                    <button className="w-full mt-10 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5">
-                      Access Tech Intelligence
+                      View Details
                    </button>
                  </div>
               </div>
@@ -397,12 +435,12 @@ export default function Home() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                   <Bell size={20} className="text-rose-500" /> Operational Alerts
+                   <Bell size={20} className="text-rose-500" /> Important Alerts
                 </h3>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Prioritized Action Items</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Things that need attention</p>
               </div>
               <span className="text-[10px] font-black bg-rose-50 text-rose-600 px-3 py-1 rounded-full uppercase tracking-widest border border-rose-100">
-                {displayData.alerts.length} Critical
+                {displayData.alerts.length} New
               </span>
             </div>
 
@@ -439,8 +477,8 @@ export default function Home() {
                   <div className="h-16 w-16 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-4 border border-emerald-100">
                      <ShieldCheck size={32} />
                   </div>
-                  <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Zero Anomalies</h4>
-                  <p className="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">Portfolio operations are stable.</p>
+                  <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-tight">All Good</h4>
+                  <p className="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">Everything is running smoothly.</p>
                 </div>
               )}
             </div>
@@ -448,10 +486,10 @@ export default function Home() {
             <div className="mt-6 pt-6 border-t border-slate-100">
               <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-xl p-6 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
                 <div className="relative z-10">
-                  <h4 className="text-[11px] font-black uppercase tracking-tight mb-2">Portfolio Insights</h4>
-                  <p className="text-[10px] font-black text-indigo-100 leading-relaxed mb-6 uppercase tracking-widest">Aggregate occupancy across all units is currently trending at <span className="text-white underline">84.5%</span>.</p>
+                  <h4 className="text-[11px] font-black uppercase tracking-tight mb-2">Quick Tips</h4>
+                  <p className="text-[10px] font-black text-indigo-100 leading-relaxed mb-6 uppercase tracking-widest">Your total occupancy across all PGs is <span className="text-white underline">{displayData?.occupancyRate || 84.5}%</span>.</p>
                   <Link to="/reports" className="block w-full px-4 py-3 bg-white text-indigo-600 rounded-xl text-center text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-lg shadow-indigo-900/20">
-                      View Analytical Report
+                      View Full Report
                   </Link>
                 </div>
               </div>
@@ -463,10 +501,10 @@ export default function Home() {
       {/* QUICK ACTIONS */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Tenant Registry', to: '/tenants', icon: Users, bg: 'bg-indigo-50', text: 'text-indigo-600' },
-          { label: 'Business Intelligence', to: '/reports', icon: IndianRupee, bg: 'bg-emerald-50', text: 'text-emerald-600' },
-          { label: 'Resolution Desk', to: '/complaints', icon: AlertCircle, bg: 'bg-amber-50', text: 'text-amber-600' },
-          { label: 'Portfolio Units', to: '/my-pgs', icon: Building2, bg: 'bg-blue-50', text: 'text-blue-600' },
+          { label: 'Tenants List', to: '/tenants', icon: Users, bg: 'bg-indigo-50', text: 'text-indigo-600' },
+          { label: 'Rent Reports', to: '/reports', icon: IndianRupee, bg: 'bg-emerald-50', text: 'text-emerald-600' },
+          { label: 'Complaints', to: '/complaints', icon: AlertCircle, bg: 'bg-amber-50', text: 'text-amber-600' },
+          { label: 'My PGs', to: '/my-pgs', icon: Building2, bg: 'bg-blue-50', text: 'text-blue-600' },
         ].map((action, idx) => (
           <Link
             key={idx}

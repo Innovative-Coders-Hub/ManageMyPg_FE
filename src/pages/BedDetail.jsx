@@ -113,12 +113,12 @@ function generateTempReceiptNumber({ pgId, periodKey }) {
 
 function TopStat({ label, value, icon, isAccent = false }) {
   return (
-    <div className={`px-4 py-1.5 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
-      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
+    <div className={`flex-1 min-w-0 px-2 py-2 rounded-xl border flex flex-col items-center justify-center transition-all ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
+      <div className={`flex items-center gap-1.5 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
         {React.cloneElement(icon, { size: 10 })}
-        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+        <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate">{label}</span>
       </div>
-      <div className="text-sm font-black leading-none">{value}</div>
+      <div className="text-xs sm:text-sm font-black leading-none truncate">{value}</div>
     </div>
   )
 }
@@ -352,16 +352,18 @@ export default function BedDetail() {
             title={`Bed ${bed.bedName}`}
             subtitle={`${bed.floorName} • Room ${bed.roomName}`}
           >
-            <div className="flex flex-wrap items-center justify-center md:justify-end gap-1">
-              <TopStat label="Status" value={bed.occupied ? 'Occupied' : 'Open'} icon={<ShieldCheck />} isAccent={bed.occupied} />
-              <TopStat label="Rent" value={`₹${current?.monthlyRent || 0}`} icon={<IndianRupee />} />
-              <TopStat label="Paid" value={`₹${totals.paid}`} icon={<TrendingUp />} />
-              <TopStat label="Pending" value={`₹${totals.pending}`} icon={<AlertCircle />} isAccent={totals.pending > 0} />
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+              <div className="grid grid-cols-4 gap-2 w-full sm:w-auto sm:flex sm:items-center">
+                <TopStat label="Status" value={bed.occupied ? 'Occupied' : 'Open'} icon={<ShieldCheck />} isAccent={bed.occupied} />
+                <TopStat label="Rent" value={`₹${current?.monthlyRent || 0}`} icon={<IndianRupee />} />
+                <TopStat label="Paid" value={`₹${totals.paid}`} icon={<TrendingUp />} />
+                <TopStat label="Pending" value={`₹${totals.pending}`} icon={<AlertCircle />} isAccent={totals.pending > 0} />
+              </div>
 
               {!bed.occupied && (
                 <button
                   onClick={() => setQuickAssignOpen(true)}
-                  className="ml-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-100"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-100"
                 >
                   <Plus size={14} /> Quick Assign
                 </button>
