@@ -9,20 +9,24 @@ import {
   BarChart3,
   Shield,
   User,
+  LogOut,
+  Calendar,
+  Briefcase,
 } from 'lucide-react'
-import { ownerLogout, getAllPgs } from '../api/ownerAuth'
+import { ownerLogout, getAllPgs, getOwnerProfile } from '../api/ownerAuth'
 import ConfirmModal from '../components/ConfirmModal'
 
 /* ---------------- Nav Config ---------------- */
 const NAV = [
   { to: '/home', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/my-pgs', label: 'My PGs', icon: Building2 },
+  { to: '/bookings', label: 'Bookings', icon: Calendar },
   { to: '/tenants', label: 'Tenants', icon: Users },
+  { to: '/workers', label: 'Workers', icon: Briefcase },
   { to: '/offers', label: 'Offers', icon: Tag },
   { to: '/complaints', label: 'Complaints', icon: CreditCard },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/ownerProfile', label: 'Profile', icon: User },
-  { to: '/admin/dashboard', label: 'Admin', icon: Shield, adminOnly: true },
 ]
 
 const cx = (...c) => c.filter(Boolean).join(' ')
@@ -43,6 +47,7 @@ export default function Sidebar({
   }, [location.search])
 
   const isTenantsRoute = location.pathname === '/tenants'
+  const isWorkersRoute = location.pathname === '/workers'
   const isComplaintsRoute = location.pathname === '/complaints'
   /* ---------- Collapse ---------- */
   const [internalCollapsed, setInternalCollapsed] = useState(() => {
@@ -74,7 +79,9 @@ export default function Sidebar({
   const [loggingOut, setLoggingOut] = useState(false)
   const [pgs, setPgs] = useState([])
   const [loadingPgs, setLoadingPgs] = useState(false)
+  const [profile, setProfile] = useState(null)
   const [showTenantPgs, setShowTenantPgs] = useState(false)
+  const [showWorkerPgs, setShowWorkerPgs] = useState(false)
   const [showComplaintPgs, setShowComplaintPgs] = useState(false)
   const [businessName, setBusinessName] = useState('ManageMyPg')
 
@@ -101,6 +108,17 @@ useEffect(() => {
 }, [isTenantsRoute, selectedPgId, pgs, navigate])
 
 useEffect(() => {
+  if (
+    isWorkersRoute &&
+    !selectedPgId &&
+    pgs &&
+    pgs.length > 0
+  ) {
+    navigate(`/workers?pgId=${pgs[0].id}`, { replace: true })
+  }
+}, [isWorkersRoute, selectedPgId, pgs, navigate])
+
+useEffect(() => {
   const syncName = () => {
     const name = localStorage.getItem('businessName')
     if (name) {
@@ -114,29 +132,41 @@ useEffect(() => {
   return () =>
     window.removeEventListener('businessNameUpdated', syncName)
 }, [])
-  /* ---------- Load PGs ---------- */
+  /* ---------- Load Sidebar Data ---------- */
   useEffect(() => {
-    const loadPgs = async () => {
+    const loadData = async () => {
       try {
         setLoadingPgs(true)
-        const data = await getAllPgs()
-        setPgs(Array.isArray(data) ? data : [])
+        const isAdmin = localStorage.getItem('isAdmin') === 'true'
+        if (!isAdmin) {
+          const [pgsData, profileData] = await Promise.all([
+            getAllPgs().catch(() => []),
+            getOwnerProfile().catch(() => null)
+          ])
+          setPgs(Array.isArray(pgsData) ? pgsData : [])
+          setProfile(profileData)
+
+          if (profileData?.businessName) {
+            setBusinessName(profileData.businessName)
+            localStorage.setItem('businessName', profileData.businessName)
+          }
+        }
       } finally {
         setLoadingPgs(false)
       }
     }
     
-    // Only load PGs for owners, not admins
-    const isAdmin = localStorage.getItem('isAdmin') === 'true'
-    if (!isAdmin) {
-      loadPgs()
-    }
+    loadData()
   }, [])
 
   /* ---------- Auto-open Tenants ---------- */
   useEffect(() => {
     if (isTenantsRoute) setShowTenantPgs(true)
   }, [isTenantsRoute])
+
+  useEffect(() => {
+    if (isWorkersRoute) setShowWorkerPgs(true)
+  }, [isWorkersRoute])
 
     useEffect(() => {
     if (isComplaintsRoute) setShowComplaintPgs(true)
@@ -167,6 +197,14 @@ useEffect(() => {
           onClick={() => {
             if (to === '/tenants') {
               setShowTenantPgs((v) => !v)
+              setShowWorkerPgs(false)
+              setShowComplaintPgs(false)
+              return
+            }
+
+            if (to === '/workers') {
+              setShowWorkerPgs((v) => !v)
+              setShowTenantPgs(false)
               setShowComplaintPgs(false)
               return
             }
@@ -174,9 +212,11 @@ useEffect(() => {
             if (to === '/complaints') {
               setShowComplaintPgs((v) => !v)
               setShowTenantPgs(false)
+              setShowWorkerPgs(false)
               return
             }
             setShowTenantPgs(false)
+            setShowWorkerPgs(false)
             if (mobileOpen) setMobileOpen(false)
           }}
         >
@@ -209,6 +249,46 @@ useEffect(() => {
                     key={pg.id}
                     onClick={() => {
                       navigate(`/tenants?pgId=${pg.id}`)
+                      if (mobileOpen) setMobileOpen(false)
+                    }}
+                    className={cx(
+                      'w-full text-left text-[10px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition',
+                      isSelected
+                        ? 'bg-white/20 text-white shadow-sm'
+                        : 'text-slate-300 hover:bg-white/10'
+                    )}
+                  >
+                    {pg.pgName}
+                  </button>
+                )
+              })}
+
+            {!loadingPgs && pgs.length === 0 && (
+              <div className="text-xs text-slate-300 px-2">
+                No PGs found
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* -------- WORKERS → PG LIST -------- */}
+        {to === '/workers' && !collapsed && showWorkerPgs && (
+          <div className="ml-14 mt-1 space-y-1 border-l border-white/20 pl-3">
+            {loadingPgs && (
+              <div className="text-xs text-slate-300 px-2">
+                Loading PGs...
+              </div>
+            )}
+
+            {!loadingPgs &&
+              pgs.map((pg) => {
+                const isSelected = String(pg.id) === String(selectedPgId)
+
+                return (
+                  <button
+                    key={pg.id}
+                    onClick={() => {
+                      navigate(`/workers?pgId=${pg.id}`)
                       if (mobileOpen) setMobileOpen(false)
                     }}
                     className={cx(
@@ -320,6 +400,7 @@ useEffect(() => {
         <SidebarProfile
           collapsed={collapsed}
           onLogoutClick={() => setShowConfirm(true)}
+          profile={profile}
         />
       </aside>
 
@@ -348,6 +429,7 @@ useEffect(() => {
               setShowConfirm(true)
               setMobileOpen(false)
             }}
+            profile={profile}
           />
         </div>
       </aside>
@@ -375,10 +457,16 @@ useEffect(() => {
 
 /* ---------------- Profile ---------------- */
 
-function SidebarProfile({ collapsed, mobile, onLogoutClick }) {
-  const fullName = localStorage.getItem('fullName')
+function SidebarProfile({ collapsed, mobile, onLogoutClick, profile }) {
+  const fullName = profile?.fullName || localStorage.getItem('fullName')
   const username = localStorage.getItem('username')
   const displayName = fullName || username || 'PG Owner'
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
+  const imageUrl = profile?.profileImageUrl
+  const fullImageUrl = imageUrl
+    ? (imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL.replace(/\/$/, '')}/${imageUrl.replace(/^\//, '')}`)
+    : null
 
   return (
     <div
@@ -387,22 +475,32 @@ function SidebarProfile({ collapsed, mobile, onLogoutClick }) {
         collapsed && !mobile ? 'justify-center' : 'justify-start'
       )}
     >
-      <div className="h-10 w-10 rounded-full bg-white/20 text-white flex items-center justify-center font-semibold">
-        {displayName.charAt(0).toUpperCase()}
+      <div className="h-10 w-10 rounded-full bg-white/20 text-white flex items-center justify-center font-semibold overflow-hidden border border-white/10 shrink-0">
+        {fullImageUrl ? (
+          <img src={fullImageUrl} alt={displayName} className="h-full w-full object-cover" />
+        ) : (
+          displayName.charAt(0).toUpperCase()
+        )}
       </div>
 
       {(!collapsed || mobile) && (
-        <div className="flex-1">
-          <div className="text-sm font-semibold text-white">
-            {displayName}
+        <>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-black text-white uppercase tracking-tight truncate">
+              {displayName}
+            </div>
+            <div className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] opacity-80">
+              PG Admin
+            </div>
           </div>
           <button
             onClick={onLogoutClick}
-            className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-400 transition-colors"
+            className="p-2.5 text-slate-400 hover:text-rose-400 transition-colors group/btn shrink-0"
+            title="Logout"
           >
-            Logout
+            <LogOut size={18} className="group-hover/btn:translate-x-0.5 transition-transform" />
           </button>
-        </div>
+        </>
       )}
     </div>
   )

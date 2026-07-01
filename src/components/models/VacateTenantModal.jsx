@@ -90,22 +90,28 @@ const isToday = tenant?.end && date && selectedDate.isSame(dayjs(), 'day')
           )}
           {/* ---------- EARLY VACATE WARNING ---------- */}
           {isEarlyVacate && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-              Selected date is less than 30 days from today.
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-rose-800 font-black text-[10px] uppercase tracking-widest mb-2">
+                <div className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                Action Required: Early Vacate
+              </div>
+              <p className="text-xs text-rose-700 font-medium leading-relaxed">
+                Selected date is less than 30 days from today. This requires an administrative override and a valid reason.
+              </p>
             </div>
           )}
 
           {/* ---------- OVERRIDE SECTION ---------- */}
           {isEarlyVacate && (
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm">
+            <div className="space-y-3 pt-2">
+              <label className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer transition-colors hover:bg-slate-100">
                 <input
                   type="checkbox"
                   checked={override}
                   onChange={e => setOverride(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                Allow early vacating (override)
+                <span className="text-xs font-black text-slate-700 uppercase tracking-tight">Confirm administrative override</span>
               </label>
 
               {override && (

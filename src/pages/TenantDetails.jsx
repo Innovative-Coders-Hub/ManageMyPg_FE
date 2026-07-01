@@ -37,7 +37,7 @@ import PaymentModal from '../components/models/PaymentModal'
 import { printRentReceipt } from '../components/PrintRentReceipt'
 import { numberToWords } from '../components/utills/numberUtils'
 
-const IMAGE_BASE_URL = 'https://api.managemypg.com/managemypg'
+const IMAGE_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
 
 export default function TenantDetails() {
   const { tenantId } = useParams()
@@ -182,16 +182,16 @@ export default function TenantDetails() {
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors group mb-4"
+            className="flex items-center gap-1.5 text-slate-400 hover:text-indigo-600 transition-colors group mb-2"
           >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Back to Registry</span>
+            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Back to Registry</span>
           </button>
 
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-6">
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
@@ -223,10 +223,6 @@ export default function TenantDetails() {
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <Hash size={14} className="text-indigo-600" />
-                    <span className="text-[11px] font-black uppercase tracking-widest">{tenant.id.slice(-12)}</span>
-                  </div>
                   <div className="flex items-center gap-1.5">
                     <Building2 size={14} className="text-indigo-600" />
                     <span className="text-[11px] font-black uppercase tracking-widest">{tenant.pgName}</span>
