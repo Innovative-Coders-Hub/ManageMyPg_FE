@@ -21,18 +21,20 @@ import {
   Plus,
   Loader2,
   Building2,
-  Bed as BedIcon
+  Bed as BedIcon,
+  MessageSquare,
+  Eye
 } from 'lucide-react'
 import { getAllTenants, getAllPgs } from '../api/ownerAuth'
 
 function TopStat({ label, value, icon, isAccent = false }) {
   return (
-    <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
-      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
+    <div className={`flex-1 min-w-0 px-2 py-2 rounded-xl border flex flex-col items-center justify-center transition-all ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
+      <div className={`flex items-center gap-1.5 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
         {React.cloneElement(icon, { size: 10 })}
-        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+        <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate">{label}</span>
       </div>
-      <div className="text-sm font-black leading-none">{value}</div>
+      <div className="text-xs sm:text-sm font-black leading-none">{value}</div>
     </div>
   )
 }
@@ -60,6 +62,37 @@ const initials = (name = '') =>
     .slice(0, 2)
     .map(s => s[0]?.toUpperCase())
     .join('') || '?'
+
+function TenantAvatar({ name, profileImageUrl, vacated }) {
+  const [imageError, setImageError] = useState(false)
+  const showImage = Boolean(profileImageUrl) && !imageError
+
+  return (
+    <div
+      className={`shrink-0 relative w-12 h-12 sm:w-16 sm:h-16 overflow-hidden rounded-full sm:rounded-2xl border shadow-sm ${
+        vacated
+          ? 'bg-slate-50 text-slate-400 border-slate-100'
+          : 'bg-indigo-600 text-white border-indigo-500'
+      }`}
+    >
+      {showImage ? (
+        <img
+          src={profileImageUrl}
+          alt={name}
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          loading="lazy"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-base sm:text-xl font-black uppercase tracking-tight">
+            {initials(name)}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function Tenants() {
   const navigate = useNavigate()
@@ -109,7 +142,10 @@ export default function Tenants() {
     init()
   }, [pgId, navigate])
 
+  const [searchQuery, setSearchQuery] = useState('')
+
   const tenants = useMemo(() => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
     return tenantsRaw.map(t => {
       const isVacated = t.vacated === true
       const isNewlyJoined = dayjs().diff(dayjs(t.dateOfJoining), 'day') <= 7
@@ -121,9 +157,12 @@ export default function Tenants() {
         email: t.email,
         start: t.dateOfJoining,
         end: t.dateOfVacate,
-        bedId: t.bedId,
+        bedId: t.bedDetail,
         vacated: isVacated,
         newlyJoined: isNewlyJoined,
+        profileImageUrl: t.profileImageUrl
+          ? (t.profileImageUrl.startsWith('http') ? t.profileImageUrl : `${API_BASE_URL.replace(/\/$/, '')}/${t.profileImageUrl.replace(/^\//, '')}`)
+          : null,
         rent: t.rentResponse?.[0] || null,
       }
     })
@@ -131,13 +170,25 @@ export default function Tenants() {
 
   const filtered = useMemo(() => {
     return tenants.filter(t => {
-      if (filters.active && !t.vacated) return true
-      if (filters.vacated && t.vacated) return true
-      if (filters.newlyJoined && t.newlyJoined) return true
-      if (!filters.active && !filters.vacated && !filters.newlyJoined) return true
-      return false
+      // 1. Apply Status Filter (Mutual Exclusive)
+      let matchesFilter = true
+      if (filters.active) matchesFilter = !t.vacated
+      else if (filters.vacated) matchesFilter = t.vacated
+      else if (filters.newlyJoined) matchesFilter = t.newlyJoined
+
+      if (!matchesFilter) return false
+
+      // 2. Apply Search Filter (Name, Email, or Mobile)
+      if (!searchQuery.trim()) return true
+
+      const query = searchQuery.toLowerCase()
+      return (
+        t.name?.toLowerCase().includes(query) ||
+        t.email?.toLowerCase().includes(query) ||
+        t.phone?.includes(query)
+      )
     })
-  }, [tenants, filters])
+  }, [tenants, filters, searchQuery])
 
   const stats = useMemo(() => {
     const total = tenants.length
@@ -165,7 +216,7 @@ export default function Tenants() {
             title="Tenant Registry"
             subtitle="Enterprise resident community management"
           >
-            <div className="flex flex-wrap items-center justify-end gap-1.5">
+            <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 w-full md:w-auto mt-4 md:mt-0">
               <TopStat label="Total" value={stats.total} icon={<Users />} />
               <TopStat label="Active" value={stats.active} icon={<UserCheck />} isAccent />
               <TopStat label="Vacated" value={stats.vacated} icon={<UserMinus />} />
@@ -178,44 +229,71 @@ export default function Tenants() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <div className="flex flex-col gap-6">
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-slate-400 mr-1">
-              <Filter size={12} />
-              <span className="text-[9px] font-black uppercase tracking-widest">Filters</span>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Search Bar */}
+            <div className="relative flex-1 min-w-[280px] max-w-md">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search size={16} className="text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search name, email, or mobile..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
             </div>
-            <FilterPill
-              label="Active"
-              icon={UserCheck}
-              active={filters.active}
-              onClick={() => setFilters(f => ({ ...f, active: !f.active }))}
-              activeClass="bg-indigo-600 border-indigo-500 text-white"
-            />
-            <FilterPill
-              label="Vacated"
-              icon={UserMinus}
-              active={filters.vacated}
-              onClick={() => setFilters(f => ({ ...f, vacated: !f.vacated }))}
-              activeClass="bg-slate-900 border-slate-800 text-white"
-            />
-            <FilterPill
-              label="Newly Joined"
-              icon={TrendingUp}
-              active={filters.newlyJoined}
-              onClick={() => setFilters(f => ({ ...f, newlyJoined: !f.newlyJoined }))}
-              activeClass="bg-emerald-600 border-emerald-500 text-white"
-            />
-            {(filters.active || filters.vacated || filters.newlyJoined) && (
-              <button
-                onClick={() => setFilters({ active: false, vacated: false, newlyJoined: false })}
-                className="text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-rose-100 transition-colors ml-2 border border-rose-100"
-              >
-                Clear
-              </button>
-            )}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-slate-400 mr-1">
+                <Filter size={12} />
+                <span className="text-[9px] font-black uppercase tracking-widest">Filters</span>
+              </div>
+              <FilterPill
+                label="Active"
+                icon={UserCheck}
+                active={filters.active}
+                onClick={() => setFilters({ active: true, vacated: false, newlyJoined: false })}
+                activeClass="bg-indigo-600 border-indigo-500 text-white"
+              />
+              <FilterPill
+                label="Vacated"
+                icon={UserMinus}
+                active={filters.vacated}
+                onClick={() => setFilters({ active: false, vacated: true, newlyJoined: false })}
+                activeClass="bg-slate-900 border-slate-800 text-white"
+              />
+              <FilterPill
+                label="Newly Joined"
+                icon={TrendingUp}
+                active={filters.newlyJoined}
+                onClick={() => setFilters({ active: false, vacated: false, newlyJoined: true })}
+                activeClass="bg-emerald-600 border-emerald-500 text-white"
+              />
+              {(filters.active || filters.vacated || filters.newlyJoined || searchQuery) && (
+                <button
+                  onClick={() => {
+                    setFilters({ active: false, vacated: false, newlyJoined: false });
+                    setSearchQuery('');
+                  }}
+                  className="text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-rose-100 transition-colors ml-2 border border-rose-100"
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <AnimatePresence mode="popLayout">
               {filtered.length === 0 ? (
                 <motion.div
@@ -223,9 +301,9 @@ export default function Tenants() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="col-span-full bg-white rounded-xl border-2 border-dashed border-slate-200 py-32 text-center"
+                  className="w-full lg:col-span-2 2xl:col-span-3 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 py-32 text-center"
                 >
-                  <div className="mx-auto w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 mb-6">
+                  <div className="mx-auto w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-6">
                     <Users size={40} />
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">No Residents Found</h2>
@@ -238,65 +316,122 @@ export default function Tenants() {
                   <motion.div
                     key={t.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="group bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden h-full flex flex-col"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    onClick={() => navigate(`/tenant/${t.id}`)}
+                    className="group bg-white rounded-[1.25rem] sm:rounded-2xl border border-slate-100 p-3 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row items-stretch sm:items-start gap-3 sm:gap-4 cursor-pointer hover:border-indigo-100 active:scale-[0.99] h-full"
                   >
-                    {/* Header Section */}
-                    <div className="flex items-start justify-between mb-5">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border transition-all duration-300 shrink-0 shadow-sm ${
-                          t.vacated ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-indigo-600 text-white border-indigo-500'
+                    {/* Mobile Top View / Desktop Avatar View */}
+                    <div className="flex items-start gap-3 sm:gap-4">
+                      {/* Avatar */}
+                      <div className="relative shrink-0">
+                        <TenantAvatar
+                          name={t.name}
+                          profileImageUrl={t.profileImageUrl}
+                          vacated={t.vacated}
+                        />
+                        {!t.vacated && (
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full sm:hidden" />
+                        )}
+                      </div>
+
+                      {/* Name & Room (Mobile Only) */}
+                      <div className="flex-1 min-w-0 sm:hidden">
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight truncate">
+                          {t.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <BedIcon size={10} className="text-amber-500" />
+                          <span className="text-[10px] font-bold text-slate-500 uppercase truncate">
+                            {t.bedId || 'Not Assigned'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Status & Phone (Mobile Only - Right) */}
+                      <div className="flex flex-col items-end gap-1.5 sm:hidden">
+                        <span className={`px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest border ${
+                          t.vacated ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                         }`}>
-                          <div className="text-sm font-black">{initials(t.name)}</div>
+                          {t.vacated ? 'Vacated' : 'Active'}
+                        </span>
+                        <div className="flex items-center gap-1 text-indigo-600">
+                          <Phone size={10} />
+                          <span className="text-[10px] font-black tracking-tight">{t.phone || 'N/A'}</span>
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight leading-none truncate">{t.name}</h3>
-                          <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">ID: {String(t.id).slice(-8)}</p>
+                      </div>
+                    </div>
+
+                    {/* Desktop Content View */}
+                    <div className="hidden sm:flex flex-1 min-w-0 flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight truncate">
+                            {t.name}
+                          </h3>
+                        </div>
+                        <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                          t.vacated ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        }`}>
+                          {t.vacated ? 'Vacated' : 'Active'}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2.5 text-slate-400">
+                          <Phone size={12} className="shrink-0 text-slate-300" />
+                          <span className="text-sm font-bold text-slate-600 tracking-tight">{t.phone || 'No Phone'}</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 text-slate-400">
+                          <Mail size={12} className="shrink-0 text-slate-300" />
+                          <span className="text-sm font-bold text-slate-500 truncate">{t.email || 'No Email'}</span>
                         </div>
                       </div>
-                      <div className={`shrink-0 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${t.vacated ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                        {t.vacated ? 'Vacated' : 'Active'}
+
+                      {/* Info Highlights - Gray Box */}
+                      <div className="bg-slate-50/80 rounded-xl px-4 py-2 border border-slate-100 flex items-center justify-between mt-1">
+                        <div className="flex flex-col">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Joined</span>
+                          <span className="text-sm font-black text-slate-900 uppercase">{t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}</span>
+                        </div>
+                        <div className="flex flex-col text-right">
+                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Bed Allocation</span>
+                          <span className="text-sm font-black text-slate-900 uppercase truncate">
+                            {t.bedId || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Button - Desktop Only */}
+                      <div className="mt-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200">
+                        PROFILE <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
 
-                    {/* Contact Bar */}
-                    <div className="flex flex-col gap-1.5 mb-5 px-0.5">
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <Phone size={11} className="shrink-0" />
-                        <span className="text-[10px] font-bold text-slate-600 tracking-tight">{t.phone || 'No Phone'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <Mail size={11} className="shrink-0" />
-                        <span className="text-[10px] font-bold text-slate-500 truncate">{t.email || 'No Email'}</span>
-                      </div>
-                    </div>
-
-                    {/* High Density Info Bar */}
-                    <div className="flex items-center justify-between bg-slate-50/50 rounded-xl px-4 py-2 border border-slate-100 mb-6">
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Joined</span>
-                        <span className="text-[11px] font-black text-slate-900 mt-0.5">{t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}</span>
-                      </div>
-                      <div className="flex flex-col text-right">
-                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Bed</span>
-                        <span className="text-[11px] font-black text-slate-900 mt-0.5">{t.bedId || 'N/A'}</span>
-                      </div>
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="mt-auto flex items-center justify-between gap-1.5 pt-1">
-                      <div className="flex items-center gap-1.5 text-slate-400">
-                         <Building2 size={12} />
-                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Resident</span>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/tenant/${t.id}`)}
-                        className="ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 min-w-[80px] whitespace-nowrap"
+                    {/* Mobile Action Buttons (Match Image Reference) */}
+                    <div className="flex sm:hidden items-center gap-2 pt-1">
+                      <a
+                        href={`tel:${t.phone}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-100 text-slate-900 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all"
                       >
-                        Profile <ArrowRight size={14} />
-                      </button>
+                        <Phone size={12} className="text-indigo-600" /> Call
+                      </a>
+                      <a
+                        href={`https://wa.me/${t.phone}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-100 text-slate-900 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                      >
+                        <MessageSquare size={12} className="text-emerald-500" /> WhatsApp
+                      </a>
+                      <div
+                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900/5 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                      >
+                        <Eye size={12} className="text-amber-500" /> Profile
+                      </div>
                     </div>
                   </motion.div>
                 ))

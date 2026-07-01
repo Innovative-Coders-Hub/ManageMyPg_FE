@@ -44,22 +44,14 @@ export async function updateOwnerAddress(address) {
 export async function uploadOwnerProfileImage(file) {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await api.post('/mmp/owner/profile/image', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+  const res = await api.post('/mmp/owner/profile/image', formData)
   return res.data
 }
 
 export async function uploadTenantProfileImage(file) {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await api.post('/mmp/tenants/profile/image', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+  const res = await api.post('/mmp/tenants/profile/image', formData)
   return res.data
 }
 
@@ -91,11 +83,7 @@ export async function updatePgPricing(pgId, payload) {
 export async function uploadPgTerms(pgId, file) {
   const formData = new FormData()
   formData.append('file', file)
-  const res = await api.post(`/mmp/pg/${pgId}/terms`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  })
+  const res = await api.post(`/mmp/pg/${pgId}/terms`, formData)
   return res.data
 }
 
@@ -249,6 +237,11 @@ export async function transferBed(bedId, payload) {
 
 // ---------- DASHBOARD & ANALYTICS ----------
 
+export async function getOwnerDashboard() {
+  const res = await api.get('/mmp/owner/dashboard')
+  return res.data
+}
+
 export async function getRevenueTrends(pgId) {
   const res = await api.get(`/mmp/owner/revenue-trends`, { params: { pgId } })
   return res.data
@@ -256,5 +249,93 @@ export async function getRevenueTrends(pgId) {
 
 export async function getRealTimeAlerts(pgId) {
   const res = await api.get(`/mmp/owner/alerts`, { params: { pgId } })
+  return res.data
+}
+
+// ---------- BOOKINGS ----------
+
+export async function getBedAvailability(pgId) {
+  const res = await api.get(`/api/bookings/pg/${pgId}/bed-availability`)
+  return res.data
+}
+
+export async function createBooking(payload) {
+  const res = await api.post('/api/bookings', payload)
+  return res.data
+}
+
+export async function getBookingDetails(bookingId) {
+  const res = await api.get(`/api/bookings/${bookingId}`)
+  return res.data
+}
+
+export async function getPgBookingSummary(pgId) {
+  const res = await api.get(`/api/bookings/pg/${pgId}/summary`)
+  return res.data
+}
+
+export async function cancelBooking(bookingId, params) {
+  const res = await api.post(`/api/bookings/${bookingId}/cancel`, null, { params })
+  return res.data
+}
+
+export async function getAllBookings(pgId) {
+  const res = await api.get(`/api/bookings/pg/${pgId}`)
+  return res.data
+}
+
+export async function completeBooking(bookingId, payload) {
+  const res = await api.post(`/api/bookings/${bookingId}/complete`, payload)
+  return res.data
+}
+
+// ---------- WORKERS ----------
+
+export async function createWorker(workerDetails, imageFile) {
+  const formData = new FormData()
+  // The backend expects the 'request' part as a JSON string
+  formData.append('request', JSON.stringify(workerDetails))
+  if (imageFile) {
+    formData.append('file', imageFile)
+  }
+  const res = await api.post('/mmp/workers', formData)
+  return res.data
+}
+
+export async function getWorkers(pgId, params = {}) {
+  const res = await api.get('/mmp/workers', {
+    params: { pgId, ...params }
+  })
+  return res.data
+}
+
+export async function updateWorker(workerId, payload) {
+  const res = await api.put(`/mmp/workers/${workerId}`, payload)
+  return res.data
+}
+
+export async function updateWorkerStatus(workerId, status) {
+  const res = await api.patch(`/mmp/workers/${workerId}/status`, null, {
+    params: { status }
+  })
+  return res.data
+}
+
+export async function updateWorkerImage(workerId, file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await api.post(`/mmp/workers/${workerId}/image`, formData)
+  return res.data
+}
+
+export async function deleteWorker(workerId) {
+  const res = await api.delete(`/mmp/workers/${workerId}`)
+  return res.data
+}
+
+// ---------- ACCOUNT DELETION ----------
+
+export async function deleteOwnerAccount() {
+  const res = await api.delete('/mmp/owner/delete-account')
   return res.data
 }

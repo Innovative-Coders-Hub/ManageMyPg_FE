@@ -35,6 +35,8 @@ const TenantTransfer = lazy(() => import('./pages/TenantTransfer'))
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'))
 const TenantDetails = lazy(() => import('./pages/TenantDetails'))
+const Bookings = lazy(() => import('./pages/Bookings'))
+const Workers = lazy(() => import('./pages/Workers'))
 
 const cx = (...c) => c.filter(Boolean).join(' ')
 
@@ -57,15 +59,7 @@ function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link to="/home" className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow">
-            Home Page
-          </Link>
-          <Link to="/manage/mypg/signin" className="px-4 py-2 rounded-xl hover:bg-gray-100 text-sm font-medium">
-            Sign in
-          </Link>
-          <Link to="/manage/mypg/signup" className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow">
-            Create account
-          </Link>
+          {/* Public landing page header links removed as per security policy */}
         </div>
       </div>
     </header>
@@ -226,6 +220,8 @@ const hideSidebar =
               <Route path="/reports" element={<RequireOwner><Reports /></RequireOwner>} />
               <Route path="/offers" element={<RequireOwner><Offers /></RequireOwner>} />
               <Route path="/tenants" element={<RequireOwner><Tenants /></RequireOwner>} />
+              <Route path="/workers" element={<RequireOwner><Workers /></RequireOwner>} />
+              <Route path="/bookings" element={<RequireOwner><Bookings /></RequireOwner>} />
               <Route path="/complaints" element={<RequireOwner><OwnerComplaints /></RequireOwner>} />
               <Route path="/ownerProfile" element={<RequireOwner><OwnerProfile mode="profile" /></RequireOwner>} />
               <Route path="/owner/onboarding" element={<RequireOwner><OwnerProfile mode="onboarding" /></RequireOwner>} />
