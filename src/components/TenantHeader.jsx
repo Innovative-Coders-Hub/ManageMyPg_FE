@@ -13,7 +13,7 @@ import {
   MessageSquare,
   UserCircle
 } from 'lucide-react'
-import { ownerLogout } from '../api/ownerAuth'
+import LogoImg from '../assets/managemypg.png'
 
 const BASE_URL = 'https://api.managemypg.com/managemypg'
 
@@ -68,13 +68,13 @@ export default function TenantHeader({ tenant }) {
       scrolled ? 'bg-white/90 backdrop-blur-xl shadow-sm border-b border-slate-200' : 'bg-white border-b border-slate-100'
     }`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between">
+        <div className="flex items-center justify-between py-2">
 
           {/* Left: Brand & PG Info */}
           <div className="flex items-center gap-6 lg:gap-10">
             <Link to="/tenant/dashboard" className="flex items-center gap-3 group">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-200 transition-all group-hover:scale-105 group-hover:rotate-3">
-                <ShieldCheck size={24} strokeWidth={2.5} />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white border border-slate-100 p-0 shadow-xl shadow-indigo-100 transition-all group-hover:scale-105 group-hover:rotate-3 overflow-hidden">
+                <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
               </div>
               <div className="hidden sm:block">
                 <span className="block text-sm font-black text-slate-900 uppercase tracking-tighter leading-none">ManageMyPg</span>

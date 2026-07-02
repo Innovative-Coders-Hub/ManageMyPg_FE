@@ -63,8 +63,11 @@ function ForecastBar({ forecast }) {
 }
 
 function RevenueChart({ data }) {
-  const max = Math.max(...data);
-  const min = Math.min(...data);
+  if (!data || data.length === 0) {
+     return <div className="h-32 flex items-center justify-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No data available</div>
+  }
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
 
   return (
     <div className="flex items-end gap-3 h-32 px-2">
@@ -181,6 +184,8 @@ export default function Home() {
 
     if (selectedPgId === 'overall') {
       const m = dashboardData.metrics;
+      const history = dashboardData.monthlyAnalytics?.lastThreeMonths?.map(m => m.totalRentCollected).reverse() || [0, 0, 0];
+
       return {
         name: "Overall Portfolio",
         totalBeds: m.totalBeds,
@@ -191,29 +196,32 @@ export default function Home() {
         openComplaints: m.totalOpenComplaints,
         vacatings: m.totalTodayVacatings,
         isOverall: true,
-        revenueHistory: [80, 90, 95, 100, 110, 108],
-        occupancyForecast: [78, 82, 85],
-        alerts: ["Operational sync active"],
+        revenueHistory: history,
+        occupancyForecast: [m.overallOccupancyRate, m.overallOccupancyRate, m.overallOccupancyRate],
+        alerts: m.totalPendingApprovals > 0 ? [`${m.totalPendingApprovals} pending tenant approvals`] : [],
       };
     }
 
     const pg = dashboardData.pgSummaries.find(p => p.pgId === selectedPgId);
     if (!pg) return null;
 
+    // Note: pgSummaries doesn't have history in the provided sample,
+    // but we can fallback to metrics or empty if not available.
     return {
       name: pg.pgName,
       totalBeds: pg.totalBeds,
       occupiedBeds: pg.occupiedBeds,
       occupancyRate: pg.occupancyRate,
       pendingRents: pg.pendingRents,
+      rentsCollected: pg.totalRentsCollected,
       openComplaints: pg.openComplaints,
-      vacatings: pg.upcomingVacatings,
+      vacatings: pg.todayVacatings,
       isOverall: false,
-      revenueHistory: revenueTrends && revenueTrends.length > 0 ? revenueTrends : [80, 90, 95, 100, 110, 108],
-      occupancyForecast: [78, 82, 85],
-      alerts: alerts && alerts.length > 0 ? alerts : ["Operational sync active"],
+      revenueHistory: [pg.totalRentsCollected],
+      occupancyForecast: [pg.occupancyRate],
+      alerts: pg.pendingApprovals > 0 ? [`${pg.pendingApprovals} pending tenant approvals`] : [],
     };
-  }, [dashboardData, selectedPgId, revenueTrends, alerts]);
+  }, [dashboardData, selectedPgId]);
 
   if (loading) {
     return (

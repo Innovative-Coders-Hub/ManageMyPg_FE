@@ -2,6 +2,12 @@ module.exports = {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
+        '26': '6.5rem',
+        '28': '7rem',
+      },
       animation: {
         blob: "blob 7s infinite",
         shimmer: "shimmer 2s infinite linear",

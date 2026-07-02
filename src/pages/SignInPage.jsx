@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { ownerLogin } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
+import LogoImg from '../assets/managemypg.png'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -147,13 +148,11 @@ export default function SignInPage() {
           <motion.div variants={itemVariants} className="text-center mb-10">
             <div className="inline-flex relative mb-6">
               <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 relative z-10 shadow-2xl">
-                <div className="h-full w-full rounded-[1.4rem] bg-slate-900 flex items-center justify-center text-indigo-400">
-                  <ShieldCheck size={36} strokeWidth={1.5} />
-                </div>
+              <div className="h-24 w-24 rounded-full bg-white p-0 relative z-10 shadow-2xl flex items-center justify-center overflow-hidden">
+                <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
               </div>
-              <div className="absolute -bottom-1 -right-1 h-7 w-7 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-xl z-20">
-                <Fingerprint size={14} />
+              <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-xl z-20">
+                <Fingerprint size={16} />
               </div>
             </div>
             <h1 className="text-3xl font-black text-white tracking-tight mb-2">Welcome Back</h1>

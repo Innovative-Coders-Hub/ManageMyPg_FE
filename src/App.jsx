@@ -8,6 +8,7 @@ import { ownerLogout } from './api/ownerAuth'
 import PageLoader from './components/PageLoader'
 import useRouteLoader from './hooks/useRouteLoader'
 import { Toaster } from 'react-hot-toast'
+import LogoImg from './assets/managemypg.png'
 
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 const SignInPage = lazy(() => import('./pages/SignInPage'))
@@ -44,22 +45,27 @@ function Header() {
   const { pathname } = useLocation()
   const isLanding = pathname === '/'
 
-  // This component is now only used for the public landing page.
-  // Other routes use role-specific headers or the sidebar.
   if (!isLanding) return null
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 py-2 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow" />
-            <span className="font-extrabold text-lg tracking-tight">ManageMyPg</span>
-          </div>
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="h-24 w-24 rounded-full bg-white border border-slate-100 p-0 shadow-sm group-hover:shadow-md transition-all overflow-hidden">
+              <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
+            </div>
+            <span className="font-black text-2xl tracking-tighter text-slate-900">ManageMyPg</span>
+          </Link>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Public landing page header links removed as per security policy */}
+        <div className="flex items-center gap-4">
+          <Link to="/manage/mypg/signin" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+            Sign In
+          </Link>
+          <Link to="/manage/mypg/signup" className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all">
+            Join Now
+          </Link>
         </div>
       </div>
     </header>
@@ -187,11 +193,11 @@ const hideSidebar =
 
           <main className={cx(
             "flex-1 px-4 py-4 transition-all duration-200 relative",
-            showMobileHamburger && "pt-14 md:pt-4"
+            showMobileHamburger && "pt-24 md:pt-4"
           )}>
             {/* Mobile Hamburger Trigger (Visible when Header is hidden on Dashboard routes) */}
             {showMobileHamburger && (
-              <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b px-4 py-3 flex items-center gap-3">
+              <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b px-4 py-2 flex items-center gap-3">
                 <button
                   onClick={() => setMobileOpen(true)}
                   className="p-2 rounded-xl bg-indigo-600 text-white shadow-lg hover:bg-indigo-700 transition-all active:scale-95"
@@ -201,7 +207,12 @@ const hideSidebar =
                     <path d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 </button>
-                <span className="font-black text-slate-900 uppercase tracking-tighter">ManageMyPg</span>
+                <div className="flex items-center gap-2">
+                  <div className="h-12 w-12 rounded-full bg-white border border-slate-100 p-0 shadow-sm overflow-hidden">
+                    <img src={LogoImg} alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                  <span className="font-black text-slate-900 uppercase tracking-tighter text-lg">ManageMyPg</span>
+                </div>
               </div>
             )}
             <Routes>
