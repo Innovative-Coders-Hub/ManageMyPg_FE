@@ -12,6 +12,7 @@ import {
   ShieldCheck
 } from 'lucide-react'
 import { adminLogout } from '../api/adminAuth'
+import LogoImg from '../assets/managemypg.png'
 
 export default function AdminHeader() {
   const { pathname } = useLocation()
@@ -49,13 +50,13 @@ export default function AdminHeader() {
       scrolled ? 'bg-white/80 backdrop-blur-md shadow-sm border-b' : 'bg-white border-b'
     }`}>
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex items-center justify-between py-2">
 
           {/* Left: Brand */}
           <div className="flex items-center gap-8">
             <Link to="/admin/dashboard" className="flex items-center gap-2.5 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-transform group-hover:scale-105">
-                <ShieldCheck size={22} />
+              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white border border-slate-200 p-0 shadow-sm transition-all group-hover:shadow-md group-hover:scale-105 overflow-hidden">
+                <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
               </div>
               <div className="hidden sm:block">
                 <span className="block text-sm font-black text-slate-900 uppercase tracking-tighter leading-none">ManageMyPg</span>

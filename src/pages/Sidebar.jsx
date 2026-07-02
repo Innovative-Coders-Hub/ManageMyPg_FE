@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { ownerLogout, getAllPgs, getOwnerProfile } from '../api/ownerAuth'
 import ConfirmModal from '../components/ConfirmModal'
+import LogoImg from '../assets/managemypg.png'
 
 /* ---------------- Nav Config ---------------- */
 const NAV = [
@@ -377,19 +378,47 @@ useEffect(() => {
           'bg-gradient-to-b from-indigo-700 via-indigo-800 to-slate-900'
         )}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-white/10">
+        <div className={cx(
+          "flex items-center border-b border-white/10 px-4 py-4 transition-all duration-300",
+          collapsed ? "justify-center" : "justify-between"
+        )}>
+          <div className={cx("flex items-center min-w-0 flex-1", collapsed ? "justify-center" : "gap-3")}>
+            <div className={cx(
+              "rounded-full bg-white p-0 border border-white/10 transition-all duration-300 overflow-hidden shrink-0",
+              collapsed ? "h-10 w-10" : "h-12 w-12"
+            )}>
+              <img src={LogoImg} alt="Logo" className="w-full h-full object-contain" />
+            </div>
+            {!collapsed && (
+              <span className="text-xl font-black text-white tracking-tighter truncate">
+                {businessName}
+              </span>
+            )}
+          </div>
           {!collapsed && (
-            <span className="text-lg font-bold text-white">
-              {businessName}
-            </span>
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-2 rounded-xl hover:bg-white/10 text-white transition-colors"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           )}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="p-2 rounded-md hover:bg-white/10 text-white"
-          >
-            ☰
-          </button>
         </div>
+
+        {collapsed && (
+          <div className="px-4 py-2 flex justify-center border-b border-white/5">
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="p-2 rounded-xl hover:bg-white/10 text-white transition-colors"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {NAV.map((item) => (
@@ -412,8 +441,11 @@ useEffect(() => {
           'bg-gradient-to-b from-indigo-700 via-indigo-800 to-slate-900'
         )}
       >
-        <div className="px-4 py-4 border-b border-white/10 font-bold text-white">
-          {businessName}
+        <div className="px-4 py-4 border-b border-white/10 font-bold text-white flex items-center gap-3 min-w-0">
+          <div className="h-12 w-12 rounded-full bg-white p-0 border border-white/10 overflow-hidden shrink-0">
+            <img src={LogoImg} alt="Logo" className="w-full h-full object-contain" />
+          </div>
+          <span className="truncate text-xl font-black tracking-tighter">{businessName}</span>
         </div>
 
         <nav className="px-3 py-4 space-y-1">

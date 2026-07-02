@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom"
+import LogoImg from "../assets/managemypg.png"
 
 export default function Footer() {
   return (
@@ -6,8 +7,10 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 grid md:grid-cols-4 gap-12">
         <div className="md:col-span-1">
           <div className="flex items-center gap-2 mb-6">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow" />
-            <span className="font-extrabold text-white text-lg tracking-tight">ManageMyPg</span>
+            <div className="h-24 w-24 rounded-full bg-white p-0 shadow-sm overflow-hidden">
+              <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
+            </div>
+            <span className="font-black text-white text-xl tracking-tight">ManageMyPg</span>
           </div>
           <p className="text-sm leading-relaxed">
             The next-generation operating system for PG owners. Simplify management, scale faster, and stay ahead.

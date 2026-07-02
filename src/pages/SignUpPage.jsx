@@ -10,11 +10,11 @@ import {
   AlertCircle,
   Loader2,
   ChevronLeft,
-  ShieldCheck,
   CheckCircle2
 } from 'lucide-react'
 import { registerOwner } from '../api/ownerAuth'
 import SuccessPopup from '../components/SuccessPopup'
+import LogoImg from '../assets/managemypg.png'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -144,10 +144,8 @@ export default function SignUpPage() {
           <motion.div variants={itemVariants} className="text-center mb-8">
             <div className="inline-flex relative mb-4">
               <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 relative z-10 shadow-2xl">
-                <div className="h-full w-full rounded-[0.9rem] bg-slate-900 flex items-center justify-center text-indigo-400">
-                  <ShieldCheck size={28} strokeWidth={1.5} />
-                </div>
+              <div className="h-24 w-24 rounded-full bg-white p-0 relative z-10 shadow-2xl flex items-center justify-center overflow-hidden">
+                <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
               </div>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight mb-1">Create Account</h1>
