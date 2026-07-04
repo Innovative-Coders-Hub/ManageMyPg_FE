@@ -23,18 +23,102 @@ import {
   Building2,
   Bed as BedIcon,
   MessageSquare,
-  Eye
+  Eye,
+  ChevronDown
 } from 'lucide-react'
 import { getAllTenants, getAllPgs } from '../api/ownerAuth'
 
-function TopStat({ label, value, icon, isAccent = false }) {
+function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50' }) {
   return (
-    <div className={`flex-1 min-w-0 px-2 py-2 rounded-xl border flex flex-col items-center justify-center transition-all ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
-      <div className={`flex items-center gap-1.5 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
-        {React.cloneElement(icon, { size: 10 })}
-        <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate">{label}</span>
+    <div className="bg-white p-2 sm:p-3.5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-2 sm:gap-3 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
+      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-2xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
+        <Icon className="w-4 h-4 sm:w-5 h-5" />
       </div>
-      <div className="text-xs sm:text-sm font-black leading-none">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-sm sm:text-lg font-black text-slate-900 leading-tight truncate">{value}</div>
+      </div>
+    </div>
+  )
+}
+
+function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white" }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = React.useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
+  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
+
+  return (
+    <div className={`relative ${className}`} ref={containerRef}>
+      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
+        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
+          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
+          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
+            {displayValue}
+          </span>
+        </div>
+        <ChevronDown
+          size={16}
+          strokeWidth={3}
+          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
+          >
+            {showAll && (
+              <button
+                type="button"
+                onClick={() => { onChange('ALL'); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                ALL {label}S
+              </button>
+            )}
+            {options.map((opt) => (
+              <button
+                key={opt.id || opt.value}
+                type="button"
+                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -43,7 +127,7 @@ function FilterPill({ active, onClick, label, icon: Icon, activeClass }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${
         active
           ? `${activeClass} shadow-md`
           : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
@@ -69,7 +153,7 @@ function TenantAvatar({ name, profileImageUrl, vacated }) {
 
   return (
     <div
-      className={`shrink-0 relative w-12 h-12 sm:w-16 sm:h-16 overflow-hidden rounded-full sm:rounded-2xl border shadow-sm ${
+      className={`shrink-0 relative w-10 h-10 sm:w-14 sm:h-14 overflow-hidden rounded-2xl border shadow-sm ${
         vacated
           ? 'bg-slate-50 text-slate-400 border-slate-100'
           : 'bg-indigo-600 text-white border-indigo-500'
@@ -85,7 +169,7 @@ function TenantAvatar({ name, profileImageUrl, vacated }) {
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-base sm:text-xl font-black uppercase tracking-tight">
+          <span className="text-sm sm:text-lg font-black uppercase tracking-tight">
             {initials(name)}
           </span>
         </div>
@@ -99,6 +183,7 @@ export default function Tenants() {
   const [searchParams] = useSearchParams()
   const pgId = searchParams.get('pgId')
 
+  const [pgs, setPgs] = useState([])
   const [tenantsRaw, setTenantsRaw] = useState([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -109,30 +194,24 @@ export default function Tenants() {
 
   useEffect(() => {
     async function init() {
-      if (!pgId) {
-        try {
-          setLoading(true)
-          const pgs = await getAllPgs()
-          if (pgs && pgs.length > 0) {
-            // Select the first PG by default and redirect
-            navigate(`?pgId=${pgs[0].id}`, { replace: true })
+      try {
+        setLoading(true)
+        const pgsData = await getAllPgs()
+        setPgs(pgsData || [])
+
+        if (!pgId) {
+          if (pgsData && pgsData.length > 0) {
+            navigate(`?pgId=${pgsData[0].id}`, { replace: true })
           } else {
             setLoading(false)
           }
-        } catch (e) {
-          console.error('Failed to fetch initial PGs:', e)
-          setLoading(false)
+          return
         }
-        return
-      }
 
-      // If pgId is available, fetch tenants
-      try {
-        setLoading(true)
         const data = await getAllTenants(pgId)
         setTenantsRaw(Array.isArray(data) ? data : [])
       } catch (e) {
-        console.error(e)
+        console.error('Failed to fetch data:', e)
         setTenantsRaw([])
       } finally {
         setLoading(false)
@@ -214,55 +293,75 @@ export default function Tenants() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader
             title="Tenant Registry"
-            subtitle="Enterprise resident community management"
+            subtitle="Tenant resident management"
           >
-            <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 w-full md:w-auto mt-4 md:mt-0">
-              <TopStat label="Total" value={stats.total} icon={<Users />} />
-              <TopStat label="Active" value={stats.active} icon={<UserCheck />} isAccent />
-              <TopStat label="Vacated" value={stats.vacated} icon={<UserMinus />} />
-              <TopStat label="New" value={stats.newJoins} icon={<TrendingUp />} />
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-center gap-2 sm:gap-3 w-full md:w-auto mt-4 md:mt-0">
+              <TopStat label="Total Residents" value={stats.total} icon={Users} />
+              <TopStat
+                label="Active"
+                value={stats.active}
+                icon={UserCheck}
+                colorClass="text-emerald-600"
+                bgClass="bg-emerald-50"
+              />
+              <TopStat label="Vacated" value={stats.vacated} icon={UserMinus} colorClass="text-slate-600" bgClass="bg-slate-50" />
+              <TopStat
+                label="Newly Joined"
+                value={stats.newJoins}
+                icon={TrendingUp}
+                colorClass="text-indigo-600"
+                bgClass="bg-indigo-50"
+              />
             </div>
           </PageHeader>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <div className="flex flex-col gap-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="flex flex-col gap-8">
           {/* Toolbar */}
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-stretch md:items-center gap-4">
+            {/* PG Selector */}
+            <CustomDropdown
+              label="Property Scope"
+              value={pgId || ''}
+              options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
+              onChange={(val) => navigate(`?pgId=${val}`)}
+              icon={Building2}
+              className="w-full md:w-72"
+              labelBg="bg-white"
+            />
+
             {/* Search Bar */}
-            <div className="relative flex-1 min-w-[280px] max-w-md">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search size={16} className="text-slate-400" />
+            <div className="relative flex-1 group w-full">
+              <label className="absolute -top-2.5 left-5 bg-white px-2 text-[9px] font-black text-indigo-600 uppercase tracking-widest z-20 transition-all duration-300">Search Directory</label>
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-500 group-focus-within:text-indigo-600 transition-colors pointer-events-none z-10">
+                <Search size={18} strokeWidth={2.5} />
               </div>
               <input
                 type="text"
-                placeholder="Search name, email, or mobile..."
+                placeholder="Name, Phone or Email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+                className="block w-full pl-12 pr-12 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all shadow-sm"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-rose-500 transition-colors z-10"
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </button>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-slate-400 mr-1">
-                <Filter size={12} />
-                <span className="text-[9px] font-black uppercase tracking-widest">Filters</span>
-              </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <FilterPill
                 label="Active"
                 icon={UserCheck}
                 active={filters.active}
                 onClick={() => setFilters({ active: true, vacated: false, newlyJoined: false })}
-                activeClass="bg-indigo-600 border-indigo-500 text-white"
+                activeClass="bg-emerald-600 border-emerald-500 text-white"
               />
               <FilterPill
                 label="Vacated"
@@ -276,24 +375,13 @@ export default function Tenants() {
                 icon={TrendingUp}
                 active={filters.newlyJoined}
                 onClick={() => setFilters({ active: false, vacated: false, newlyJoined: true })}
-                activeClass="bg-emerald-600 border-emerald-500 text-white"
+                activeClass="bg-indigo-600 border-indigo-500 text-white"
               />
-              {(filters.active || filters.vacated || filters.newlyJoined || searchQuery) && (
-                <button
-                  onClick={() => {
-                    setFilters({ active: false, vacated: false, newlyJoined: false });
-                    setSearchQuery('');
-                  }}
-                  className="text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-rose-100 transition-colors ml-2 border border-rose-100"
-                >
-                  Clear All
-                </button>
-              )}
             </div>
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
             <AnimatePresence mode="popLayout">
               {filtered.length === 0 ? (
                 <motion.div
@@ -301,13 +389,13 @@ export default function Tenants() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="w-full lg:col-span-2 2xl:col-span-3 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 py-32 text-center"
+                  className="w-full md:col-span-3 xl:col-span-4 bg-white rounded-[2.5rem] border border-slate-200 py-32 text-center shadow-sm"
                 >
-                  <div className="mx-auto w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-6">
-                    <Users size={40} />
+                  <div className="mx-auto w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-300 mb-8 border border-slate-100 shadow-inner">
+                    <Users size={48} />
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">No Residents Found</h2>
-                  <p className="mt-4 text-slate-500 font-medium max-w-sm mx-auto px-4">
+                  <p className="mt-4 text-[9px] font-black text-slate-400 uppercase tracking-widest max-w-sm mx-auto px-4">
                     Adjust your filters to see more tenants or register new ones via the PG view.
                   </p>
                 </motion.div>
@@ -320,118 +408,113 @@ export default function Tenants() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.98 }}
                     onClick={() => navigate(`/tenant/${t.id}`)}
-                    className="group bg-white rounded-[1.25rem] sm:rounded-2xl border border-slate-100 p-3 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row items-stretch sm:items-start gap-3 sm:gap-4 cursor-pointer hover:border-indigo-100 active:scale-[0.99] h-full"
+                    className="group bg-white rounded-[2rem] border border-slate-200 p-3.5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-stretch gap-3 cursor-pointer hover:border-indigo-200 active:scale-[0.99] h-full relative overflow-hidden"
                   >
-                    {/* Mobile Top View / Desktop Avatar View */}
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      {/* Avatar */}
-                      <div className="relative shrink-0">
-                        <TenantAvatar
-                          name={t.name}
-                          profileImageUrl={t.profileImageUrl}
-                          vacated={t.vacated}
-                        />
-                        {!t.vacated && (
-                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full sm:hidden" />
-                        )}
-                      </div>
-
-                      {/* Name & Room (Mobile Only) */}
-                      <div className="flex-1 min-w-0 sm:hidden">
-                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight truncate">
-                          {t.name}
-                        </h3>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <BedIcon size={10} className="text-amber-500" />
-                          <span className="text-[10px] font-bold text-slate-500 uppercase truncate">
-                            {t.bedId || 'Not Assigned'}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Status & Phone (Mobile Only - Right) */}
-                      <div className="flex flex-col items-end gap-1.5 sm:hidden">
-                        <span className={`px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest border ${
-                          t.vacated ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                    {/* Status Badge - Floating */}
+                    <div className="absolute top-0 right-0 z-10">
+                      {t.rent ? (
+                        <div className={`px-3 py-1 rounded-bl-2xl text-[7px] font-black uppercase tracking-widest shadow-sm ${
+                          t.rent.status === 'PAID'
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-rose-500 text-white'
                         }`}>
-                          {t.vacated ? 'Vacated' : 'Active'}
-                        </span>
-                        <div className="flex items-center gap-1 text-indigo-600">
-                          <Phone size={10} />
-                          <span className="text-[10px] font-black tracking-tight">{t.phone || 'N/A'}</span>
+                          Rent: {t.rent.status}
                         </div>
-                      </div>
+                      ) : (
+                        <div className="px-3 py-1 rounded-bl-2xl bg-slate-100 text-slate-400 text-[7px] font-black uppercase tracking-widest border-b border-l border-slate-200">
+                          No Records
+                        </div>
+                      )}
                     </div>
 
-                    {/* Desktop Content View */}
-                    <div className="hidden sm:flex flex-1 min-w-0 flex-col gap-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight truncate">
+                    {/* Header Section: Avatar + Name + Status + Top Right Contact */}
+                    <div className="flex items-start justify-between gap-3 pt-1">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative shrink-0">
+                          <TenantAvatar
+                            name={t.name}
+                            profileImageUrl={t.profileImageUrl}
+                            vacated={t.vacated}
+                          />
+                          {!t.vacated && (
+                            <div className="absolute -bottom-1 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <h3 className="text-[15px] font-black text-slate-900 uppercase tracking-tight truncate leading-tight group-hover:text-indigo-600 transition-colors">
                             {t.name}
                           </h3>
-                        </div>
-                        <span className={`shrink-0 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                          t.vacated ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        }`}>
-                          {t.vacated ? 'Vacated' : 'Active'}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2.5 text-slate-400">
-                          <Phone size={12} className="shrink-0 text-slate-300" />
-                          <span className="text-sm font-bold text-slate-600 tracking-tight">{t.phone || 'No Phone'}</span>
-                        </div>
-                        <div className="flex items-center gap-2.5 text-slate-400">
-                          <Mail size={12} className="shrink-0 text-slate-300" />
-                          <span className="text-sm font-bold text-slate-500 truncate">{t.email || 'No Email'}</span>
+                          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                            <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest border ${
+                              t.vacated
+                                ? 'bg-slate-50 text-slate-400 border-slate-200'
+                                : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                            }`}>
+                              {t.vacated ? 'Vacated' : 'Active'}
+                            </span>
+                            {t.newlyJoined && !t.vacated && (
+                              <span className="px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">
+                                New
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Info Highlights - Gray Box */}
-                      <div className="bg-slate-50/80 rounded-xl px-4 py-2 border border-slate-100 flex items-center justify-between mt-1">
-                        <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Joined</span>
-                          <span className="text-sm font-black text-slate-900 uppercase">{t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}</span>
+                      {/* Top Right: Contact Info (Positioned below Rent Badge) */}
+                      <div className="flex flex-col items-end gap-0.5 pt-6 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[17px] font-black text-slate-900 tracking-tight">{t.phone || '—'}</span>
+                          <Phone size={16} className="text-emerald-500" />
                         </div>
-                        <div className="flex flex-col text-right">
-                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Bed Allocation</span>
-                          <span className="text-sm font-black text-slate-900 uppercase truncate">
-                            {t.bedId || 'N/A'}
-                          </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[9px] font-black text-slate-400 truncate max-w-[80px] sm:max-w-[120px] tracking-tight">{t.email || '—'}</span>
+                          <Mail size={10} className="text-indigo-400" />
                         </div>
-                      </div>
-
-                      {/* Action Button - Desktop Only */}
-                      <div className="mt-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200">
-                        PROFILE <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
 
-                    {/* Mobile Action Buttons (Match Image Reference) */}
-                    <div className="flex sm:hidden items-center gap-2 pt-1">
-                      <a
-                        href={`tel:${t.phone}`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-100 text-slate-900 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                    {/* Info Grid: Accommodation & Duration */}
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div className="bg-slate-50/50 rounded-xl p-1.5 border border-slate-100 group-hover:bg-white transition-colors">
+                        <p className="text-[6.5px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Accommodation</p>
+                        <div className="flex items-center gap-1">
+                          <BedIcon size={10} className="text-amber-500" />
+                          <span className="text-[8.5px] font-black text-slate-900 uppercase truncate tracking-tight">
+                            {t.bedId || 'Unassigned'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="bg-slate-50/50 rounded-xl p-1.5 border border-slate-100 group-hover:bg-white transition-colors">
+                        <p className="text-[6.5px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Stay Duration</p>
+                        <div className="flex items-center gap-1">
+                          <Calendar size={10} className="text-indigo-500" />
+                          <span className="text-[8.5px] font-black text-slate-900 uppercase tracking-tight">
+                            {t.start ? dayjs(t.start).format('DD MMM YY') : '—'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Footer */}
+                    <div className="mt-auto pt-0.5 flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/tenant/${t.id}`); }}
+                        className="flex-1 px-4 py-2.5 bg-slate-900 text-white rounded-2xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200 active:scale-95 flex items-center justify-center gap-2"
                       >
-                        <Phone size={12} className="text-indigo-600" /> Call
-                      </a>
+                        Profile <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
                       <a
                         href={`https://wa.me/${t.phone}`}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-100 text-slate-900 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all"
+                        className="px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-2xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm flex items-center justify-center gap-2"
+                        title="WhatsApp"
                       >
-                        <MessageSquare size={12} className="text-emerald-500" /> WhatsApp
+                        WhatsApp <MessageSquare size={12} />
                       </a>
-                      <div
-                        className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-900/5 text-slate-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-slate-200 transition-all"
-                      >
-                        <Eye size={12} className="text-amber-500" /> Profile
-                      </div>
                     </div>
                   </motion.div>
                 ))

@@ -38,6 +38,10 @@ const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'))
 const TenantDetails = lazy(() => import('./pages/TenantDetails'))
 const Bookings = lazy(() => import('./pages/Bookings'))
 const Workers = lazy(() => import('./pages/Workers'))
+const ManageRents = lazy(() => import('./pages/ManageRents'))
+const Expenses = lazy(() => import('./pages/Expenses'))
+const ForgotPasswordScreen = lazy(() => import('./pages/ForgotPasswordScreen'))
+const ChangePasswordScreen = lazy(() => import('./pages/ChangePasswordScreen'))
 
 const cx = (...c) => c.filter(Boolean).join(' ')
 
@@ -110,6 +114,7 @@ export default function App() {
   '/',
   '/manage/mypg/signin',
   '/manage/mypg/signup',
+  '/forgot-password',
   '/application/administrator/login',
   '/privacy-policy',
   '/terms-and-conditions'
@@ -219,6 +224,8 @@ const hideSidebar =
               <Route path="/" element={<LandingWrapper />} />
               <Route path="/manage/mypg/signin" element={<SignInPage />} />
               <Route path="/manage/mypg/signup" element={<SignUpPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
+              <Route path="/change-password" element={<RequireOwner><ChangePasswordScreen /></RequireOwner>} />
               <Route path="/login" element={<Login />} />
               <Route path="/application/administrator/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
@@ -232,6 +239,8 @@ const hideSidebar =
               <Route path="/offers" element={<RequireOwner><Offers /></RequireOwner>} />
               <Route path="/tenants" element={<RequireOwner><Tenants /></RequireOwner>} />
               <Route path="/workers" element={<RequireOwner><Workers /></RequireOwner>} />
+              <Route path="/rents" element={<RequireOwner><ManageRents /></RequireOwner>} />
+              <Route path="/expenses" element={<RequireOwner><Expenses /></RequireOwner>} />
               <Route path="/bookings" element={<RequireOwner><Bookings /></RequireOwner>} />
               <Route path="/complaints" element={<RequireOwner><OwnerComplaints /></RequireOwner>} />
               <Route path="/ownerProfile" element={<RequireOwner><OwnerProfile mode="profile" /></RequireOwner>} />

@@ -165,12 +165,22 @@ export default function Home() {
         return;
       }
       try {
-        const [revRes, alertRes] = await Promise.all([
+        const [revRes, alertRes] = await Promise.allSettled([
           getRevenueTrends(selectedPgId),
           getRealTimeAlerts(selectedPgId)
         ]);
-        if (revRes.success) setRevenueTrends(revRes.data);
-        if (alertRes.success) setAlerts(alertRes.data);
+
+        if (revRes.status === 'fulfilled' && revRes.value.success) {
+          setRevenueTrends(revRes.value.data);
+        } else {
+          setRevenueTrends([]);
+        }
+
+        if (alertRes.status === 'fulfilled' && alertRes.value.success) {
+          setAlerts(alertRes.value.data);
+        } else {
+          setAlerts([]);
+        }
       } catch (error) {
         console.error("Failed to fetch dashboard addons:", error);
       }
@@ -205,8 +215,15 @@ export default function Home() {
     const pg = dashboardData.pgSummaries.find(p => p.pgId === selectedPgId);
     if (!pg) return null;
 
-    // Note: pgSummaries doesn't have history in the provided sample,
-    // but we can fallback to metrics or empty if not available.
+    // Use fetched addons if available, otherwise fallback to summary data
+    const combinedAlerts = [...alerts];
+    if (pg.pendingApprovals > 0) {
+      const approvalAlert = `${pg.pendingApprovals} pending tenant approvals`;
+      if (!combinedAlerts.includes(approvalAlert)) {
+        combinedAlerts.push(approvalAlert);
+      }
+    }
+
     return {
       name: pg.pgName,
       totalBeds: pg.totalBeds,
@@ -217,11 +234,11 @@ export default function Home() {
       openComplaints: pg.openComplaints,
       vacatings: pg.todayVacatings,
       isOverall: false,
-      revenueHistory: [pg.totalRentsCollected],
+      revenueHistory: revenueTrends.length > 0 ? revenueTrends : [pg.totalRentsCollected],
       occupancyForecast: [pg.occupancyRate],
-      alerts: pg.pendingApprovals > 0 ? [`${pg.pendingApprovals} pending tenant approvals`] : [],
+      alerts: combinedAlerts,
     };
-  }, [dashboardData, selectedPgId]);
+  }, [dashboardData, selectedPgId, revenueTrends, alerts]);
 
   if (loading) {
     return (

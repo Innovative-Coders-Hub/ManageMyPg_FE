@@ -47,6 +47,7 @@ export default function TenantDetails() {
   const [approving, setApproving] = useState(false)
   const [error, setError] = useState(null)
   const [selectedRent, setSelectedRent] = useState(null)
+  const [imgError, setImgError] = useState(false)
 
   const fetchDetails = async (silent = false) => {
     try {
@@ -196,8 +197,13 @@ export default function TenantDetails() {
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                 <div className="relative h-24 w-24 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
-                  {profileImageUrl ? (
-                    <img src={profileImageUrl} alt={tenant.name} className="h-full w-full object-cover" />
+                  {profileImageUrl && !imgError ? (
+                    <img
+                      src={profileImageUrl}
+                      alt={tenant.name}
+                      className="h-full w-full object-cover"
+                      onError={() => setImgError(true)}
+                    />
                   ) : (
                     <div className="h-full w-full bg-slate-50 flex items-center justify-center text-slate-300">
                       <User size={40} />
@@ -224,11 +230,15 @@ export default function TenantDetails() {
                 </div>
                 <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-slate-500">
                   <div className="flex items-center gap-1.5">
-                    <Building2 size={14} className="text-indigo-600" />
+                    <div className="h-6 w-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                      <Building2 size={12} strokeWidth={2.5} />
+                    </div>
                     <span className="text-[11px] font-black uppercase tracking-widest">{tenant.pgName}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Clock size={14} className="text-indigo-600" />
+                    <div className="h-6 w-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                      <Clock size={12} strokeWidth={2.5} />
+                    </div>
                     <span className="text-[11px] font-black uppercase tracking-widest">Joined {dayjs(tenant.dateOfJoining).format('MMM YYYY')}</span>
                   </div>
                 </div>
@@ -255,39 +265,39 @@ export default function TenantDetails() {
             </div>
 
             {/* Personal Details Section */}
-            <Section title="Personal Profile" icon={<User />}>
+            <Section title="Personal Profile" icon={<User />} color="indigo">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                <InfoItem label="Full Name" value={tenant.name} icon={<User />} />
-                <InfoItem label="Son/Daughter of" value={tenant.sonOf} icon={<Users />} />
-                <InfoItem label="Date of Birth" value={tenant.dateOfBirth ? dayjs(tenant.dateOfBirth).format('DD MMMM YYYY') : 'N/A'} icon={<Calendar />} />
-                <InfoItem label="Age" value={`${tenant.age} Years`} icon={<Activity />} />
-                <InfoItem label="Aadhaar Number" value={tenant.aadhaarNumber ? `XXXX XXXX ${tenant.aadhaarNumber.slice(-4)}` : 'N/A'} icon={<ShieldCheck />} />
-                <InfoItem label="Blood Group" value={tenant.bloodGroup} icon={<Activity />} />
-                <InfoItem label="Qualification" value={tenant.qualification} icon={<Briefcase />} />
+                <InfoItem label="Full Name" value={tenant.name} icon={<User />} color="indigo" />
+                <InfoItem label="Son/Daughter of" value={tenant.sonOf} icon={<Users />} color="blue" />
+                <InfoItem label="Date of Birth" value={tenant.dateOfBirth ? dayjs(tenant.dateOfBirth).format('DD MMMM YYYY') : 'N/A'} icon={<Calendar />} color="amber" />
+                <InfoItem label="Age" value={`${tenant.age} Years`} icon={<Activity />} color="rose" />
+                <InfoItem label="Aadhaar Number" value={tenant.aadhaarNumber ? `XXXX XXXX ${tenant.aadhaarNumber.slice(-4)}` : 'N/A'} icon={<ShieldCheck />} color="emerald" />
+                <InfoItem label="Blood Group" value={tenant.bloodGroup} icon={<Activity />} color="rose" />
+                <InfoItem label="Qualification" value={tenant.qualification} icon={<Briefcase />} color="purple" />
               </div>
             </Section>
 
             {/* Professional & Contact */}
-            <Section title="Professional & Contact" icon={<Briefcase />}>
+            <Section title="Professional & Contact" icon={<Briefcase />} color="purple">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                <InfoItem label="Email Address" value={tenant.email} icon={<Mail />} />
-                <InfoItem label="Mobile Number" value={tenant.mobileNumber} icon={<Phone />} />
-                <InfoItem label="Emergency Number" value={tenant.parentNumber} icon={<Phone />} />
-                <InfoItem label="Company / College" value={tenant.workCompany} icon={<Building />} />
-                <InfoItem label="Vehicle Number" value={tenant.vehicleNumber || 'No Vehicle'} icon={<Hash />} />
+                <InfoItem label="Email Address" value={tenant.email} icon={<Mail />} color="indigo" />
+                <InfoItem label="Mobile Number" value={tenant.mobileNumber} icon={<Phone />} color="emerald" />
+                <InfoItem label="Emergency Number" value={tenant.parentNumber} icon={<Phone />} color="rose" />
+                <InfoItem label="Company / College" value={tenant.workCompany} icon={<Building />} color="amber" />
+                <InfoItem label="Vehicle Number" value={tenant.vehicleNumber || 'No Vehicle'} icon={<Hash />} color="slate" />
               </div>
             </Section>
 
             {/* Permanent Address */}
-            <Section title="Permanent Address" icon={<MapPin />}>
+            <Section title="Permanent Address" icon={<MapPin />} color="rose">
               {tenant.address ? (
-                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 group hover:border-rose-100 transition-colors">
                   <div className="flex gap-4">
-                    <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-indigo-600 shrink-0">
-                      <MapPin size={18} />
+                    <div className="h-10 w-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-rose-600 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
+                      <MapPin size={18} strokeWidth={2.5} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900 leading-relaxed">
+                      <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-relaxed">
                         {tenant.address.address}, {tenant.address.areaLocality}<br />
                         {tenant.address.landmark && `${tenant.address.landmark}, `}
                         {tenant.address.city}, {tenant.address.district && `${tenant.address.district}, `} {tenant.address.state} - {tenant.address.pinCode}<br />
@@ -297,13 +307,13 @@ export default function TenantDetails() {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No address information provided</p>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No address information provided</p>
               )}
             </Section>
 
             {/* Rent History */}
-            <Section title="Rent Ledger" icon={<History />}>
-              <div className="overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <Section title="Rent Ledger" icon={<History />} color="emerald">
+              <div className="overflow-hidden bg-white border border-slate-200 rounded-[2rem] shadow-sm">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-50">
@@ -321,38 +331,38 @@ export default function TenantDetails() {
                       tenant.rentResponse.map((rent, idx) => (
                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
                           <td className="px-6 py-4">
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-tight">{rent.rentMonth}</span>
+                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{rent.rentMonth}</span>
                             {rent.modeOfPayment && (
-                              <p className="text-[8px] font-bold text-slate-400 uppercase">{rent.modeOfPayment}</p>
+                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{rent.modeOfPayment}</p>
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
                               {rent.dueDate ? dayjs(rent.dueDate).format('DD MMM YYYY') : 'N/A'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
-                              <span className="text-xs font-black text-slate-900 tracking-tight">₹{rent.rentAmount + (rent.charges || 0) + (rent.lateFee || 0)}</span>
+                              <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">₹{rent.rentAmount + (rent.charges || 0) + (rent.lateFee || 0)}</span>
                               {(rent.charges > 0 || rent.lateFee > 0 || rent.refundAmount > 0) && (
                                 <div className="flex flex-wrap gap-1 mt-0.5">
-                                  {rent.charges > 0 && <span className="text-[7px] px-1 bg-blue-50 text-blue-600 rounded">Chg: ₹{rent.charges}</span>}
-                                  {rent.lateFee > 0 && <span className="text-[7px] px-1 bg-amber-50 text-amber-600 rounded">Fee: ₹{rent.lateFee}</span>}
-                                  {rent.refundAmount > 0 && <span className="text-[7px] px-1 bg-rose-50 text-rose-600 rounded">Ref: ₹{rent.refundAmount}</span>}
+                                  {rent.charges > 0 && <span className="text-[7px] px-1 bg-blue-50 text-blue-600 rounded font-black uppercase">Chg: ₹{rent.charges}</span>}
+                                  {rent.lateFee > 0 && <span className="text-[7px] px-1 bg-amber-50 text-amber-600 rounded font-black uppercase">Fee: ₹{rent.lateFee}</span>}
+                                  {rent.refundAmount > 0 && <span className="text-[7px] px-1 bg-rose-50 text-rose-600 rounded font-black uppercase">Ref: ₹{rent.refundAmount}</span>}
                                 </div>
                               )}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-indigo-600">
-                            <span className="text-xs font-black tracking-tight">₹{rent.paidAmount}</span>
+                            <span className="text-[11px] font-black tracking-widest">₹{rent.paidAmount}</span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
                               {rent.paidDate ? dayjs(rent.paidDate).format('DD MMM YYYY') : 'PENDING'}
                             </span>
                           </td>
                           <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
+                            <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
                               rent.status === 'PAID' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
                             }`}>
                               {rent.status}
@@ -363,7 +373,7 @@ export default function TenantDetails() {
                               {rent.status === 'PAID' && (
                                 <button
                                   onClick={() => handlePrintReceipt(rent)}
-                                  className="p-1.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-lg transition-all border border-slate-200"
+                                  className="p-1.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-2xl transition-all border border-slate-200"
                                   title="Print Receipt"
                                 >
                                   <Printer size={14} />
@@ -372,7 +382,7 @@ export default function TenantDetails() {
                               {rent.status !== 'PAID' && (
                                 <button
                                   onClick={() => setSelectedRent(rent)}
-                                  className="px-3 py-1 bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-700 transition-colors"
+                                  className="px-3 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 transition-colors"
                                 >
                                   Mark Paid
                                 </button>
@@ -383,7 +393,7 @@ export default function TenantDetails() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="3" className="px-6 py-8 text-center text-xs font-black text-slate-400 uppercase tracking-widest">No transaction history found</td>
+                        <td colSpan="3" className="px-6 py-8 text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">No transaction history found</td>
                       </tr>
                     )}
                   </tbody>
@@ -438,24 +448,24 @@ export default function TenantDetails() {
                     to={`/beds/${tenant.bedId}`}
                     className="flex items-center justify-center gap-2 w-full px-6 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-50 transition-all"
                   >
-                    View Bed Layout <ExternalLink size={16} />
+                    View Bed Details <ExternalLink size={16} />
                   </Link>
                 )}
               </div>
             </div>
 
             {/* Documentation Section */}
-            <Section title="Verification Documents" icon={<ShieldCheck />}>
+            <Section title="Verification Documents" icon={<ShieldCheck />} color="cyan">
               <div className="space-y-3">
                 {tenant.documents && tenant.documents.length > 0 ? (
                   tenant.documents.map((doc, idx) => (
-                    <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between group hover:border-indigo-600 transition-all shadow-sm">
+                    <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between group hover:border-cyan-600 transition-all shadow-sm">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                          <FileText size={18} />
+                        <div className="h-10 w-10 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-colors shadow-sm">
+                          <FileText size={18} strokeWidth={2.5} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight">{doc.type}</p>
+                          <p className="text-[9px] font-black text-slate-900 uppercase tracking-tight">{doc.type}</p>
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                             Verified: {doc.type?.toUpperCase().includes('AADHAAR')
                               ? (doc.documentNumber ? `XXXX XXXX ${doc.documentNumber.slice(-4)}` : 'N/A')
@@ -467,24 +477,27 @@ export default function TenantDetails() {
                         href={`${IMAGE_BASE_URL}${doc.url}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="h-8 w-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-indigo-600 hover:text-white transition-all"
+                        className="h-8 w-8 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-cyan-600 hover:text-white transition-all"
                       >
                         <ExternalLink size={14} />
                       </a>
                     </div>
                   ))
                 ) : (
-                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Documents Uploaded</p>
+                  <div className="bg-slate-50 p-6 rounded-[2.5rem] border-2 border-dashed border-slate-200 text-center">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No Documents Uploaded</p>
                   </div>
                 )}
               </div>
             </Section>
 
             {/* Account Status Card */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-              <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <UserCheck size={16} className="text-indigo-600" /> Administrative Status
+            <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+                  <UserCheck size={16} strokeWidth={2.5} />
+                </div>
+                Administrative Status
               </h3>
               <div className="space-y-4">
                 <StatusToggle
@@ -496,7 +509,7 @@ export default function TenantDetails() {
                   <button
                     onClick={handleApprove}
                     disabled={approving}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50"
                   >
                     {approving ? (
                       <Loader2 size={14} className="animate-spin" />
@@ -555,13 +568,14 @@ function StatCard({ label, value, icon, color }) {
     emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
     rose: 'text-rose-600 bg-rose-50 border-rose-100',
     slate: 'text-slate-600 bg-slate-50 border-slate-100',
-    purple: 'text-purple-600 bg-purple-50 border-purple-100'
+    purple: 'text-purple-600 bg-purple-50 border-purple-100',
+    amber: 'text-amber-600 bg-amber-50 border-amber-100'
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-4 border ${colors[color]}`}>
-        {React.cloneElement(icon, { size: 18 })}
+    <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
+      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-4 border ${colors[color] || colors.indigo} group-hover:scale-110 transition-transform`}>
+        {React.cloneElement(icon, { size: 18, strokeWidth: 2.5 })}
       </div>
       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
       <p className="text-sm font-black text-slate-900">{value}</p>
@@ -569,29 +583,55 @@ function StatCard({ label, value, icon, color }) {
   )
 }
 
-function Section({ title, icon, children }) {
+function Section({ title, icon, children, color = "indigo" }) {
+  const colors = {
+    indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    rose: 'text-rose-600 bg-rose-50 border-rose-100',
+    purple: 'text-purple-600 bg-purple-50 border-purple-100',
+    amber: 'text-amber-600 bg-amber-50 border-amber-100',
+    blue: 'text-blue-600 bg-blue-50 border-blue-100'
+  }
+
+  const colorClass = colors[color] || colors.indigo
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 px-1">
-        <div className="text-indigo-600">{React.cloneElement(icon, { size: 18 })}</div>
-        <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">{title}</h2>
+      <div className="flex items-center gap-3 px-1">
+        <div className={`h-9 w-9 rounded-xl border flex items-center justify-center shadow-sm ${colorClass}`}>
+          {React.cloneElement(icon, { size: 18, strokeWidth: 2.5 })}
+        </div>
+        <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{title}</h2>
       </div>
-      <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+      <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
         {children}
       </div>
     </div>
   )
 }
 
-function InfoItem({ label, value, icon }) {
+function InfoItem({ label, value, icon, color = "indigo" }) {
+  const colors = {
+    indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    rose: 'text-rose-600 bg-rose-50 border-rose-100',
+    purple: 'text-purple-600 bg-purple-50 border-purple-100',
+    amber: 'text-amber-600 bg-amber-50 border-amber-100',
+    blue: 'text-blue-600 bg-blue-50 border-blue-100',
+    slate: 'text-slate-600 bg-slate-50 border-slate-100',
+    cyan: 'text-cyan-600 bg-cyan-50 border-cyan-100'
+  }
+
+  const colorClass = colors[color] || colors.indigo
+
   return (
     <div className="flex gap-4 group">
-      <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-white group-hover:border-indigo-100 transition-all shrink-0">
-        {React.cloneElement(icon, { size: 16 })}
+      <div className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-all shrink-0 group-hover:scale-110 shadow-sm ${colorClass}`}>
+        {React.cloneElement(icon, { size: 16, strokeWidth: 2.5 })}
       </div>
       <div className="min-w-0">
         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-        <p className="text-sm font-black text-slate-900 truncate">{value || 'N/A'}</p>
+        <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{value || 'N/A'}</p>
       </div>
     </div>
   )
@@ -599,9 +639,9 @@ function InfoItem({ label, value, icon }) {
 
 function StatusToggle({ label, status, active }) {
   return (
-    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
-      <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+    <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-slate-200 transition-colors">
+      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
+      <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
         active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
       }`}>
         {status}

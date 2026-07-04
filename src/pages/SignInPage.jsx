@@ -225,7 +225,7 @@ export default function SignInPage() {
                 </button>
               </div>
               <div className="flex justify-end pr-1">
-                <Link to="/forgot" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors">
+                <Link to="/forgot-password" title="Forgot Password" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors">
                   Forgot Security Key?
                 </Link>
               </div>
