@@ -27,7 +27,9 @@ import {
   TrendingUp,
   ExternalLink,
   Download,
-  Bell
+  Bell,
+  ChevronDown,
+  Building
 } from 'lucide-react'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
@@ -52,16 +54,97 @@ import {
 /* Sub-components                                     */
 /* -------------------------------------------------- */
 
-function StatCard({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50' }) {
+function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50' }) {
   return (
-    <div className="bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md transition-all">
+    <div className="bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
       <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
         <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
       </div>
-      <div>
-        <div className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</div>
-        <div className="text-base sm:text-xl font-black text-slate-900 leading-tight">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-base sm:text-xl font-black text-slate-900 leading-tight truncate">{value}</div>
       </div>
+    </div>
+  )
+}
+
+function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white" }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = React.useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
+  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
+
+  return (
+    <div className={`relative ${className}`} ref={containerRef}>
+      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
+        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
+          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
+          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
+            {displayValue}
+          </span>
+        </div>
+        <ChevronDown
+          size={16}
+          strokeWidth={3}
+          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
+          >
+            {showAll && (
+              <button
+                type="button"
+                onClick={() => { onChange('ALL'); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                ALL {label}S
+              </button>
+            )}
+            {options.map((opt) => (
+              <button
+                key={opt.id || opt.value}
+                type="button"
+                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -323,15 +406,14 @@ export default function Bookings() {
               >
                 <Download size={14} /> Export Report
               </button>
-              <select
-                value={pgId || ''}
-                onChange={(e) => navigate(`?pgId=${e.target.value}`)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-              >
-                {pgs.map(pg => (
-                  <option key={pg.id} value={pg.id}>{pg.pgName}</option>
-                ))}
-              </select>
+              <CustomDropdown
+                label="Property"
+                value={pgId}
+                options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
+                onChange={(val) => navigate(`?pgId=${val}`)}
+                icon={Building}
+                className="w-64"
+              />
             </div>
           </PageHeader>
         </div>
@@ -341,18 +423,17 @@ export default function Bookings() {
         {/* Summary Stats */}
         {summary && (
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-            <StatCard label="Active Bookings" value={summary.totalActiveBookings} icon={CalendarDays} />
-            <StatCard label="Joining Today" value={summary.joiningToday} icon={Clock} colorClass="text-emerald-600" bgClass="bg-emerald-50" />
-            <div className="relative group">
-              <StatCard label="Expiring Soon" value={summary.expiringSoon} icon={AlertCircle} colorClass="text-amber-600" bgClass="bg-amber-50" />
+            <TopStat label="Active Bookings" value={summary.totalActiveBookings} icon={CalendarDays} />
+            <TopStat label="Joining Today" value={summary.joiningToday} icon={Clock} colorClass="text-emerald-600" bgClass="bg-emerald-50" />
+            <div className="relative group flex-1 min-w-0">
+              <TopStat label="Expiring Soon" value={summary.expiringSoon} icon={AlertCircle} colorClass="text-amber-600" bgClass="bg-amber-50" />
               {summary.expiringSoon > 0 && (
                 <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white animate-bounce shadow-lg border-2 border-white">
                   {summary.expiringSoon}
                 </div>
               )}
-              <div className="absolute inset-0 rounded-2xl bg-amber-500/0 group-hover:bg-amber-500/5 transition-colors pointer-events-none" />
             </div>
-            <StatCard label="This Month" value={`₹${summary.totalBookingAmountThisMonth}`} icon={IndianRupee} colorClass="text-indigo-600" bgClass="bg-indigo-50" />
+            <TopStat label="This Month" value={`₹${summary.totalBookingAmountThisMonth}`} icon={IndianRupee} colorClass="text-indigo-600" bgClass="bg-indigo-50" />
           </div>
         )}
 
@@ -440,20 +521,23 @@ export default function Bookings() {
                         placeholder="SEARCH..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
-                        className="bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-4 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-40 md:w-56"
+                        className="bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-4 py-2.5 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20 w-40 md:w-56"
                       />
                     </div>
-                    <select
+                    <CustomDropdown
+                      label="Status"
                       value={statusFilter}
-                      onChange={e => setStatusFilter(e.target.value)}
-                      className="bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                    >
-                      <option value="ALL">ALL STATUS</option>
-                      <option value="CONFIRMED">CONFIRMED</option>
-                      <option value="COMPLETED">COMPLETED</option>
-                      <option value="CANCELLED">CANCELLED</option>
-                      <option value="EXPIRED">EXPIRED</option>
-                    </select>
+                      options={[
+                        { id: 'ALL', label: 'ALL STATUS' },
+                        { id: 'CONFIRMED', label: 'CONFIRMED' },
+                        { id: 'COMPLETED', label: 'COMPLETED' },
+                        { id: 'CANCELLED', label: 'CANCELLED' },
+                        { id: 'EXPIRED', label: 'EXPIRED' }
+                      ]}
+                      onChange={setStatusFilter}
+                      icon={Filter}
+                      className="w-44"
+                    />
                   </div>
                 </div>
 
@@ -632,17 +716,19 @@ export default function Bookings() {
                     />
                   </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Gender</label>
-                  <select
+                <div className="pt-2">
+                  <CustomDropdown
+                    label="Gender"
                     value={bookingForm.gender}
-                    onChange={e => setBookingForm({...bookingForm, gender: e.target.value})}
-                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3.5 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all appearance-none"
-                  >
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
-                    <option value="OTHER">Other</option>
-                  </select>
+                    options={[
+                      { id: 'MALE', label: 'MALE' },
+                      { id: 'FEMALE', label: 'FEMALE' },
+                      { id: 'OTHER', label: 'OTHER' }
+                    ]}
+                    onChange={val => setBookingForm({...bookingForm, gender: val})}
+                    className="w-full"
+                    icon={User}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Joining Date</label>

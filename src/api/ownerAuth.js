@@ -29,6 +29,44 @@ export const ownerLogout = () => {
   return api.post('/api/auth/logout')
 }
 
+// ---------- FORGOT PASSWORD ----------
+
+export async function forgotPassword(identifier) {
+  const res = await api.post('/api/auth/forgot-password', { identifier })
+  return res.data
+}
+
+export async function verifyForgotPasswordOtp(identifier, otp) {
+  const res = await api.post('/api/auth/verify-forgot-password-otp', { identifier, otp })
+  return res.data
+}
+
+export async function resetPassword(identifier, token, newPassword, confirmPassword) {
+  const res = await api.post('/api/auth/reset-password', {
+    identifier,
+    token,
+    newPassword,
+    confirmPassword
+  })
+  return res.data
+}
+
+// ---------- CHANGE PASSWORD ----------
+
+export async function changePassword(currentPassword, newPassword, confirmPassword) {
+  const res = await api.post('/api/auth/change-password', {
+    currentPassword,
+    newPassword,
+    confirmPassword
+  })
+  return res.data
+}
+
+export async function verifyChangePassword(otp) {
+  const res = await api.post('/api/auth/verify-change-password', { otp })
+  return res.data
+}
+
 // ---------- PROFILE ----------
 
 export async function getOwnerProfile() {
@@ -337,5 +375,57 @@ export async function deleteWorker(workerId) {
 
 export async function deleteOwnerAccount() {
   const res = await api.delete('/mmp/owner/delete-account')
+  return res.data
+}
+
+// ---------- RENTS ----------
+
+export async function getPgRentStatus(pgId, month, year) {
+  const res = await api.get(`/mmp/owner/pg-rent-status/${pgId}`, {
+    params: { month, year }
+  })
+  return res.data
+}
+
+// ---------- EXPENSES ----------
+
+export async function createExpense(payload) {
+  const res = await api.post('/mmp/expenses', payload)
+  return res.data
+}
+
+export async function updateExpense(expenseId, payload) {
+  const res = await api.put(`/mmp/expenses/${expenseId}`, payload)
+  return res.data
+}
+
+export async function deleteExpense(expenseId) {
+  const res = await api.delete(`/mmp/expenses/${expenseId}`)
+  return res.data
+}
+
+export async function getExpensesRange(pgId, startDate, endDate) {
+  const res = await api.get(`/mmp/expenses/pg/${pgId}/range`, {
+    params: { startDate, endDate }
+  })
+  return res.data
+}
+
+export async function getExpenseAnalytics(pgId, startDate, endDate) {
+  const res = await api.get(`/mmp/expenses/pg/${pgId}/analytics`, {
+    params: { startDate, endDate }
+  })
+  return res.data
+}
+
+export async function getExpenseCategories() {
+  const res = await api.get('/mmp/expenses/categories')
+  return res.data
+}
+
+export async function getMonthlyGraphData(pgId, months = 12) {
+  const res = await api.get(`/mmp/expenses/pg/${pgId}/monthly-graph`, {
+    params: { months }
+  })
   return res.data
 }

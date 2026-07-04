@@ -60,7 +60,7 @@ export default function AdminHeader() {
               </div>
               <div className="hidden sm:block">
                 <span className="block text-sm font-black text-slate-900 uppercase tracking-tighter leading-none">ManageMyPg</span>
-                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">Admin Console</span>
+                <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Admin Console</span>
               </div>
             </Link>
 
@@ -70,7 +70,7 @@ export default function AdminHeader() {
                 <Link
                   key={item.label}
                   to={item.to}
-                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg ${
+                  className={`relative flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-2xl ${
                     item.active
                       ? 'text-indigo-600 bg-indigo-50/50'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -101,12 +101,12 @@ export default function AdminHeader() {
             <div className="flex items-center gap-3">
               <div className="hidden md:block text-right">
                 <p className="text-xs font-black text-slate-900 leading-none">Super Admin</p>
-                <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-tight font-black">System Manager</p>
+                <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-widest font-black">System Manager</p>
               </div>
 
               <div className="relative group">
                 <button className="flex items-center gap-2 p-1 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-200">
-                  <div className="h-10 w-10 min-w-[40px] rounded-xl bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-600 font-bold overflow-hidden relative">
+                  <div className="h-10 w-10 min-w-[40px] rounded-2xl bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-600 font-bold overflow-hidden relative">
                     <img
                       src="https://ui-avatars.com/api/?name=Super+Admin&background=6366f1&color=fff"
                       alt="Profile"
@@ -117,11 +117,11 @@ export default function AdminHeader() {
                 </button>
 
                 {/* Dropdown Menu (Simplified for now) */}
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[70]">
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-[70]">
                   <div className="p-2">
                     <button
                       onClick={signOut}
-                      className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-2xl transition-colors"
                     >
                       <LogOut size={16} />
                       Sign Out
@@ -133,7 +133,7 @@ export default function AdminHeader() {
               {/* Mobile menu button */}
               <button
                 onClick={() => setOpen(!open)}
-                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-2xl transition-colors"
               >
                 {open ? <X size={24} /> : <Menu size={24} />}
               </button>
@@ -151,7 +151,7 @@ export default function AdminHeader() {
                 key={item.label}
                 onClick={() => setOpen(false)}
                 to={item.to}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-colors ${
                   item.active
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100'
                     : 'text-slate-600 hover:bg-slate-50'
@@ -164,7 +164,7 @@ export default function AdminHeader() {
             <div className="mt-4 pt-4 border-t border-slate-100">
               <button
                 onClick={signOut}
-                className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-2xl transition-colors"
               >
                 <LogOut size={20} />
                 Logout
