@@ -71,8 +71,8 @@ const StatCard = memo(function StatCard({ title, value, subtitle, growth, icon: 
     <motion.div
       variants={itemVariants}
       onClick={onClick}
-      className={`relative overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ${
-        onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-1 hover:border-indigo-300 group' : ''
+      className={`relative overflow-hidden rounded-[2.5rem] border border-slate-200 bg-white p-7 shadow-sm transition-all duration-300 ${
+        onClick ? 'cursor-pointer hover:shadow-xl hover:-translate-y-1 hover:border-indigo-300 group' : ''
       }`}
     >
       <div className="relative flex items-start justify-between">
@@ -246,11 +246,11 @@ export default function AdminDashboard() {
             subtitle="Enterprise Administration & Control Center"
           >
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <button className="flex items-center justify-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition shadow-sm">
+              <button className="flex items-center justify-center gap-2 px-4 py-1.5 bg-white border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition shadow-sm">
                 <Download size={14} />
                 Export
               </button>
-              <div className="flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-widest">
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-2xl font-black text-[10px] uppercase tracking-widest">
                 <Activity size={14} />
                 Healthy
               </div>
@@ -312,8 +312,8 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Main Content: Recent Owners Table */}
         <motion.div variants={itemVariants} className="xl:col-span-2 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+            <div className="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">Recent Onboarding</h3>
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Monitor latest registrations</p>
@@ -325,14 +325,14 @@ export default function AdminDashboard() {
                     placeholder="Search owners…"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest w-full sm:w-64 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
+                    className="pl-10 pr-4 py-2 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest w-full sm:w-64 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition"
                   />
                 </div>
                 <div className="relative">
                   <select
                     value={statusFilter}
                     onChange={e => setStatusFilter(e.target.value)}
-                    className="appearance-none w-full pl-4 pr-10 py-2 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition cursor-pointer"
+                    className="appearance-none w-full pl-4 pr-10 py-2 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition cursor-pointer"
                   >
                     <option value="all">All Status</option>
                     <option value="approved">Approved</option>
@@ -362,7 +362,7 @@ export default function AdminDashboard() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center font-black shrink-0 text-sm">
+                          <div className="h-9 w-9 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center font-black shrink-0 text-sm">
                             {(o.fullName || o.username || 'O')?.charAt(0)}
                           </div>
                           <div className="min-w-0">
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
                         <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{o.state || 'Region'}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${
+                        <span className={`inline-flex items-center px-3 py-1 rounded-2xl text-[9px] font-black uppercase tracking-widest border ${
                           o.status?.toLowerCase() === 'approved'
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
                             : 'bg-amber-50 text-amber-800 border-amber-100'
@@ -386,7 +386,7 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-xl transition-all ml-auto border border-indigo-100 group-hover:shadow-sm">
+                        <button className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[9px] font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 hover:bg-indigo-600 hover:text-white rounded-2xl transition-all ml-auto border border-indigo-100 group-hover:shadow-sm">
                           View
                           <ArrowRight size={14} className="hidden sm:inline" />
                         </button>
@@ -413,7 +413,7 @@ export default function AdminDashboard() {
                 <button
                   disabled={page === 1}
                   onClick={(e) => { e.stopPropagation(); setPage(p => p - 1); }}
-                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition shadow-sm"
+                  className="p-2 rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition shadow-sm"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
                 <button
                   disabled={page * ownersPerPage >= filteredOwners.length}
                   onClick={(e) => { e.stopPropagation(); setPage(p => p + 1); }}
-                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition shadow-sm"
+                  className="p-2 rounded-2xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition shadow-sm"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -434,7 +434,7 @@ export default function AdminDashboard() {
 
         {/* Sidebar Analytics */}
         <motion.div variants={itemVariants} className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6">
+          <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm p-8">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
                 Regional Distribution
@@ -448,7 +448,7 @@ export default function AdminDashboard() {
                   <span className="text-[9px] text-indigo-600 font-black px-2 py-0.5 bg-indigo-50 rounded-lg border border-indigo-100">LIVE DATA</span>
                 </div>
                 <div className="h-64">
-                  <Suspense fallback={<div className="h-full flex items-center justify-center text-[9px] font-black text-slate-400 uppercase tracking-widest animate-pulse bg-slate-50 rounded-xl border border-slate-100">Analyzing...</div>}>
+                  <Suspense fallback={<div className="h-full flex items-center justify-center text-[9px] font-black text-slate-400 uppercase tracking-widest animate-pulse bg-slate-50 rounded-[2.5rem] border border-slate-100">Analyzing...</div>}>
                     <OwnersByCityChart data={chartCityData} />
                   </Suspense>
                 </div>

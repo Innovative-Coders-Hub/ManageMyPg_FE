@@ -50,15 +50,15 @@ const StatCard = memo(function StatCard({ label, value, icon: Icon, color }) {
   return (
     <motion.div
       variants={itemVariants}
-      className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all duration-300"
+      className="bg-white rounded-[2.5rem] border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all duration-300"
     >
       <div className="flex items-center gap-4">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-xl border border-slate-100 ${color}`}>
-          <Icon size={18} />
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-100 ${color}`}>
+          <Icon size={20} />
         </div>
         <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{label}</p>
-          <p className="text-lg font-black text-slate-900 leading-none">{value}</p>
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1.5">{label}</p>
+          <p className="text-xl font-black text-slate-900 leading-none">{value}</p>
         </div>
       </div>
     </motion.div>
@@ -211,23 +211,23 @@ export default function AdminOwnersList() {
         className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-2 pb-10 space-y-6"
       >
         {/* Modern Control Bar */}
-        <div className="flex flex-col md:flex-row gap-3 items-stretch">
-        <div className="relative flex-1 group">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+        <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
           <input
             placeholder="Search owners by name, email or phone..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all shadow-sm hover:border-slate-300"
+            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all shadow-sm hover:border-slate-300"
           />
         </div>
 
-        <div className="flex bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+        <div className="flex bg-white border border-slate-200 p-1.5 rounded-2xl shadow-sm">
           {['all', 'approved', 'pending', 'deleted'].map((s) => (
             <button
               key={s}
               onClick={() => updateParams({ filter: s })}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex-1 px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${
                 statusFilter === s
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-900'
@@ -242,7 +242,7 @@ export default function AdminOwnersList() {
           <select
             value={stateFilter}
             onChange={(e) => updateParams({ state: e.target.value })}
-            className="appearance-none pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/10 outline-none cursor-pointer h-full"
+            className="w-full appearance-none pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-700 focus:ring-2 focus:ring-indigo-500/10 outline-none cursor-pointer h-full"
           >
             <option value="all">All States</option>
             <option value="Karnataka">Karnataka</option>
@@ -255,7 +255,7 @@ export default function AdminOwnersList() {
       </div>
 
       {/* Main Table Directory */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead>
@@ -295,11 +295,11 @@ export default function AdminOwnersList() {
                             <img
                               src={`${BASE_URL}${o.profileImageUrl}`}
                               alt=""
-                              className="h-10 w-10 rounded-xl object-cover border border-slate-100 shadow-sm"
+                              className="h-10 w-10 rounded-2xl object-cover border border-slate-100 shadow-sm"
                               onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + (o.fullName || 'User') }}
                             />
                           ) : (
-                            <div className="h-10 w-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-base shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <div className="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-black text-base shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all">
                               {(o.fullName || o.username)?.charAt(0)}
                             </div>
                           )}
@@ -339,14 +339,14 @@ export default function AdminOwnersList() {
                           <select
                             onClick={e => e.stopPropagation()}
                             onChange={(e) => handleStatusChange(e, o.id, e.target.value)}
-                            className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-600 focus:ring-1 focus:ring-indigo-500 outline-none"
+                            className="bg-slate-50 border border-slate-200 rounded-2xl px-2 py-1 text-[9px] font-black uppercase tracking-widest text-slate-600 focus:ring-1 focus:ring-indigo-500 outline-none"
                             defaultValue={o.status?.toLowerCase()}
                           >
                             <option value="pending">Pending</option>
                             <option value="approved">Approve</option>
                             <option value="deleted">Deleted</option>
                           </select>
-                          <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+                          <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-2xl transition-all">
                             <ExternalLink size={16} />
                           </button>
                         </div>
@@ -378,7 +378,7 @@ export default function AdminOwnersList() {
             <button
               disabled={page === 1}
               onClick={() => setPage(p => p - 1)}
-              className="p-2 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              className="p-2 rounded-2xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50"
             >
               <ChevronLeft size={16} />
             </button>
@@ -403,7 +403,7 @@ export default function AdminOwnersList() {
                     <button
                       key={p}
                       onClick={() => setPage(p)}
-                      className={`h-8 w-8 rounded-xl text-[10px] font-black transition-all ${
+                      className={`h-8 w-8 rounded-2xl text-[10px] font-black transition-all ${
                         page === p
                           ? 'bg-indigo-600 text-white shadow-md'
                           : 'bg-white border border-slate-200 text-slate-500 hover:border-slate-300'
@@ -418,7 +418,7 @@ export default function AdminOwnersList() {
             <button
               disabled={page * limit >= totalRecords}
               onClick={() => setPage(p => p + 1)}
-              className="p-2 rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+              className="p-2 rounded-2xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 disabled:opacity-50"
             >
               <ChevronRight size={16} />
             </button>
@@ -453,7 +453,7 @@ function StatusBadge({ status }) {
 
 function TopStat({ label, value, icon, color }) {
   return (
-    <div className={`px-4 py-1.5 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] bg-white shadow-sm ${color || 'border-slate-200'}`}>
+    <div className={`px-4 py-1.5 rounded-2xl border flex flex-col items-center justify-center transition-all min-w-[84px] bg-white shadow-sm ${color || 'border-slate-200'}`}>
       <div className="flex items-center gap-2 mb-0.5 text-slate-400">
         {React.cloneElement(icon, { size: 10 })}
         <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>

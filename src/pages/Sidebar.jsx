@@ -6,12 +6,14 @@ import {
   Users,
   Tag,
   CreditCard,
+  Wallet,
   BarChart3,
   Shield,
   User,
   LogOut,
   Calendar,
   Briefcase,
+  AlertCircle,
 } from 'lucide-react'
 import { ownerLogout, getAllPgs, getOwnerProfile } from '../api/ownerAuth'
 import ConfirmModal from '../components/ConfirmModal'
@@ -19,15 +21,17 @@ import LogoImg from '../assets/managemypg.png'
 
 /* ---------------- Nav Config ---------------- */
 const NAV = [
-  { to: '/home', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/my-pgs', label: 'My PGs', icon: Building2 },
-  { to: '/bookings', label: 'Bookings', icon: Calendar },
-  { to: '/tenants', label: 'Tenants', icon: Users },
-  { to: '/workers', label: 'Workers', icon: Briefcase },
-  { to: '/offers', label: 'Offers', icon: Tag },
-  { to: '/complaints', label: 'Complaints', icon: CreditCard },
-  { to: '/reports', label: 'Reports', icon: BarChart3 },
-  { to: '/ownerProfile', label: 'Profile', icon: User },
+  { to: '/home', label: 'Dashboard', icon: LayoutDashboard, color: 'text-sky-500', activeColor: 'text-sky-600', bg: 'bg-sky-500/20' },
+  { to: '/my-pgs', label: 'My PGs', icon: Building2, color: 'text-indigo-400', activeColor: 'text-indigo-600', bg: 'bg-indigo-400/20' },
+  { to: '/bookings', label: 'Bookings', icon: Calendar, color: 'text-purple-400', activeColor: 'text-purple-600', bg: 'bg-purple-400/20' },
+  { to: '/tenants', label: 'Tenants', icon: Users, color: 'text-emerald-400', activeColor: 'text-emerald-600', bg: 'bg-emerald-400/20' },
+  { to: '/rents', label: 'Rent Payments', icon: CreditCard, color: 'text-rose-400', activeColor: 'text-rose-600', bg: 'bg-rose-400/20' },
+  { to: '/expenses', label: 'Expenses', icon: Wallet, color: 'text-amber-400', activeColor: 'text-amber-600', bg: 'bg-amber-400/20' },
+  { to: '/workers', label: 'Workers', icon: Briefcase, color: 'text-cyan-400', activeColor: 'text-cyan-600', bg: 'bg-cyan-400/20' },
+  { to: '/offers', label: 'Offers', icon: Tag, color: 'text-orange-400', activeColor: 'text-orange-600', bg: 'bg-orange-400/20' },
+  { to: '/complaints', label: 'Complaints', icon: AlertCircle, color: 'text-red-400', activeColor: 'text-red-600', bg: 'bg-red-400/20' },
+  { to: '/reports', label: 'Reports', icon: BarChart3, color: 'text-violet-400', activeColor: 'text-violet-600', bg: 'bg-violet-400/20' },
+  { to: '/ownerProfile', label: 'Profile', icon: User, color: 'text-slate-400', activeColor: 'text-slate-600', bg: 'bg-slate-400/20' },
 ]
 
 const cx = (...c) => c.filter(Boolean).join(' ')
@@ -179,7 +183,7 @@ useEffect(() => {
 
   /* ================= NAV ITEM ================= */
 
-  const NavItem = ({ to, label, Icon, adminOnly }) => {
+  const NavItem = ({ to, label, Icon, color, activeColor, bg, adminOnly }) => {
     if (adminOnly && localStorage.getItem('isAdmin') !== 'true') return null
 
     return (
@@ -221,14 +225,29 @@ useEffect(() => {
             if (mobileOpen) setMobileOpen(false)
           }}
         >
-          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-white/15 text-white">
-            <Icon size={20} />
-          </div>
+          {({ isActive }) => (
+            <>
+              <div
+                className={cx(
+                  'h-10 w-10 flex items-center justify-center rounded-lg transition-all duration-300',
+                  isActive
+                    ? 'bg-white shadow-sm'
+                    : `${bg} group-hover:bg-white/20`
+                )}
+              >
+                <Icon
+                  size={20}
+                  strokeWidth={2.5}
+                  className={isActive ? activeColor : color}
+                />
+              </div>
 
-          {!collapsed && (
-            <span className="text-sm font-medium whitespace-nowrap">
-              {label}
-            </span>
+              {!collapsed && (
+                <span className="text-sm font-medium whitespace-nowrap">
+                  {label}
+                </span>
+              )}
+            </>
           )}
         </NavLink>
 
@@ -398,10 +417,10 @@ useEffect(() => {
           {!collapsed && (
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="p-2 rounded-xl hover:bg-white/10 text-white transition-colors"
+              className="p-2 rounded-xl hover:bg-white/10 text-indigo-400 transition-colors"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
           )}
@@ -411,10 +430,10 @@ useEffect(() => {
           <div className="px-4 py-2 flex justify-center border-b border-white/5">
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className="p-2 rounded-xl hover:bg-white/10 text-white transition-colors"
+              className="p-2 rounded-xl hover:bg-white/10 text-indigo-400 transition-colors"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
           </div>
@@ -490,6 +509,7 @@ useEffect(() => {
 /* ---------------- Profile ---------------- */
 
 function SidebarProfile({ collapsed, mobile, onLogoutClick, profile }) {
+  const [imgError, setImgError] = useState(false)
   const fullName = profile?.fullName || localStorage.getItem('fullName')
   const username = localStorage.getItem('username')
   const displayName = fullName || username || 'PG Owner'
@@ -508,8 +528,13 @@ function SidebarProfile({ collapsed, mobile, onLogoutClick, profile }) {
       )}
     >
       <div className="h-10 w-10 rounded-full bg-white/20 text-white flex items-center justify-center font-semibold overflow-hidden border border-white/10 shrink-0">
-        {fullImageUrl ? (
-          <img src={fullImageUrl} alt={displayName} className="h-full w-full object-cover" />
+        {fullImageUrl && !imgError ? (
+          <img
+            src={fullImageUrl}
+            alt={displayName}
+            className="h-full w-full object-cover"
+            onError={() => setImgError(true)}
+          />
         ) : (
           displayName.charAt(0).toUpperCase()
         )}
@@ -527,7 +552,7 @@ function SidebarProfile({ collapsed, mobile, onLogoutClick, profile }) {
           </div>
           <button
             onClick={onLogoutClick}
-            className="p-2.5 text-slate-400 hover:text-rose-400 transition-colors group/btn shrink-0"
+            className="p-2.5 text-rose-400 hover:text-rose-500 transition-colors group/btn shrink-0"
             title="Logout"
           >
             <LogOut size={18} className="group-hover/btn:translate-x-0.5 transition-transform" />

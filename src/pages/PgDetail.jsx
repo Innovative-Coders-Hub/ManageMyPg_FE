@@ -47,20 +47,33 @@ import bedOccupiedImg from '../assets/bed_occupied.png'
 import bedReservedImg from '../assets/bed_reserved.png'
 import bedDeletedImg from '../assets/bed_deleted.png'
 
-const isVacatingSoon = (endDate) => {
+// Preload assets for faster rendering
+const statusImages = {
+  available: bedAvailableImg,
+  occupied: bedOccupiedImg,
+  vacating: bedOccupiedImg,
+  booked: bedReservedImg,
+  deleted: bedDeletedImg
+};
+
+Object.values(statusImages).forEach(src => {
+  const img = new Image();
+  img.src = src;
+});
+
+const isVacatingSoon = (endDate, today = dayjs()) => {
   if (!endDate) return false
-  const today = dayjs()
   const end = dayjs(endDate)
   if (!end.isValid()) return false
   const diff = end.diff(today, 'day')
   return diff >= 0 && diff <= 7
 }
 
-const getBedStatus = (bed) => {
+const getBedStatus = (bed, today = dayjs()) => {
   if (!bed) return 'available'
   if (bed.deleted === true) return 'deleted'
   if (bed.occupied === true) {
-    if (isVacatingSoon(bed.vacatingDate)) {
+    if (isVacatingSoon(bed.vacatingDate, today)) {
       return 'vacating'
     }
     return 'occupied'
@@ -69,30 +82,35 @@ const getBedStatus = (bed) => {
   return 'available'
 }
 
-function TopStat({ label, value, icon, isAccent = false }) {
+function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50', isAccent = false }) {
+  if (isAccent) {
+    colorClass = 'text-white'
+    bgClass = 'bg-indigo-600'
+  }
   return (
-    <div className={`px-4 py-1.5 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
-      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
-        {React.cloneElement(icon, { size: 10 })}
-        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+    <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
+      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
+        <Icon className="w-4 h-4 sm:w-5 h-5" />
       </div>
-      <div className="text-sm font-black leading-none">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-sm sm:text-lg font-black text-slate-900 leading-tight truncate">{value}</div>
+      </div>
     </div>
   )
 }
 
-const RoomCard = React.forwardRef(({ room, onAddBed, onDeleteBed, onTransferBed }, ref) => {
+const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onTransferBed }, ref) => {
   const occupiedCount = (room.beds || []).filter(b => b.occupied && !b.deleted).length
   const totalBedsCount = (room.beds || []).filter(b => !b.deleted).length
 
   return (
     <motion.div
       ref={ref}
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="bg-white rounded-[2.5rem] border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
     >
       <div className="flex justify-between items-start mb-5">
         <div>
@@ -117,55 +135,48 @@ const RoomCard = React.forwardRef(({ room, onAddBed, onDeleteBed, onTransferBed 
           {(room.beds || []).map(bed => (
             <Bed
               key={bed.id}
-              bed={bed}
+              id={bed.id}
+              name={bed.name}
+              status={bed.status}
+              deleted={bed.deleted}
+              tenantName={bed.tenantName}
               onDelete={() => onDeleteBed(bed)}
               onTransfer={() => onTransferBed(bed)}
             />
           ))}
         </AnimatePresence>
         <motion.button
-          layout
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onAddBed}
-          className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all group"
+          className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all group"
         >
           <Plus size={18} className="group-hover:scale-110 transition-transform" />
         </motion.button>
       </div>
     </motion.div>
   )
-})
+}))
 
-const Bed = React.memo(React.forwardRef(function Bed({ bed, onDelete, onTransfer }, ref) {
+const Bed = React.memo(React.forwardRef(function Bed({ id, name, status, deleted, tenantName, onDelete, onTransfer }, ref) {
   const navigate = useNavigate()
-  const status = getBedStatus(bed)
-
-  const statusImages = {
-    available: bedAvailableImg,
-    occupied: bedOccupiedImg,
-    vacating: bedOccupiedImg,
-    booked: bedReservedImg,
-    deleted: bedDeletedImg
-  }
 
   const go = () => {
-    navigate(`/beds/${encodeURIComponent(bed.id)}`, {
-      state: { bedName: bed.name }
+    navigate(`/beds/${encodeURIComponent(id)}`, {
+      state: { bedName: name }
     })
   }
 
   return (
     <motion.div
       ref={ref}
-      layout
-      initial={{ opacity: 0, scale: 0.8 }}
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
+      exit={{ opacity: 0 }}
       whileHover={{ y: -2 }}
       whileTap={{ scale: 0.95 }}
       onClick={go}
-      className={`group relative aspect-square rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-sm bg-white hover:shadow-md ${
+      className={`group relative aspect-square rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all duration-300 shadow-sm bg-white hover:shadow-md transform-gpu will-change-transform ${
         status === 'available' ? 'border-emerald-100' :
         status === 'occupied' ? 'border-indigo-100' :
         status === 'vacating' ? 'border-amber-100' :
@@ -173,18 +184,23 @@ const Bed = React.memo(React.forwardRef(function Bed({ bed, onDelete, onTransfer
       }`}
     >
       {/* Background Image - Maximum Clarity */}
-      <div className="absolute inset-0 flex items-center justify-center p-1 transition-transform duration-300 group-hover:scale-105">
+      <div className="absolute inset-0 flex items-center justify-center p-1 transition-transform duration-300 group-hover:scale-105 bg-slate-50/50 rounded-2xl overflow-hidden transform-gpu">
         <img
           src={statusImages[status]}
           alt={status}
-          className="w-full h-full object-contain opacity-100"
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+          className="w-full h-full object-contain opacity-100 drop-shadow-sm transform-gpu transition-opacity duration-200"
+          onLoad={(e) => e.target.style.opacity = 1}
+          style={{ opacity: 0, imageRendering: 'auto' }}
         />
       </div>
 
       {/* Bed Name Top Left - Professional Badge */}
       <div className="absolute top-0.5 left-0.5 z-10">
         <div className="bg-slate-900/90 text-white text-[9px] font-black px-1.5 py-0.5 rounded-lg shadow-lg backdrop-blur-sm uppercase tracking-tighter border border-white/20">
-          {bed.name}
+          {name}
         </div>
       </div>
 
@@ -197,15 +213,15 @@ const Bed = React.memo(React.forwardRef(function Bed({ bed, onDelete, onTransfer
           status === 'booked' ? 'bg-purple-600/95 text-white' : 'bg-slate-500/95 text-white'
         }`}>
            <span className="text-[7.5px] font-black uppercase tracking-widest truncate block px-1 drop-shadow-sm">
-            {bed.deleted ? 'Deleted' :
-             bed.occupied ? (bed.tenantName || 'Occupied') :
-             bed.booked ? 'Booked' : 'Available'}
+            {deleted ? 'Deleted' :
+             status === 'occupied' || status === 'vacating' ? (tenantName || 'Occupied') :
+             status === 'booked' ? 'Booked' : 'Available'}
           </span>
         </div>
       </div>
 
       <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all z-20">
-        {!bed.deleted && (
+        {!deleted && (
           <button
             onClick={(e) => {
               e.stopPropagation()
@@ -220,11 +236,11 @@ const Bed = React.memo(React.forwardRef(function Bed({ bed, onDelete, onTransfer
         <button
           onClick={(e) => {
             e.stopPropagation()
-            onDelete(bed.id)
+            onDelete(id)
           }}
           className="w-8 h-8 rounded-lg bg-white border border-slate-200 shadow-md flex items-center justify-center hover:scale-110 active:scale-95"
         >
-          {bed.deleted ? (
+          {deleted ? (
             <RefreshCw size={12} className="text-amber-500" />
           ) : (
             <Trash2 size={12} className="text-rose-500" />
@@ -247,7 +263,7 @@ function FilterPill({ active, onClick, label, icon: Icon, activeClass }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${
         active
           ? `${activeClass} shadow-md`
           : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
@@ -271,7 +287,7 @@ function Toolbar({ filters, setFilters }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl text-slate-400 mr-1">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-2xl text-slate-400 mr-1">
         <Filter size={12} />
         <span className="text-[9px] font-black uppercase tracking-widest">Filters</span>
       </div>
@@ -288,7 +304,7 @@ function Toolbar({ filters, setFilters }) {
       {(filters.ac || filters.nonac || filters.available || filters.booked || filters.vacatingSoon) && (
         <button
           onClick={() => setFilters({ ac: false, nonac: false, available: false, booked: false, vacatingSoon: false })}
-          className="text-[10px] font-black text-rose-500 bg-rose-50 px-4 py-2.5 rounded-xl uppercase tracking-widest hover:bg-rose-100 transition-colors ml-2 border border-rose-100"
+          className="text-[9px] font-black text-rose-500 bg-rose-50 px-4 py-2.5 rounded-2xl uppercase tracking-widest hover:bg-rose-100 transition-colors ml-2 border border-rose-100"
         >
           Clear
         </button>
@@ -346,7 +362,7 @@ export default function PgDetail() {
   const normalizeFloorsFromBE = (floors = []) =>
     floors.map(floor => ({
       id: floor.id,
-      number: String(floor.floorName).replace(/floor/gi, '').trim() || floor.floorName,
+      number: floor.floorName,
       rooms: (floor.roomsResponses || []).map(room => ({
         id: room.id,
         number: room.roomName,
@@ -405,6 +421,8 @@ export default function PgDetail() {
     if (id) fetchPg()
   }, [id])
 
+  const today = useMemo(() => dayjs(), [])
+
   const matchesRoomFilters = (room) => {
     const { ac, nonac } = filters
     if (!ac && !nonac) return true
@@ -415,13 +433,20 @@ export default function PgDetail() {
 
   const filteredBedsForRoom = (room) => {
     const { available, vacatingSoon, booked } = filters;
-    if (!available && !vacatingSoon && !booked) return room.beds || [];
-    return (room.beds || []).filter(bed => {
-      const status = getBedStatus(bed)
+
+    // Always calculate status for all beds in this room once
+    const bedsWithStatus = (room.beds || []).map(bed => ({
+      ...bed,
+      status: getBedStatus(bed, today)
+    }));
+
+    if (!available && !vacatingSoon && !booked) return bedsWithStatus;
+
+    return bedsWithStatus.filter(bed => {
       return (
-        (available && status === 'available') ||
-        (vacatingSoon && status === 'vacating') ||
-        (booked && status === 'booked')
+        (available && bed.status === 'available') ||
+        (vacatingSoon && bed.status === 'vacating') ||
+        (booked && bed.status === 'booked')
       )
     })
   };
@@ -457,7 +482,7 @@ export default function PgDetail() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white p-12 rounded-xl border border-slate-200 text-center shadow-xl shadow-slate-200/50"
+          className="bg-white p-12 rounded-[2.5rem] border border-slate-200 text-center shadow-xl shadow-slate-200/50"
         >
           <div className="w-20 h-20 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 mx-auto mb-6">
             <Building2 size={40} />
@@ -466,7 +491,7 @@ export default function PgDetail() {
           <p className="text-slate-500 font-medium mb-8">We couldn't locate the PG details you're looking for.</p>
           <button
             onClick={() => navigate('/mypgs')}
-            className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+            className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
           >
             Back to Portfolio
           </button>
@@ -486,19 +511,19 @@ export default function PgDetail() {
             title={pgDisplayName}
             subtitle={typeof pg.address === 'string' ? pg.address : pg.address?.address || 'Beds Management'}
             backButton={
-              <button onClick={() => navigate('/mypgs')} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-400 transition-all border border-slate-100 mr-2">
+              <button onClick={() => navigate('/mypgs')} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all border border-slate-100 mr-2">
                 <ArrowLeft size={18} />
               </button>
             }
           >
-            <div className="flex flex-wrap items-center justify-end gap-1.5">
-              <TopStat label="Floors" value={pg.floors?.length || 0} icon={<Layers />} />
-              <TopStat label="Rooms" value={totalRoomsCount} icon={<DoorOpen />} />
-              <TopStat label="Beds" value={totalBeds} icon={<BedIcon />} />
-              <TopStat label="Occupancy" value={`${totalBeds > 0 ? Math.round((filledBedsCount/totalBeds)*100) : 0}%`} icon={<TrendingUp />} isAccent />
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <TopStat label="Floors" value={pg.floors?.length || 0} icon={Layers} />
+              <TopStat label="Rooms" value={totalRoomsCount} icon={DoorOpen} />
+              <TopStat label="Beds" value={totalBeds} icon={BedIcon} />
+              <TopStat label="Occupancy" value={`${totalBeds > 0 ? Math.round((filledBedsCount/totalBeds)*100) : 0}%`} icon={TrendingUp} isAccent />
               <button
                 onClick={() => setShowAddFloor(true)}
-                className="ml-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-200"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 h-[64px] ml-2"
               >
                 <Plus size={14} /> Add Floor
               </button>
@@ -539,7 +564,7 @@ export default function PgDetail() {
                       key={f.id}
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+                      className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden"
                     >
                       {/* Floor Header */}
                       <div
@@ -547,12 +572,11 @@ export default function PgDetail() {
                         className="p-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-black shadow-sm">
+                          <div className="px-3 h-9 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-black shadow-sm">
                             {f.number}
                           </div>
                           <div>
-                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">{f.number}</h3>
-                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                               {f.rooms.length} Units • {floorBedsCount} Active Beds
                             </p>
                           </div>
@@ -668,7 +692,7 @@ export default function PgDetail() {
                   </div>
 
                   {floorForm.rooms.map((room, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-4">
+                    <div key={idx} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Unit {idx + 1}</span>
                         <label className="flex items-center gap-2 cursor-pointer group">
@@ -694,7 +718,7 @@ export default function PgDetail() {
                             rooms[idx].name = e.target.value
                             setFloorForm(prev => ({ ...prev, rooms }))
                           }}
-                          className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 bg-white"
+                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 bg-white"
                         />
                         <div className="relative">
                           <input
@@ -706,7 +730,7 @@ export default function PgDetail() {
                               rooms[idx].sharing = Number(e.target.value)
                               setFloorForm(prev => ({ ...prev, rooms }))
                             }}
-                            className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-black uppercase pointer-events-none tracking-tighter">Beds</span>
                         </div>
@@ -771,15 +795,15 @@ export default function PgDetail() {
       {showDiscardConfirm && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" onClick={() => setShowDiscardConfirm(false)} />
-          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl border border-slate-200 text-center">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl border border-slate-200 text-center">
             <div className="w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-amber-100">
               <Info size={32} />
             </div>
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Discard Changes?</h3>
             <p className="text-slate-500 text-sm font-medium mt-2 mb-8 px-4">You have unsaved configuration for this floor. Are you sure you want to stop?</p>
             <div className="flex gap-3">
-              <button className="flex-1 px-4 py-3 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-colors" onClick={() => setShowDiscardConfirm(false)}>Stay</button>
-              <button className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100" onClick={() => { resetFloorForm(); setShowDiscardConfirm(false); setShowAddFloor(false); }}>Discard</button>
+              <button className="flex-1 px-4 py-3 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-colors" onClick={() => setShowDiscardConfirm(false)}>Stay</button>
+              <button className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100" onClick={() => { resetFloorForm(); setShowDiscardConfirm(false); setShowAddFloor(false); }}>Discard</button>
             </div>
           </motion.div>
         </div>
@@ -795,7 +819,7 @@ export default function PgDetail() {
                 <div className="flex items-center gap-4">
                    <div className="flex-1 p-3 bg-white rounded-lg border border-slate-100">
                       <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Floor</span>
-                      <span className="text-sm font-black text-slate-900 uppercase">Level {showAddBed.floorNumber}</span>
+                      <span className="text-sm font-black text-slate-900 uppercase">{showAddBed.floorNumber}</span>
                    </div>
                    <div className="flex-1 p-3 bg-white rounded-lg border border-slate-100">
                       <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Unit</span>
@@ -831,7 +855,8 @@ export default function PgDetail() {
                             booked: false,
                             deleted: false,
                             vacatingDate: null,
-                            tenantName: null
+                            tenantName: null,
+                            status: 'available'
                           }]
                         })
                       })
@@ -869,7 +894,7 @@ export default function PgDetail() {
                 }
               }}
             />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white rounded-xl p-8 max-w-sm w-full shadow-2xl border border-slate-200 text-center">
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className="relative bg-white rounded-[2.5rem] p-8 max-w-sm w-full shadow-2xl border border-slate-200 text-center">
               {actionSuccess ? (
                 <div className="py-4">
                   <div className={`w-16 h-16 ${deleteBedTarget ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-emerald-50 text-emerald-500 border-emerald-100'} rounded-full flex items-center justify-center mx-auto mb-6 border-2`}>
@@ -884,7 +909,7 @@ export default function PgDetail() {
                       : `Bed ${activateBedTarget.bedName} is now active and ready for bookings.`}
                   </p>
                   <button
-                    className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg"
+                    className="w-full px-4 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg"
                     onClick={() => {
                       setDeleteBedTarget(null);
                       setActivateBedTarget(null);
@@ -900,15 +925,15 @@ export default function PgDetail() {
                     <Trash2 size={32} />
                   </div>
                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Delete Bed?</h3>
-                  <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 space-y-2">
+                  <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 space-y-2">
                     <div className="flex justify-between"><span>Floor</span><span className="text-slate-900">{deleteBedTarget.floorNumber}</span></div>
                     <div className="flex justify-between"><span>Room</span><span className="text-slate-900">{deleteBedTarget.roomNumber}</span></div>
                     <div className="flex justify-between"><span>Bed Name</span><span className="text-slate-900">{deleteBedTarget.bedName}</span></div>
                   </div>
                   <p className="text-slate-400 text-xs font-bold mt-6 mb-8 px-2 uppercase tracking-tighter">This Bed will be deleted,Until you reactivate it.</p>
                   <div className="flex gap-3">
-                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50" onClick={() => setDeleteBedTarget(null)}>Cancel</button>
-                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 disabled:opacity-50" onClick={async () => {
+                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50" onClick={() => setDeleteBedTarget(null)}>Cancel</button>
+                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-rose-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 disabled:opacity-50" onClick={async () => {
                         try {
                           setActionLoading(true)
                           await deleteBed(deleteBedTarget.bedId)
@@ -918,7 +943,7 @@ export default function PgDetail() {
                               ...f,
                               rooms: f.rooms.map(r => r.id !== deleteBedTarget.roomId ? r : {
                                 ...r,
-                                beds: r.beds.map(b => b.id === deleteBedTarget.bedId ? { ...b, deleted: true } : b)
+                                beds: r.beds.map(b => b.id === deleteBedTarget.bedId ? { ...b, deleted: true, status: 'deleted' } : b)
                               })
                             })
                           }))
@@ -937,15 +962,15 @@ export default function PgDetail() {
                     <RefreshCw size={32} />
                   </div>
                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Reactivate Bed?</h3>
-                   <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 space-y-2">
+                   <div className="mt-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-[10px] font-black uppercase tracking-widest text-slate-500 space-y-2">
                     <div className="flex justify-between"><span>Floor</span><span className="text-slate-900">{activateBedTarget.floorNumber}</span></div>
                     <div className="flex justify-between"><span>Room</span><span className="text-slate-900">{activateBedTarget.roomNumber}</span></div>
                     <div className="flex justify-between"><span>Bed Name</span><span className="text-slate-900">{activateBedTarget.bedName}</span></div>
                   </div>
                   <p className="text-slate-400 text-xs font-bold mt-6 mb-8 px-2 uppercase tracking-tighter">This unit will be restored for bookings.</p>
                   <div className="flex gap-3">
-                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50" onClick={() => setActivateBedTarget(null)}>Cancel</button>
-                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50" onClick={async () => {
+                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-slate-50 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50" onClick={() => setActivateBedTarget(null)}>Cancel</button>
+                    <button disabled={actionLoading} className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50" onClick={async () => {
                         try {
                           setActionLoading(true)
                           await activateBed(activateBedTarget.bedId)
@@ -955,7 +980,7 @@ export default function PgDetail() {
                               ...f,
                               rooms: f.rooms.map(r => r.id !== activateBedTarget.roomId ? r : {
                                 ...r,
-                                beds: r.beds.map(b => b.id === activateBedTarget.bedId ? { ...b, deleted: false } : b)
+                                beds: r.beds.map(b => b.id === activateBedTarget.bedId ? { ...b, deleted: false, status: 'available' } : b)
                               })
                             })
                           }))
@@ -982,7 +1007,7 @@ export default function PgDetail() {
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Current Asset Location</p>
                 <div className="text-xs font-black text-slate-900 uppercase">
-                  {transferBedTarget.bedName} • Level {transferBedTarget.floorNumber} • Room {transferBedTarget.roomNumber}
+                  {transferBedTarget.bedName} • {transferBedTarget.floorNumber} • Room {transferBedTarget.roomNumber}
                 </div>
               </div>
 
@@ -990,7 +1015,7 @@ export default function PgDetail() {
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Floor</label>
                   <select
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 mt-1.5"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 mt-1.5"
                     onChange={(e) => {
                       const floorId = e.target.value;
                       setTransferForm(prev => ({ ...prev, targetFloorId: floorId, targetRoomId: '' }));
@@ -1008,7 +1033,7 @@ export default function PgDetail() {
                   <div>
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Room</label>
                     <select
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 mt-1.5"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 mt-1.5"
                       onChange={(e) => setTransferForm(prev => ({ ...prev, targetRoomId: e.target.value }))}
                       value={transferForm.targetRoomId || ''}
                       required
@@ -1111,7 +1136,7 @@ export default function PgDetail() {
   )
 }
 
-const Modal = React.forwardRef(({ children, onClose, title, icon, className = "max-w-md" }, ref) => {
+const Modal = React.forwardRef(({ children, onClose, title, subtitle, icon, className = "max-w-2xl" }, ref) => {
   return (
     <motion.div
       ref={ref}
@@ -1122,30 +1147,30 @@ const Modal = React.forwardRef(({ children, onClose, title, icon, className = "m
     >
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-950/40 backdrop-blur-md"
+        className="absolute inset-0 bg-slate-950/40 backdrop-blur-xl"
         onClick={onClose}
       />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`relative w-full ${className} bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200`}
+        className={`relative w-full ${className} bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200`}
       >
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0 border border-indigo-100">
-              {React.cloneElement(icon, { size: 18 })}
+            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
+              {React.isValidElement(icon) ? icon : React.cloneElement(icon, { size: 22 })}
             </div>
             <div className="min-w-0">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest leading-none truncate">{title}</h3>
-              <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">Inventory Protocol</p>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none truncate">{title}</h3>
+              <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">{subtitle || 'Inventory Protocol'}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all shrink-0 ml-2 border border-slate-100">
-            <X size={16} />
+          <button onClick={onClose} className="p-3 bg-slate-50 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all shrink-0 ml-2 border border-slate-100">
+            <X size={20} />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto custom-scrollbar">
+        <div className="p-8 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </motion.div>
@@ -1164,7 +1189,7 @@ function FormInput({ label, value, onChange, placeholder, type = 'text', readOnl
         readOnly={readOnly}
         placeholder={placeholder}
         required={required}
-        className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all ${readOnly ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-white'} ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}`}
+        className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all ${readOnly ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-white'} ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}`}
       />
     </div>
   )

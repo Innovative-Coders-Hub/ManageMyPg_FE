@@ -195,17 +195,17 @@ export default function MyPgs() {
             title="Portfolio Units"
             subtitle="Asset inventory & operational oversight"
           >
-            <div className="flex flex-wrap items-center justify-end gap-1">
-              <TopStat label="PGs" value={stats.total} icon={<Building2 />} />
-              <TopStat label="Total Beds" value={stats.totalBeds} icon={<Users />} />
-              <TopStat label="Filled" value={stats.filledBeds} icon={<TrendingUp />} />
-              <TopStat label="Occupancy" value={`${stats.occupancy}%`} icon={<Percent />} isAccent />
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <TopStat label="PGs" value={stats.total} icon={Building2} />
+              <TopStat label="Total Beds" value={stats.totalBeds} icon={Users} />
+              <TopStat label="Filled" value={stats.filledBeds} icon={TrendingUp} colorClass="text-emerald-600" bgClass="bg-emerald-50" />
+              <TopStat label="Occupancy" value={`${stats.occupancy}%`} icon={Percent} isAccent />
 
               <button
                 onClick={() => setShowCreate(true)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-200 ml-2"
+                className="flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 h-[64px] ml-2"
               >
-                <Plus size={14} /> Add PG
+                <Plus size={16} /> Add PG
               </button>
             </div>
           </PageHeader>
@@ -217,7 +217,7 @@ export default function MyPgs() {
         <div className="mt-1">
           {loading ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-              {[1, 2, 3].map(i => <div key={i} className="h-80 rounded-xl bg-white border border-slate-100 animate-pulse" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-80 rounded-[2.5rem] bg-white border border-slate-100 animate-pulse" />)}
             </div>
           ) : pgs.length === 0 ? (
             <EmptyState onAdd={() => setShowCreate(true)} />
@@ -254,8 +254,8 @@ export default function MyPgs() {
           >
             <div className="space-y-6">
               <section>
-                <div className="bg-slate-50 px-5 py-3 rounded-xl border border-slate-200">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 block ml-1">Admission Fee</label>
+                <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 block ml-1">Admission Fee</label>
                   <div className="relative flex items-center">
                     <span className="text-sm font-black text-slate-400 mr-1.5">₹</span>
                     <input
@@ -283,7 +283,7 @@ export default function MyPgs() {
                         ]
                       }))
                     }}
-                    className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-xl hover:bg-indigo-100"
+                    className="text-[9px] font-black text-indigo-600 bg-indigo-50 px-4 py-1.5 rounded-2xl hover:bg-indigo-100"
                   >
                     + PRICING
                   </button>
@@ -291,27 +291,26 @@ export default function MyPgs() {
 
                 <div className="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
                   {Object.entries(groupedPricing).map(([s, items]) => (
-                    <div key={s} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                    <div key={s} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                       <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-b border-slate-200">
-                        <span className="text-[10px] font-black uppercase text-slate-900">{s} Sharing</span>
+                        <span className="text-[9px] font-black uppercase text-slate-900">{s} Sharing</span>
                       </div>
                       <div className="p-4 space-y-3">
                         {items.map((item) => (
                           <div key={item.originalIndex} className="flex items-center gap-3">
-                            <select
+                            <CustomDropdown
+                              label="Type"
                               value={item.roomType}
-                              onChange={(e) => {
+                              options={['AC', 'NON_AC']}
+                              onChange={(val) => {
                                 const newList = [...pricingForm.pricingList]
-                                newList[item.originalIndex].roomType = e.target.value
+                                newList[item.originalIndex].roomType = val
                                 setPricingForm({ ...pricingForm, pricingList: newList })
                               }}
-                              className={`text-[10px] font-black p-2 rounded-xl border-none ring-1 ring-slate-100 ${item.roomType==='AC'?'bg-indigo-50 text-indigo-600 ring-indigo-100':'bg-slate-50 text-slate-600'}`}
-                            >
-                              <option value="AC">AC</option>
-                              <option value="NON_AC">NON-AC</option>
-                            </select>
+                              className="w-[100px]"
+                            />
                             <div className="flex-1 relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">₹</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">₹</span>
                               <input
                                 type="number"
                                 value={item.monthlyRate}
@@ -320,12 +319,12 @@ export default function MyPgs() {
                                   newList[item.originalIndex].monthlyRate = Number(e.target.value)
                                   setPricingForm({ ...pricingForm, pricingList: newList })
                                 }}
-                                className="w-full bg-slate-50 border-none rounded-xl py-2 pl-6 pr-3 text-xs font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-full bg-slate-50 border-none rounded-2xl py-2 pl-6 pr-3 text-xs font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 placeholder="Monthly"
                               />
                             </div>
                             <div className="flex-1 relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">₹</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400">₹</span>
                               <input
                                 type="number"
                                 value={item.dailyRate}
@@ -334,7 +333,7 @@ export default function MyPgs() {
                                   newList[item.originalIndex].dailyRate = Number(e.target.value)
                                   setPricingForm({ ...pricingForm, pricingList: newList })
                                 }}
-                                className="w-full bg-slate-50 border-none rounded-xl py-2 pl-6 pr-3 text-xs font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-full bg-slate-50 border-none rounded-2xl py-2 pl-6 pr-3 text-xs font-bold outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 placeholder="Daily"
                               />
                             </div>
@@ -355,7 +354,7 @@ export default function MyPgs() {
               <button
                 onClick={handleUpdatePricing}
                 disabled={updatingPricing}
-                className="w-full px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                className="w-full px-4 py-1.5 bg-indigo-600 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
               >
                 {updatingPricing ? <Loader2 className="animate-spin" size={14} /> : 'Confirm Pricing Structure'}
               </button>
@@ -372,7 +371,7 @@ export default function MyPgs() {
             className="max-w-lg"
           >
             <div className="text-center space-y-8">
-              <div className="mx-auto w-24 h-24 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 border border-indigo-100">
+              <div className="mx-auto w-24 h-24 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100">
                 <FileSearch size={40} />
               </div>
               <div className="space-y-2">
@@ -380,15 +379,15 @@ export default function MyPgs() {
                 <p className="text-slate-500 text-sm font-medium px-8">Upload a PDF document outlining your house rules, refund policies, and legal agreements.</p>
               </div>
 
-              <div className="bg-slate-900 rounded-xl p-8 text-white relative overflow-hidden group">
+              <div className="bg-slate-900 rounded-2xl p-8 text-white relative overflow-hidden group">
                 <div className="absolute inset-0 bg-indigo-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative z-10 space-y-6">
                   {selectedPgForPricing?.termsAndConditionsUrl ? (
-                    <div className="flex items-center justify-center gap-2 text-emerald-400 text-[10px] font-black uppercase tracking-widest bg-emerald-400/10 py-2 px-4 rounded-full w-fit mx-auto border border-emerald-400/20">
+                    <div className="flex items-center justify-center gap-2 text-emerald-400 text-[9px] font-black uppercase tracking-widest bg-emerald-400/10 py-2 px-4 rounded-full w-fit mx-auto border border-emerald-400/20">
                       <div className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Document Active
                     </div>
                   ) : (
-                    <div className="text-slate-500 text-[10px] font-black uppercase tracking-widest">No Document Found</div>
+                    <div className="text-slate-500 text-[9px] font-black uppercase tracking-widest">No Document Found</div>
                   )}
 
                   <div className="grid grid-cols-1 gap-4">
@@ -397,12 +396,12 @@ export default function MyPgs() {
                         href={selectedPgForPricing.termsAndConditionsUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="flex items-center justify-center gap-3 w-full px-4 py-1.5 bg-white/5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                        className="flex items-center justify-center gap-3 w-full px-4 py-1.5 bg-white/5 rounded-2xl border border-white/10 text-[9px] font-black uppercase tracking-widest hover:bg-white/10 transition-all"
                       >
                         <LayoutGrid size={16} /> View Current PDF
                       </a>
                     )}
-                    <label className="flex items-center justify-center gap-3 w-full px-4 py-1.5 bg-indigo-600 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/40">
+                    <label className="flex items-center justify-center gap-3 w-full px-4 py-1.5 bg-indigo-600 rounded-2xl text-[9px] font-black uppercase tracking-widest cursor-pointer hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-900/40">
                       {uploadingTerms ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
                       {selectedPgForPricing?.termsAndConditionsUrl ? 'Replace Agreement' : 'Upload Agreement'}
                       <input type="file" accept=".pdf" onChange={handleFileUpload} className="hidden" />
@@ -427,13 +426,13 @@ export default function MyPgs() {
               <div className="mb-8">
                 <div className="flex items-center justify-center gap-2 mt-3">
                   <div className="h-[2px] w-4 bg-indigo-600 rounded-full" />
-                  <p className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Scan to Tenant Register</p>
+                  <p className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.2em]">Scan to Tenant Register</p>
                   <div className="h-[2px] w-4 bg-indigo-600 rounded-full" />
                 </div>
               </div>
 
-              <div className="inline-block p-6 bg-slate-50 rounded-xl border border-slate-200 mb-6 relative group">
-                <div className="absolute inset-0 bg-indigo-600/5 scale-90 rounded-xl group-hover:scale-105 transition-transform" />
+              <div className="inline-block p-6 bg-slate-50 rounded-2xl border border-slate-200 mb-6 relative group">
+                <div className="absolute inset-0 bg-indigo-600/5 scale-90 rounded-2xl group-hover:scale-105 transition-transform" />
                 <img
                   src={`${import.meta.env.VITE_API_BASE_URL}/mmp/pg/${showQrFor}/qr`}
                   alt="QR"
@@ -441,15 +440,15 @@ export default function MyPgs() {
                 />
               </div>
               <div className="space-y-4">
-                <div className="bg-indigo-50/50 p-6 rounded-xl border border-indigo-100">
+                <div className="bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100">
                   <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em] mb-3">Direct Onboarding URL</p>
-                  <div className="text-[11px] font-bold text-indigo-600 break-all select-all leading-relaxed bg-white p-4 rounded-xl border border-indigo-100/50">
+                  <div className="text-[11px] font-bold text-indigo-600 break-all select-all leading-relaxed bg-white p-4 rounded-2xl border border-indigo-100/50">
                     {window.location.origin}/mmp/register/{showQrFor}
                   </div>
                 </div>
                 <button
                   onClick={() => setShowQrFor(null)}
-                  className="w-full px-4 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md"
+                  className="w-full px-4 py-1.5 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-md"
                 >
                   Dismiss QR
                 </button>
@@ -520,11 +519,11 @@ export default function MyPgs() {
               </div>
 
               <div className="flex gap-4 pt-6">
-                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 px-4 py-1.5 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600">Discard</button>
+                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 px-4 py-1.5 text-slate-400 font-black uppercase text-[9px] tracking-widest hover:text-slate-600">Discard</button>
                 <button
                   type="submit"
                   disabled={creating || !pgName || pincode.length !== 6}
-                  className="flex-[2] px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                  className="flex-[2] px-4 py-1.5 bg-indigo-600 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:opacity-50 transition-all"
                 >
                   {creating ? <Loader2 className="animate-spin mx-auto" size={14} /> : 'Save PG'}
                 </button>
@@ -537,14 +536,108 @@ export default function MyPgs() {
   )
 }
 
-function TopStat({ label, value, icon, isAccent = false }) {
+function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50', isAccent = false }) {
+  if (isAccent) {
+    colorClass = 'text-white'
+    bgClass = 'bg-indigo-600'
+  }
   return (
-    <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
-      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
-        {React.cloneElement(icon, { size: 10 })}
-        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+    <div className={`bg-white p-3 sm:p-5 rounded-2xl sm:rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0`}>
+      <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-2xl sm:rounded-2xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
+        {React.isValidElement(Icon) ? Icon : <Icon className="w-5 h-5 sm:w-6 h-6" />}
       </div>
-      <div className="text-sm font-black leading-none">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[8px] sm:text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-base sm:text-xl font-black text-slate-900 leading-tight truncate">{value}</div>
+      </div>
+    </div>
+  )
+}
+
+function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white" }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = React.useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedOption = typeof options[0] === 'object'
+    ? options.find(opt => opt.id === value || opt.value === value)
+    : { id: value, label: value }
+
+  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
+
+  return (
+    <div className={`relative ${className}`} ref={containerRef}>
+      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
+        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
+          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
+          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
+            {displayValue}
+          </span>
+        </div>
+        <ChevronDown
+          size={16}
+          strokeWidth={3}
+          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
+          >
+            {showAll && (
+              <button
+                type="button"
+                onClick={() => { onChange('ALL'); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                ALL {label}S
+              </button>
+            )}
+            {options.map((opt) => {
+              const id = typeof opt === 'object' ? (opt.id || opt.value) : opt
+              const labelText = typeof opt === 'object' ? opt.label : opt
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => { onChange(id); setIsOpen(false); }}
+                  className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                    value === id ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {labelText}
+                </button>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -557,12 +650,12 @@ const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="group bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden h-full flex flex-col"
+      className="group bg-white rounded-[2rem] border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden h-full flex flex-col"
     >
       {/* Header Section */}
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-xl flex items-center justify-center border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0">
+          <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center border border-slate-100 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 shrink-0 shadow-sm">
             <Building2 size={24} />
           </div>
           <div className="min-w-0">
@@ -570,7 +663,7 @@ const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
             <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">{pg.businessName || 'Accommodation'}</p>
           </div>
         </div>
-        <div className={`shrink-0 px-2.5 py-1 rounded-xl text-[8px] font-black uppercase tracking-widest border ${pg.approved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
+        <div className={`shrink-0 px-2.5 py-1 rounded-2xl text-[8px] font-black uppercase tracking-widest border ${pg.approved ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
           {pg.approved ? 'Approved' : 'Verifying'}
         </div>
       </div>
@@ -591,18 +684,18 @@ const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
       </div>
 
       {/* Footer Actions */}
-      <div className="mt-auto flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar pt-1">
-        <div className="flex items-center gap-1.5">
-          <ActionButton icon={<QrCode size={13} />} label="QR Code" onClick={onQr} />
-          <ActionButton icon={<IndianRupee size={13} />} label="Pricing" onClick={onPricing} />
-          <ActionButton icon={<FileText size={13} />} label="View T&C" onClick={onTerms} />
+      <div className="mt-auto flex items-center justify-between gap-2 overflow-x-auto no-scrollbar pt-1">
+        <div className="flex items-center gap-2">
+          <ActionButton icon={<QrCode size={13} />} label="QR" onClick={onQr} />
+          <ActionButton icon={<IndianRupee size={13} />} label="Rates" onClick={onPricing} />
+          <ActionButton icon={<FileText size={13} />} label="T&C" onClick={onTerms} />
         </div>
 
         <Link
           to={`/pg/${pg.id}`}
-          className="ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 min-w-[70px] whitespace-nowrap"
+          className="ml-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 min-w-[70px] whitespace-nowrap"
         >
-          Enter <ArrowRight size={14} />
+          ENTER <ArrowRight size={14} />
         </Link>
       </div>
     </motion.div>
@@ -611,7 +704,7 @@ const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
 
 function StatItem({ label, value, isAccent = false }) {
   return (
-    <div className="bg-slate-50/50 rounded-xl p-3 border border-slate-100/50 flex flex-col items-start">
+    <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100/50 flex flex-col items-start transition-colors hover:bg-white hover:border-indigo-100 group">
       <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
       <p className={`text-lg font-black leading-none ${isAccent ? 'text-emerald-600' : 'text-slate-900'}`}>{value}</p>
     </div>
@@ -622,7 +715,7 @@ function ActionButton({ icon, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-600 hover:border-indigo-100 hover:bg-white transition-all group shrink-0"
+      className="flex items-center gap-1.5 px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-slate-600 hover:border-indigo-100 hover:bg-white hover:text-indigo-600 transition-all group shrink-0 shadow-sm"
     >
       <span className="text-slate-400 group-hover:text-indigo-600 transition-colors">{icon}</span>
       <span className="text-[9px] font-black uppercase tracking-tight whitespace-nowrap">{label}</span>
@@ -636,20 +729,20 @@ function EmptyState({ onAdd }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl border-2 border-dashed border-slate-200 py-24 text-center px-8"
+      className="bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 py-32 text-center px-8 shadow-sm"
     >
-      <div className="mx-auto w-24 h-24 bg-slate-50 rounded-xl flex items-center justify-center text-slate-300 mb-8 border border-slate-100">
+      <div className="mx-auto w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-300 mb-8 border border-slate-100 shadow-inner">
         <Building2 size={40} />
       </div>
       <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">
         Start your journey
       </h2>
-      <p className="mt-4 text-slate-500 font-medium max-w-sm mx-auto">
+      <p className="mt-4 text-[11px] font-black text-slate-400 uppercase tracking-widest max-w-sm mx-auto">
         Add your first PG to start managing tenants, collections and maintenance.
       </p>
       <button
         onClick={onAdd}
-        className="mt-10 inline-flex items-center gap-3 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all"
+        className="mt-10 inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
       >
         Create First PG <ArrowRight size={16} />
       </button>
@@ -675,23 +768,23 @@ const Modal = React.forwardRef(({ children, onClose, title, subtitle, icon, clas
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`relative w-full ${className} bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200`}
+        className={`relative w-full ${className} bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-slate-200`}
       >
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-4 min-w-0">
-            <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0 border border-indigo-100">
-              {React.cloneElement(icon, { size: 18 })}
+            <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-100 shadow-sm">
+              {React.isValidElement(icon) ? icon : React.cloneElement(icon, { size: 22 })}
             </div>
             <div className="min-w-0">
-              <h3 className="text-base font-black text-slate-900 uppercase tracking-tight leading-none truncate">{title}</h3>
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none truncate">{title}</h3>
               <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mt-1.5 truncate">{subtitle || 'Professional Suite'}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all shrink-0 ml-2 border border-slate-100">
-            <X size={16} />
+          <button onClick={onClose} className="p-3 bg-slate-50 rounded-2xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all shrink-0 ml-2 border border-slate-100">
+            <X size={20} />
           </button>
         </div>
-        <div className="p-6 overflow-y-auto custom-scrollbar">
+        <div className="p-8 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </motion.div>
@@ -703,7 +796,7 @@ function SectionHeader({ title }) {
   return (
     <div className="flex items-center gap-3 mb-5">
       <div className="h-1 w-6 bg-indigo-600 rounded-full" />
-      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{title}</h4>
+      <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{title}</h4>
     </div>
   )
 }
@@ -711,7 +804,7 @@ function SectionHeader({ title }) {
 function FormInput({ label, value, onChange, placeholder, type = 'text', readOnly = false, required = false }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label} {required && '*'}</label>
+      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">{label} {required && '*'}</label>
       <input
         type={type}
         value={value}
@@ -719,7 +812,7 @@ function FormInput({ label, value, onChange, placeholder, type = 'text', readOnl
         readOnly={readOnly}
         placeholder={placeholder}
         required={required}
-        className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all ${readOnly ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-white'} ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}`}
+        className={`w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all ${readOnly ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-white'} ${type === 'number' ? '[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none' : ''}`}
       />
     </div>
   )

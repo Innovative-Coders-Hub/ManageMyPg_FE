@@ -1,6 +1,7 @@
-import React, { useMemo, useState, useId } from "react"
+import React, { useMemo, useState, useId, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { jsPDF } from "jspdf"
+import dayjs from 'dayjs'
 import PageHeader from "../components/PageHeader"
 import {
   Download,
@@ -30,14 +31,97 @@ import {
    COMPONENTS
 ===================================================== */
 
-function TopStat({ label, value, icon, isAccent = false }) {
+function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50' }) {
   return (
-    <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] ${isAccent ? 'bg-indigo-600 border-indigo-500 text-white shadow-md' : 'bg-white border-slate-200 text-slate-900 shadow-sm'}`}>
-      <div className={`flex items-center gap-2 mb-0.5 ${isAccent ? 'text-indigo-100' : 'text-slate-400'}`}>
-        {React.cloneElement(icon, { size: 10 })}
-        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+    <div className="bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
+      <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
+        <Icon className="w-5 h-5 sm:w-6 h-6" />
       </div>
-      <div className="text-sm font-black leading-none">{value}</div>
+      <div className="min-w-0">
+        <div className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
+        <div className="text-base sm:text-xl font-black text-slate-900 leading-tight truncate">{value}</div>
+      </div>
+    </div>
+  )
+}
+
+function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white" }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = React.useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
+  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
+
+  return (
+    <div className={`relative ${className}`} ref={containerRef}>
+      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
+        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
+          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
+          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
+            {displayValue}
+          </span>
+        </div>
+        <ChevronDown
+          size={16}
+          strokeWidth={3}
+          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
+          >
+            {showAll && (
+              <button
+                type="button"
+                onClick={() => { onChange('ALL'); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                ALL {label}S
+              </button>
+            )}
+            {options.map((opt) => (
+              <button
+                key={opt.id || opt.value}
+                type="button"
+                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -269,33 +353,36 @@ export default function Reports() {
             title="Business Intelligence"
             subtitle="Strategic portfolio analytics & financial tracking"
           >
-            <div className="flex flex-wrap items-center justify-center md:justify-end gap-1">
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
               <TopStat
                 label="Portfolio Occupancy"
                 value={`${data.occupancyPct}%`}
-                icon={<Users />}
+                icon={Users}
               />
               <TopStat
                 label="MTD Collection"
                 value={`₹${(data.mtdRevenue / 1000).toFixed(1)}K`}
-                icon={<IndianRupee />}
-                isAccent
+                icon={IndianRupee}
+                colorClass="text-emerald-600"
+                bgClass="bg-emerald-50"
               />
               <TopStat
                 label="Total Dues"
                 value={`₹${(data.duesOutstanding / 1000).toFixed(1)}K`}
-                icon={<AlertCircle />}
+                icon={AlertCircle}
+                colorClass="text-rose-600"
+                bgClass="bg-rose-50"
               />
               <TopStat
                 label="Churn Rate"
                 value={`${data.churnRatePct}%`}
-                icon={<TrendingUp />}
+                icon={TrendingUp}
               />
               <button
                 onClick={() => exportPDF("executive_summary")}
-                className="ml-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 h-[64px]"
               >
-                <ShieldCheck size={14} /> Export Dossier
+                <ShieldCheck size={16} /> Export Dossier
               </button>
             </div>
           </PageHeader>
@@ -305,40 +392,38 @@ export default function Reports() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <div className="flex flex-col gap-8">
           {/* Filters Bar */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center gap-4">
-            <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div className="relative group">
-                <select
-                  value={pgId}
-                  onChange={(e) => setPgId(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="all">Consolidated Portfolio</option>
-                  <option value="pg1">Bliss Mens PG - Sector 45</option>
-                  <option value="pg2">Bliss Womens PG - Sector 21</option>
-                </select>
-                <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-              </div>
+          <div className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm flex flex-col md:flex-row items-center gap-4">
+            <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <CustomDropdown
+                label="Property"
+                value={pgId}
+                options={[
+                  { id: 'all', label: 'CONSOLIDATED PORTFOLIO' },
+                  { id: 'pg1', label: 'BLISS MENS PG - SECTOR 45' },
+                  { id: 'pg2', label: 'BLISS WOMENS PG - SECTOR 21' }
+                ]}
+                onChange={setPgId}
+                icon={Building2}
+                className="w-full"
+              />
 
-              <div className="relative group">
-                <select
-                  value={range}
-                  onChange={(e) => setRange(e.target.value)}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-600 outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
-                >
-                  <option value="this_month">Current Billing Cycle</option>
-                  <option value="last_30">Trailing 30 Days</option>
-                  <option value="last_90">Quarterly Review</option>
-                  <option value="this_year">Fiscal Year to Date</option>
-                </select>
-                <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-              </div>
+              <CustomDropdown
+                label="Analysis Window"
+                value={range}
+                options={[
+                  { id: 'this_month', label: 'CURRENT BILLING CYCLE' },
+                  { id: 'last_30', label: 'TRAILING 30 DAYS' },
+                  { id: 'last_90', label: 'QUARTERLY REVIEW' },
+                  { id: 'this_year', label: 'FISCAL YEAR TO DATE' }
+                ]}
+                onChange={setRange}
+                icon={Calendar}
+                className="w-full"
+              />
 
-              <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
-                 <Zap size={14} className="text-indigo-600" />
-                 <span className="text-[9px] font-black text-indigo-600 uppercase tracking-[0.2em]">Real-time Sync Active</span>
+              <div className="flex items-center gap-4 px-6 py-3.5 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                 <div className="h-2.5 w-2.5 rounded-full bg-indigo-600 animate-pulse" />
+                 <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Real-time Sync Active</span>
               </div>
             </div>
           </div>

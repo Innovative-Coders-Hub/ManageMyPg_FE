@@ -1,13 +1,112 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Camera, User, Settings, MapPin, Mail, Loader2, CheckCircle2, ShieldCheck, FileText, Trash2, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { X, Camera, User, Settings, MapPin, Mail, Loader2, CheckCircle2, ShieldCheck, FileText, Trash2, AlertTriangle, ShieldAlert, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageHeader from '../components/PageHeader'
 import { getOwnerProfile, updateOwnerAddress, uploadOwnerProfileImage, deleteOwnerAccount } from '../api/ownerAuth'
 import ProfileImageCropper from '../components/models/ProfileImageCropper'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
+
+function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white", disabled = false }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = React.useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
+  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
+
+  if (disabled) {
+    return (
+      <div className={`relative ${className}`}>
+        <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20`}>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{label}</span>
+        </div>
+        <div className="w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-100 border-2 border-slate-100 rounded-2xl opacity-60">
+          <div className="flex items-center gap-3">
+            {Icon && <Icon size={18} className="text-slate-400" strokeWidth={2.5} />}
+            <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest truncate">
+              {displayValue}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`relative ${className}`} ref={containerRef}>
+      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
+        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
+          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
+          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate">
+            {displayValue}
+          </span>
+        </div>
+        <ChevronDown
+          size={16}
+          strokeWidth={3}
+          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
+          >
+            {showAll && (
+              <button
+                type="button"
+                onClick={() => { onChange('ALL'); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                ALL {label}S
+              </button>
+            )}
+            {options.map((opt) => (
+              <button
+                key={opt.id || opt.value}
+                type="button"
+                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
+                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
+                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 
 export default function OwnerProfile({ mode = 'profile' }) {
   const navigate = useNavigate()
@@ -254,7 +353,7 @@ export default function OwnerProfile({ mode = 'profile' }) {
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Profile Sidebar */}
           <div className="lg:col-span-4 2xl:col-span-3 space-y-6">
-            <div className="bg-white rounded-xl border border-slate-200 p-8 flex flex-col items-center shadow-sm">
+            <div className="bg-white rounded-[2rem] border border-slate-100 p-8 flex flex-col items-center shadow-sm">
               <div className="relative group">
                 <div
                   className="h-40 w-40 rounded-full overflow-hidden border-4 border-slate-50 bg-slate-100 cursor-pointer flex items-center justify-center shadow-inner transition-transform hover:scale-[1.02]"
@@ -313,59 +412,87 @@ export default function OwnerProfile({ mode = 'profile' }) {
                 setIsPolicyViewOnly(true)
                 setShowDeleteModal(true)
               }}
-              className="w-full flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/30 transition-all group"
+              className="w-full flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-emerald-600 hover:bg-emerald-50/30 transition-all group"
             >
-              <div className="h-10 w-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-white transition-colors">
+              <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-white shadow-sm transition-colors">
                 <ShieldCheck size={20} />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-indigo-600">Trust & Transparency</p>
+                <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-0.5">Trust & Transparency</p>
                 <p className="text-xs font-black text-slate-900">Privacy Policy</p>
               </div>
             </button>
 
             <Link
               to="/terms-and-conditions"
-              className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/30 transition-all group"
+              className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-amber-600 hover:bg-amber-50/30 transition-all group"
             >
-              <div className="h-10 w-10 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-white transition-colors">
+              <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 group-hover:bg-white shadow-sm transition-colors">
                 <FileText size={20} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 group-hover:text-indigo-600">Legal Agreement</p>
+                <p className="text-[10px] font-black text-amber-600/60 uppercase tracking-widest mb-0.5">Legal Agreement</p>
                 <p className="text-xs font-black text-slate-900">Terms & Conditions</p>
               </div>
             </Link>
 
             {!isOnboarding && (
-              <button
-                onClick={() => {
-                  setIsPolicyViewOnly(false)
-                  setAgreedToDelete(false)
-                  setShowDeleteModal(true)
-                }}
-                className="w-full flex items-center gap-3 p-4 bg-rose-50 rounded-xl border border-rose-100 hover:bg-rose-100 transition-all group"
-              >
-                <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-rose-500 shadow-sm transition-colors">
-                  <Trash2 size={20} />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="text-xs font-black text-rose-600">Delete My Account</p>
-                </div>
-              </button>
+              <>
+                <Link
+                  to="/change-password"
+                  className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 hover:border-indigo-600 hover:bg-indigo-50/30 transition-all group"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:bg-white shadow-sm transition-colors">
+                    <Lock size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-black text-indigo-600/60 uppercase tracking-widest mb-0.5">Security Access</p>
+                    <p className="text-xs font-black text-slate-900">Change Password</p>
+                  </div>
+                </Link>
+
+                <button
+                  onClick={() => {
+                    setIsPolicyViewOnly(false)
+                    setAgreedToDelete(false)
+                    setShowDeleteModal(true)
+                  }}
+                  className="w-full flex items-center gap-3 p-4 bg-rose-50 rounded-xl border border-rose-100 hover:bg-rose-100 transition-all group shadow-sm"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-white flex items-center justify-center text-rose-500 shadow-sm transition-colors">
+                    <Trash2 size={20} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[10px] font-black text-rose-600/60 uppercase tracking-widest mb-0.5">Account Removal</p>
+                    <p className="text-xs font-black text-rose-600">Delete My Account</p>
+                  </div>
+                </button>
+              </>
             )}
+
           </div>
 
           {/* Form Content */}
           <div className="lg:col-span-8 2xl:col-span-9 space-y-6">
-            <Section title="Basic Details" icon={<User size={16} />}>
+            <Section
+              title="Basic Details"
+              icon={<User size={18} />}
+              colorClass="text-indigo-600"
+              bgClass="bg-indigo-50"
+            >
               <Input label="Full Name" value={profile.fullName} onChange={v => updateField('fullName', v)} placeholder="John Doe" disabled={isReadOnly} />
               <Input label="Phone" value={profile.phone} numeric maxLength={10} onChange={v => updateField('phone', v)} placeholder="9876543210" disabled={isReadOnly} />
               <Input label="Email Address" value={profile.email} disabled placeholder="email@example.com" />
               <Input label="System Username" value={profile.username} disabled />
             </Section>
 
-            <Section title="Location Information" icon={<MapPin size={16} />} highlight={isMandatory}>
+            <Section
+              title="Location Information"
+              icon={<MapPin size={18} />}
+              highlight={isMandatory}
+              colorClass="text-emerald-600"
+              bgClass="bg-emerald-50"
+            >
               <div className="sm:col-span-2">
                 <Input
                   label="Registered Address"
@@ -411,17 +538,16 @@ export default function OwnerProfile({ mode = 'profile' }) {
               )}
 
               {areas.length > 1 && (
-                <div className="sm:col-span-2 space-y-1.5">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Area / Locality</label>
-                  <select
+                <div className="sm:col-span-2 pt-2">
+                  <CustomDropdown
+                    label="Area / Locality"
                     value={profile.address.areaLocality || ''}
                     disabled={isReadOnly}
-                    onChange={e => updateField('address.areaLocality', e.target.value)}
-                    className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all ${isReadOnly ? 'opacity-50 cursor-not-allowed bg-slate-100' : 'hover:bg-white hover:border-slate-300'}`}
-                  >
-                    <option value="">Select area...</option>
-                    {areas.map(a => <option key={a.Name} value={a.Name}>{a.Name}</option>)}
-                  </select>
+                    options={areas.map(a => ({ id: a.Name, label: a.Name.toUpperCase() }))}
+                    onChange={val => updateField('address.areaLocality', val)}
+                    icon={MapPin}
+                    className="w-full"
+                  />
                 </div>
               )}
 
@@ -717,23 +843,23 @@ export default function OwnerProfile({ mode = 'profile' }) {
   )
 }
 
-function Section({ title, icon, children, highlight }) {
+function Section({ title, icon, children, highlight, colorClass = "text-indigo-600", bgClass = "bg-indigo-50" }) {
   return (
     <section
-      className={`bg-white rounded-xl border p-6 transition-all ${
-        highlight ? 'border-amber-200 shadow-lg shadow-amber-50' : 'border-slate-200 shadow-sm'
+      className={`bg-white rounded-[2rem] border p-8 transition-all ${
+        highlight ? 'border-amber-200 shadow-xl shadow-amber-50/50' : 'border-slate-100 shadow-sm'
       }`}
     >
-      <div className="flex items-center gap-3 mb-6">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${highlight ? 'bg-amber-100 text-amber-600' : 'bg-slate-50 text-slate-400'}`}>
+      <div className="flex items-center gap-4 mb-8">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${highlight ? 'bg-amber-100 text-amber-600 shadow-inner' : `${bgClass} ${colorClass} border border-slate-100 shadow-sm`}`}>
           {icon}
         </div>
-        <div className="flex items-center gap-3 flex-1">
-          <h2 className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{title}</h2>
+        <div className="flex items-center gap-4 flex-1">
+          <h2 className={`text-xs font-black uppercase tracking-widest ${highlight ? 'text-amber-600' : colorClass}`}>{title}</h2>
           <div className="h-[1px] flex-1 bg-slate-100" />
         </div>
       </div>
-      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
+      <div className="grid sm:grid-cols-2 gap-x-8 gap-y-6">
         {children}
       </div>
     </section>

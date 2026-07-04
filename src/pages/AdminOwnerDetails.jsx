@@ -143,7 +143,7 @@ export default function AdminOwnerDetails() {
           <AlertCircle size={32} />
         </div>
         <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight">{error || 'Owner not found'}</h2>
-        <button onClick={() => navigate('/admin/owners')} className="px-4 py-1.5 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100">
+        <button onClick={() => navigate('/admin/owners')} className="px-4 py-1.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100">
           Return to Directory
         </button>
       </div>
@@ -173,7 +173,7 @@ export default function AdminOwnerDetails() {
               />
               <button
                 onClick={() => navigate('/admin/owners')}
-                className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
+                className="hidden md:inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl border border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-sm"
               >
                 <ChevronLeft size={14} /> Back to Directory
               </button>
@@ -202,21 +202,21 @@ export default function AdminOwnerDetails() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left: Owner Profile Card */}
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-6 md:space-y-8">
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden p-5 md:p-6 relative">
+          <div className="bg-white border border-slate-200 rounded-[2.5rem] shadow-sm overflow-hidden p-5 md:p-8 relative">
             <div className="absolute top-0 right-0 h-40 w-40 bg-indigo-50/10 rounded-full -mr-20 -mt-20 blur-3xl pointer-events-none" />
 
             <div className="relative flex flex-row items-center gap-6 md:gap-8">
               {/* Profile Photo Placeholder */}
               <div className="flex flex-col items-center flex-shrink-0">
-                <div className="h-20 w-20 md:h-24 md:w-24 rounded-xl bg-slate-100 p-0.5 shadow-lg shadow-slate-200/50 overflow-hidden">
+                <div className="h-20 w-20 md:h-24 md:w-24 rounded-2xl bg-slate-100 p-0.5 shadow-lg shadow-slate-200/50 overflow-hidden">
                   {owner.profileImageUrl ? (
                     <img
                       src={`${BASE_URL}${owner.profileImageUrl}`}
                       alt={owner.fullName}
-                      className="h-full w-full rounded-xl object-cover"
+                      className="h-full w-full rounded-2xl object-cover"
                     />
                   ) : (
-                    <div className="h-full w-full rounded-xl bg-white flex items-center justify-center font-black text-2xl md:text-3xl text-indigo-600">
+                    <div className="h-full w-full rounded-2xl bg-white flex items-center justify-center font-black text-2xl md:text-3xl text-indigo-600">
                       {owner.fullName?.charAt(0)}
                     </div>
                   )}
@@ -235,7 +235,7 @@ export default function AdminOwnerDetails() {
 
                 <div className="hidden md:grid md:grid-cols-2 gap-y-3 gap-x-8 text-left">
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                    <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                       <Mail size={16} />
                     </div>
                     <div>
@@ -245,7 +245,7 @@ export default function AdminOwnerDetails() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                    <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                       <Phone size={16} />
                     </div>
                     <div>
@@ -255,7 +255,7 @@ export default function AdminOwnerDetails() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                    <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                       <Calendar size={16} />
                     </div>
                     <div>
@@ -265,7 +265,7 @@ export default function AdminOwnerDetails() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                    <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                       <Activity size={16} />
                     </div>
                     <div>
@@ -280,7 +280,7 @@ export default function AdminOwnerDetails() {
             {/* Mobile Contact Info Grid */}
             <div className="mt-6 grid grid-cols-1 gap-4 md:hidden">
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                   <Mail size={16} />
                 </div>
                 <div>
@@ -289,7 +289,7 @@ export default function AdminOwnerDetails() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
                   <Phone size={16} />
                 </div>
                 <div>
@@ -306,7 +306,7 @@ export default function AdminOwnerDetails() {
                   <MapPin size={14} className="text-indigo-600" />
                   <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Registered HQ Address</h4>
                 </div>
-                <div className="bg-slate-50/80 rounded-xl p-4 border border-slate-100 text-sm font-black text-slate-600 leading-relaxed">
+                <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-100 text-sm font-black text-slate-600 leading-relaxed">
                   {owner.address ? (
                     <>
                       <p className="text-slate-900">{owner.address.street}</p>
@@ -327,11 +327,11 @@ export default function AdminOwnerDetails() {
                   <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Security & Verification</h4>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest">
                     <span>Identity Verified</span>
                     <CheckCircle2 size={12} />
                   </div>
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest">
+                  <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-widest">
                     <span>Business Documents</span>
                     <Activity size={12} />
                   </div>
@@ -349,7 +349,7 @@ export default function AdminOwnerDetails() {
             </div>
 
             {pgs.length === 0 ? (
-              <div className="bg-white border border-dashed border-slate-300 rounded-xl p-8 md:p-12 text-center">
+              <div className="bg-white border border-dashed border-slate-300 rounded-[2.5rem] p-8 md:p-12 text-center">
                  <Building2 size={32} className="text-slate-200 mx-auto mb-4" />
                  <p className="text-slate-500 font-black uppercase text-[10px] tracking-widest">No PG Units Onboarded Yet</p>
               </div>
@@ -368,10 +368,10 @@ export default function AdminOwnerDetails() {
 
         {/* Right: Command Center (Actions) */}
         <motion.div variants={itemVariants} className="space-y-6">
-          <div className="bg-slate-900 rounded-xl p-6 md:p-6 text-white shadow-2xl shadow-slate-200 lg:sticky lg:top-24">
+          <div className="bg-slate-900 rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl shadow-slate-200 lg:sticky lg:top-24">
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <Shield size={20} />
+              <div className="h-12 w-12 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <Shield size={22} />
               </div>
               <div>
                 <h3 className="text-base font-black tracking-tight">Command Center</h3>
@@ -419,21 +419,21 @@ export default function AdminOwnerDetails() {
 
             <div className="mt-8 pt-6 border-t border-slate-800 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400">
+                <div className="h-10 w-10 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400">
                   <Activity size={14} />
                 </div>
                 <div className="flex-1">
-                   <div className="flex justify-between items-center mb-1">
+                   <div className="flex justify-between items-center mb-1.5">
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Review Progress</span>
                       <span className="text-[10px] font-black text-indigo-400">75%</span>
                    </div>
-                   <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                   <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                       <div className="h-full bg-indigo-600 rounded-full" style={{ width: '75%' }} />
                    </div>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-800 text-[10px] font-black text-slate-400 leading-relaxed italic uppercase tracking-wider">
+              <div className="p-4 rounded-2xl bg-slate-800/50 border border-slate-800 text-[10px] font-black text-slate-400 leading-relaxed italic uppercase tracking-wider">
                 "Approving this owner will grant them full access to the PG management dashboard and tenant onboarding features."
               </div>
             </div>
@@ -456,7 +456,7 @@ export default function AdminOwnerDetails() {
               initial={{ opacity: 0, scale: 0.95, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 100 }}
-              className="relative w-full max-w-md bg-white rounded-xl p-6 md:p-8 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-white rounded-[2.5rem] p-6 md:p-8 shadow-2xl overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-full h-1.5 bg-indigo-600" />
 
@@ -472,13 +472,13 @@ export default function AdminOwnerDetails() {
                 onChange={e => setReason(e.target.value)}
                 placeholder="Professional justification (Required)..."
                 rows={4}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all resize-none"
               />
 
               <div className="mt-6 md:mt-8 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => { setShowReasonModal(false); setReason(''); }}
-                  className="order-2 sm:order-1 flex-1 px-4 py-1.5 rounded-xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition"
+                  className="order-2 sm:order-1 flex-1 px-4 py-2 rounded-2xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
@@ -489,7 +489,7 @@ export default function AdminOwnerDetails() {
                     if (selectedAction?.type === 'PG') updatePgStatus(selectedAction.pgId, selectedAction.action, reason.trim())
                     setShowReasonModal(false); setReason('');
                   }}
-                  className="order-1 sm:order-2 flex-1 px-4 py-1.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-lg shadow-indigo-100 disabled:opacity-50"
+                  className="order-1 sm:order-2 flex-1 px-4 py-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-lg shadow-indigo-100 disabled:opacity-50"
                 >
                   Confirm Action
                 </button>
@@ -513,16 +513,16 @@ export default function AdminOwnerDetails() {
               initial={{ opacity: 0, scale: 0.9, y: 100 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 100 }}
-              className="relative w-full max-w-sm bg-white rounded-xl p-8 md:p-10 text-center shadow-2xl"
+              className="relative w-full max-w-sm bg-white rounded-[2.5rem] p-8 md:p-10 text-center shadow-2xl"
             >
-              <div className="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                <CheckCircle2 size={32} />
+              <div className="h-20 w-20 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <CheckCircle2 size={40} />
               </div>
 
               <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Success</h3>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 md:mb-8">{statusResponse.message}</p>
 
-              <div className="bg-slate-50 rounded-xl p-4 mb-6 md:mb-8 border border-slate-100">
+              <div className="bg-slate-50 rounded-2xl p-4 mb-6 md:mb-8 border border-slate-100">
                 <div className="flex justify-between items-center mb-2">
                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Entity</span>
                    <span className="text-xs font-black text-slate-900 truncate ml-2">{statusResponse.data.ownerName || statusResponse.data.pgName}</span>
@@ -539,7 +539,7 @@ export default function AdminOwnerDetails() {
                   setStatusResponse(null)
                   setRefreshKey(prev => prev + 1)
                 }}
-                className="w-full py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-xl shadow-indigo-100"
+                className="w-full py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-xl shadow-indigo-100"
               >
                 Continue Review
               </button>
@@ -558,7 +558,7 @@ export default function AdminOwnerDetails() {
 
 const TopStat = React.memo(function TopStat({ label, value, icon, color }) {
   return (
-    <div className={`px-4 py-1.5 rounded-xl border flex flex-col items-center justify-center transition-all min-w-[84px] bg-white shadow-sm ${color || 'border-slate-100'}`}>
+    <div className={`px-4 py-1.5 rounded-2xl border flex flex-col items-center justify-center transition-all min-w-[84px] bg-white shadow-sm ${color || 'border-slate-100'}`}>
       <div className="flex items-center gap-2 mb-0.5 text-slate-400">
         {icon && React.isValidElement(icon) ? React.cloneElement(icon, { size: 10 }) : null}
         <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
@@ -590,7 +590,7 @@ const StatusBadge = React.memo(function StatusBadge({ status }) {
 
 const PGCard = React.memo(function PGCard({ pg, ownerStatus, onAction }) {
   return (
-    <div className="group bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+    <div className="group bg-white border border-slate-200 rounded-[2.5rem] p-6 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
         <div>
           <h4 className="text-sm font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{pg.pgName}</h4>
@@ -601,7 +601,7 @@ const PGCard = React.memo(function PGCard({ pg, ownerStatus, onAction }) {
         </div>
       </div>
 
-      <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 mb-4 space-y-2">
+      <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 mb-4 space-y-2">
         <div className="flex items-start gap-2">
           <MapPin size={12} className="text-slate-400 mt-0.5" />
           <p className="text-[11px] font-black text-slate-600 leading-snug">
@@ -632,7 +632,7 @@ const PGCard = React.memo(function PGCard({ pg, ownerStatus, onAction }) {
            <button
              onClick={() => onAction('APPROVE')}
              disabled={ownerStatus !== 'APPROVED'}
-             className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition disabled:opacity-30"
+             className="px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition disabled:opacity-30"
            >
              Verify
            </button>
@@ -641,7 +641,7 @@ const PGCard = React.memo(function PGCard({ pg, ownerStatus, onAction }) {
            <button
              onClick={() => onAction('ON_HOLD')}
              disabled={ownerStatus !== 'APPROVED'}
-             className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition disabled:opacity-30"
+             className="px-3 py-1.5 bg-amber-50 text-amber-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-amber-600 hover:text-white transition disabled:opacity-30"
            >
              Suspend
            </button>
@@ -649,14 +649,14 @@ const PGCard = React.memo(function PGCard({ pg, ownerStatus, onAction }) {
          {pg.status === 'DEACTIVATED' ? (
            <button
              onClick={() => onAction('REACTIVATE')}
-             className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition col-span-2"
+             className="px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition col-span-2"
            >
              Reactivate
            </button>
          ) : (
            <button
              onClick={() => onAction('DEACTIVATE')}
-             className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-600 hover:text-white transition"
+             className="px-3 py-1.5 bg-slate-50 text-slate-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-600 hover:text-white transition"
            >
              Disable
            </button>
@@ -677,13 +677,13 @@ const ActionButton = React.memo(function ActionButton({ label, icon: Icon, varia
     <button
       onClick={onClick}
       disabled={!active || loading}
-      className={`w-full flex items-center justify-between px-4 py-1.5 rounded-xl border-none font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm disabled:opacity-30 disabled:hover:scale-100 group ${variants[variant] || ''}`}
+      className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl border-none font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm disabled:opacity-30 disabled:hover:scale-100 group ${variants[variant] || ''}`}
     >
       <span className="flex items-center gap-3">
-        <Icon size={14} className="transition-transform group-hover:scale-110" />
+        <Icon size={16} className="transition-transform group-hover:scale-110" />
         {label}
       </span>
-      <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+      <ArrowRight size={16} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
     </button>
   )
 })
