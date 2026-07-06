@@ -1,112 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Camera, User, Settings, MapPin, Mail, Loader2, CheckCircle2, ShieldCheck, FileText, Trash2, AlertTriangle, ShieldAlert, Lock } from 'lucide-react'
+import { X, Camera, User, Settings, MapPin, Mail, Loader2, CheckCircle2, ShieldCheck, FileText, Trash2, AlertTriangle, ShieldAlert, Lock, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageHeader from '../components/PageHeader'
+import CustomDropdown from '../components/CustomDropdown'
 import { getOwnerProfile, updateOwnerAddress, uploadOwnerProfileImage, deleteOwnerAccount } from '../api/ownerAuth'
 import ProfileImageCropper from '../components/models/ProfileImageCropper'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
-
-function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white", disabled = false }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = React.useRef(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
-  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
-
-  if (disabled) {
-    return (
-      <div className={`relative ${className}`}>
-        <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20`}>
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{label}</span>
-        </div>
-        <div className="w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-100 border-2 border-slate-100 rounded-2xl opacity-60">
-          <div className="flex items-center gap-3">
-            {Icon && <Icon size={18} className="text-slate-400" strokeWidth={2.5} />}
-            <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest truncate">
-              {displayValue}
-            </span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className={`relative ${className}`} ref={containerRef}>
-      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
-        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
-          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
-          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate">
-            {displayValue}
-          </span>
-        </div>
-        <ChevronDown
-          size={16}
-          strokeWidth={3}
-          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
-          >
-            {showAll && (
-              <button
-                type="button"
-                onClick={() => { onChange('ALL'); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                ALL {label}S
-              </button>
-            )}
-            {options.map((opt) => (
-              <button
-                key={opt.id || opt.value}
-                type="button"
-                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
 
 export default function OwnerProfile({ mode = 'profile' }) {
   const navigate = useNavigate()

@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
+import CustomDropdown from '../components/CustomDropdown'
 import {
   getOwnerComplaints,
   updateComplaintStatus
@@ -64,86 +65,6 @@ const TenantAvatar = ({ name, profileImageUrl, size = "w-10 h-10", fontSize = "t
       ) : (
         <span>{initials}</span>
       )}
-    </div>
-  )
-}
-
-function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = true, className = "min-w-[240px]", labelBg = "bg-[#F8FAFC]" }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = React.useRef(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const displayValue = value === '' || value === 'ALL' ? `ALL ${label}S` : value
-
-  return (
-    <div className={`relative ${className}`} ref={containerRef}>
-      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
-        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
-          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
-          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
-            {displayValue}
-          </span>
-        </div>
-        <ChevronDown
-          size={16}
-          strokeWidth={3}
-          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
-          >
-            {showAll && (
-              <button
-                type="button"
-                onClick={() => { onChange(''); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  value === '' || value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                ALL {label}S
-              </button>
-            )}
-            {options.map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                onClick={() => { onChange(opt); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  value === opt ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   )
 }
@@ -536,45 +457,63 @@ export default function OwnerComplaints() {
               <div className="flex items-center justify-between bg-slate-50 -mx-6 -mt-6 px-6 py-4 border-b border-slate-200 rounded-t-2xl">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-indigo-600 shadow-sm">
-                    <Wrench size={18} />
+                    <Wrench size={18} strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Ticket Analysis</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-900">Ticket Analysis</h3>
                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Ref: #{selectedComplaint.id.slice(-6)}</p>
                   </div>
                 </div>
                 <StatusBadge status={selectedComplaint.status} />
               </div>
 
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                <Detail label="Subject" value={selectedComplaint.title} icon={<MessageSquare size={10} />} />
-                <Detail label="Classification" value={selectedComplaint.category} icon={<Tag size={10} />} />
-                <Detail label="Tenant Identity" value={selectedComplaint.tenantName} icon={<User size={10} />} />
-                <Detail label="Property" value={selectedComplaint.pgName} icon={<Building2 size={10} />} />
-                <Detail
-                  label="Submission Date"
-                  value={dayjs(selectedComplaint.createdDate).format('DD MMM YYYY HH:mm')}
-                  icon={<Calendar size={10} />}
-                />
-                <Detail label="SLA Clock" value="Active" icon={<Clock size={10} />} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50/50 rounded-[2rem] border border-slate-100 space-y-4">
+                    <Detail label="Subject" value={selectedComplaint.title} icon={<MessageSquare />} />
+                    <Detail label="Classification" value={selectedComplaint.category} icon={<Tag />} color="amber" />
+                    <Detail label="Property" value={selectedComplaint.pgName} icon={<Building2 />} color="slate" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 bg-slate-50/50 rounded-[2rem] border border-slate-100 space-y-4">
+                    <div className="flex gap-4 group">
+                      <div className="h-10 w-10 rounded-xl border-2 border-white flex items-center justify-center shrink-0 shadow-sm overflow-hidden bg-white">
+                        <TenantAvatar name={selectedComplaint.tenantName} profileImageUrl={selectedComplaint.profileImageUrl} size="w-full h-full" fontSize="text-[10px]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Submitted By</p>
+                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-tight">{selectedComplaint.tenantName}</p>
+                      </div>
+                    </div>
+                    <Detail
+                      label="Submission Date"
+                      value={dayjs(selectedComplaint.createdDate).format('DD MMM YYYY HH:mm')}
+                      icon={<Calendar />}
+                      color="emerald"
+                    />
+                    <Detail label="SLA Clock" value="Active" icon={<Clock />} color="rose" />
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-4 pt-4 border-t border-slate-100">
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
-                    <Activity size={12} className="text-indigo-500" />
+                <div className="relative group">
+                  <label className="absolute -top-2 left-5 bg-white px-2 text-[9px] font-black uppercase tracking-widest text-indigo-600 z-10 flex items-center gap-2 group-focus-within:text-indigo-700 transition-colors">
+                    <Activity size={10} strokeWidth={3} />
                     Resolution Protocol & Notes
                   </label>
                   <textarea
                     value={resolutionNotes}
                     onChange={e => setResolutionNotes(e.target.value)}
-                    className="w-full border border-slate-200 rounded-xl p-4 text-xs font-medium focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all bg-slate-50/50 min-h-[100px]"
+                    className="w-full border-2 border-slate-100 rounded-[1.5rem] p-5 pt-6 text-[11px] font-bold focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition-all bg-slate-50/30 min-h-[120px] text-slate-700 placeholder:text-slate-300"
                     placeholder="Document the actions taken for resolution..."
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
+                  <div className="flex-1">
                     <CustomDropdown
                       label="Lifecycle Status"
                       value={status}
@@ -583,22 +522,23 @@ export default function OwnerComplaints() {
                       showAll={false}
                       className="w-full"
                       labelBg="bg-white"
+                      direction="up"
                     />
                   </div>
-                  <div className="flex items-end gap-2">
+                  <div className="flex items-center gap-2 flex-1">
                     <button
                       onClick={saveUpdate}
                       disabled={saving}
-                      className="flex-1 h-[44px] bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all disabled:opacity-40 shadow-lg shadow-slate-100 active:scale-95 flex items-center justify-center gap-2"
+                      className="flex-1 h-[46px] bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all disabled:opacity-40 shadow-lg shadow-slate-100 active:scale-95 flex items-center justify-center gap-2"
                     >
-                      {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 size={14} />}
-                      {saving ? 'Processing...' : 'Commit Changes'}
+                      {saving ? <Loader2 className="w-4 h-4" /> : <CheckCircle2 size={16} />}
+                      Commit Changes
                     </button>
                     <button
                       onClick={closeDetails}
-                      className="flex-1 h-[44px] bg-white border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                      className="h-[46px] px-4 bg-slate-50 border border-slate-200 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 hover:text-slate-600 transition-all active:scale-95"
                     >
-                      Dismiss
+                      <X size={18} />
                     </button>
                   </div>
                 </div>
@@ -621,28 +561,45 @@ const Td = ({ children, className = "" }) => (
   <td className={`px-6 py-4 text-slate-600 ${className}`}>{children}</td>
 )
 
-const Detail = ({ label, value, icon }) => (
-  <div className="space-y-1.5">
-    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400">
-      {icon} {label}
+const Detail = ({ label, value, icon, color = "indigo" }) => {
+  const colors = {
+    indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    rose: 'text-rose-600 bg-rose-50 border-rose-100',
+    purple: 'text-purple-600 bg-purple-50 border-purple-100',
+    amber: 'text-amber-600 bg-amber-50 border-amber-100',
+    blue: 'text-blue-600 bg-blue-50 border-blue-100',
+    slate: 'text-slate-600 bg-slate-50 border-slate-100',
+    cyan: 'text-cyan-600 bg-cyan-50 border-cyan-100'
+  }
+  const colorClass = colors[color] || colors.indigo
+
+  return (
+    <div className="flex gap-4 group">
+      <div className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-all shrink-0 group-hover:scale-110 shadow-sm ${colorClass}`}>
+        {React.cloneElement(icon, { size: 16, strokeWidth: 2.5 })}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">{label}</p>
+        <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate leading-tight">
+          {value || 'N/A'}
+        </p>
+      </div>
     </div>
-    <div className="text-[11px] font-black text-slate-800 uppercase tracking-tight bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-      {value || 'Not Specified'}
-    </div>
-  </div>
-)
+  )
+}
 
 const StatusBadge = ({ status }) => {
   const styles = {
-    OPEN: 'bg-amber-500 text-white border-amber-600 shadow-amber-100',
-    ASSIGNED: 'bg-indigo-600 text-white border-indigo-700 shadow-indigo-100',
-    COMPLETED: 'bg-emerald-500 text-white border-emerald-600 shadow-emerald-100'
+    OPEN: 'bg-amber-50 text-amber-600 border-amber-100 shadow-amber-100/20',
+    ASSIGNED: 'bg-indigo-50 text-indigo-600 border-indigo-100 shadow-indigo-100/20',
+    COMPLETED: 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-emerald-100/20'
   }
 
   return (
     <span
-      className={`px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border shadow-sm inline-block ${
-        styles[status] || 'bg-slate-500 text-white border-slate-600 shadow-slate-100'
+      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm inline-block ${
+        styles[status] || 'bg-slate-50 text-slate-500 border-slate-100 shadow-slate-100/20'
       }`}
     >
       {status}
@@ -656,25 +613,27 @@ const Modal = React.forwardRef(({ children, onClose }, ref) => (
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 overflow-y-auto"
     onClick={onClose}
   >
-    <motion.div
-      initial={{ scale: 0.95, opacity: 0, y: 20 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
-      exit={{ scale: 0.95, opacity: 0, y: 20 }}
-      className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative border border-white/20 overflow-hidden"
-      onClick={e => e.stopPropagation()}
-    >
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+    <div className="flex min-h-full items-center justify-center p-4">
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.95, opacity: 0, y: 20 }}
+        className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl p-8 relative border border-white/20 my-8"
+        onClick={e => e.stopPropagation()}
+      >
+      <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-emerald-500 rounded-t-[2.5rem]" />
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 text-slate-400 hover:text-slate-900 transition-colors"
+        className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 transition-colors z-20"
       >
-        <X size={20} />
+        <X size={20} strokeWidth={3} />
       </button>
       {children}
-    </motion.div>
+      </motion.div>
+    </div>
   </motion.div>
 ))
 

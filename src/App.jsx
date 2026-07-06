@@ -63,7 +63,7 @@ function Header() {
           </Link>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-4">
           <Link to="/manage/mypg/signin" className="text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
             Sign In
           </Link>
