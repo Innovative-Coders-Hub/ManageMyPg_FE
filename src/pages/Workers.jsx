@@ -30,7 +30,6 @@ import {
   MoreVertical,
   Clock,
   ShieldAlert,
-  ChevronDown,
   MessageSquare,
   Eye,
   Tag
@@ -313,8 +312,11 @@ export default function Workers() {
 
   if (loading && workers.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-indigo-600" size={40} />
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Accessing Personnel Files...</p>
+        </div>
       </div>
     )
   }

@@ -28,10 +28,10 @@ import {
   Hash,
   Activity,
   ThumbsUp,
-  Printer
+  Printer,
+  X
 } from 'lucide-react'
 import { getTenantDetails, approveTenant, markRentAsPaid } from '../api/ownerAuth'
-import PageHeader from '../components/PageHeader'
 import toast from 'react-hot-toast'
 import PaymentModal from '../components/models/PaymentModal'
 import { printRentReceipt } from '../components/PrintRentReceipt'
@@ -48,6 +48,7 @@ export default function TenantDetails() {
   const [error, setError] = useState(null)
   const [selectedRent, setSelectedRent] = useState(null)
   const [imgError, setImgError] = useState(false)
+  const [previewImage, setPreviewImage] = useState(null)
 
   const fetchDetails = async (silent = false) => {
     try {
@@ -183,20 +184,16 @@ export default function TenantDetails() {
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
       <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-slate-400 hover:text-indigo-600 transition-colors group mb-2"
-          >
-            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Back to Registry</span>
-          </button>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-6">
-              <div className="relative group">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div className="flex items-center gap-4 md:gap-6">
+              {/* Profile Image Section */}
+              <div className="relative group shrink-0">
                 <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative h-24 w-24 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center">
+                <div
+                  onClick={() => profileImageUrl && !imgError && setPreviewImage({ url: profileImageUrl, title: tenant.name })}
+                  className="relative h-20 w-20 md:h-24 md:w-24 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                >
                   {profileImageUrl && !imgError ? (
                     <img
                       src={profileImageUrl}
@@ -217,35 +214,70 @@ export default function TenantDetails() {
                 )}
               </div>
 
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight">{tenant.name}</h1>
-                  <span className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                    tenant.vacated
-                      ? 'bg-rose-50 text-rose-600 border-rose-100'
-                      : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                  }`}>
-                    {tenant.vacated ? 'Vacated' : 'Active'}
-                  </span>
-                </div>
-                <div className="flex flex-wrap items-center gap-y-2 gap-x-4 text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-6 w-6 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                      <Building2 size={12} strokeWidth={2.5} />
-                    </div>
-                    <span className="text-[11px] font-black uppercase tracking-widest">{tenant.pgName}</span>
+              {/* Text Content Next to Image */}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase truncate leading-tight">
+                    {tenant.name}
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
+                      tenant.vacated
+                        ? 'bg-rose-50 text-rose-600 border-rose-100'
+                        : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                    }`}>
+                      {tenant.vacated ? 'Vacated' : 'Active'}
+                    </span>
+                    {tenant.approved && (
+                      <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest">
+                        Verified
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="h-6 w-6 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                      <Clock size={12} strokeWidth={2.5} />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                    {tenant.pgName} • {tenant.roomName || 'Room N/A'} • {tenant.bedDetail || 'Bed N/A'}
+                  </p>
+
+                  <div className="flex items-center gap-1.5 text-slate-500">
+                    <div className="h-4 w-4 rounded bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                      <Clock size={8} strokeWidth={3} />
                     </div>
-                    <span className="text-[11px] font-black uppercase tracking-widest">Joined {dayjs(tenant.dateOfJoining).format('MMM YYYY')}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest">Joined {dayjs(tenant.dateOfJoining).format('DD MMM YYYY')}</span>
                   </div>
                 </div>
               </div>
             </div>
 
+            {/* Quick Stats Grid - Now in Header */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 xl:max-w-3xl">
+              <HeaderStat label="Monthly Rent" value={`₹${tenant.monthlyRent}`} icon={<CreditCard />} color="indigo" />
+              <HeaderStat label="Security Advance" value={`₹${tenant.advance}`} icon={<ShieldCheck />} color="emerald" />
+              <HeaderStat label="Outstanding" value={`₹${tenant.pending}`} icon={<AlertCircle />} color={tenant.pending > 0 ? 'rose' : 'slate'} />
+              <HeaderStat label="Sharing Type" value={`${tenant.sharing} Sharing`} icon={<Users />} color="purple" />
+            </div>
 
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 self-end xl:self-center">
+              {!tenant.approved && (
+                <button
+                  onClick={handleApprove}
+                  disabled={approving}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+                >
+                  {approving ? <Loader2 size={14} className="animate-spin" /> : <ThumbsUp size={14} strokeWidth={2.5} />}
+                  Approve
+                </button>
+              )}
+              <button
+                onClick={() => navigate(-1)}
+                className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all group"
+              >
+                <ArrowLeft size={20} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -255,14 +287,6 @@ export default function TenantDetails() {
 
           {/* Left Column: Core Info */}
           <div className="lg:col-span-8 space-y-8">
-
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <StatCard label="Monthly Rent" value={`₹${tenant.monthlyRent}`} icon={<CreditCard />} color="indigo" />
-              <StatCard label="Security Advance" value={`₹${tenant.advance}`} icon={<ShieldCheck />} color="emerald" />
-              <StatCard label="Outstanding" value={`₹${tenant.pending}`} icon={<AlertCircle />} color={tenant.pending > 0 ? 'rose' : 'slate'} />
-              <StatCard label="Sharing Type" value={`${tenant.sharing} Sharing`} icon={<Users />} color="purple" />
-            </div>
 
             {/* Personal Details Section */}
             <Section title="Personal Profile" icon={<User />} color="indigo">
@@ -313,8 +337,8 @@ export default function TenantDetails() {
 
             {/* Rent History */}
             <Section title="Rent Ledger" icon={<History />} color="emerald">
-              <div className="overflow-hidden bg-white border border-slate-200 rounded-[2rem] shadow-sm">
-                <table className="w-full text-left border-collapse">
+              <div className="overflow-x-auto bg-white border border-slate-200 rounded-[2rem] shadow-sm">
+                <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="bg-slate-50">
                       <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Month</th>
@@ -427,7 +451,7 @@ export default function TenantDetails() {
                   </div>
                   <div>
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Room Type</p>
-                    <p className="text-lg font-black tracking-tight">{tenant.roomType} / {tenant.joiningType || 'Regular'}</p>
+                    <p className="text-lg font-black tracking-tight">{tenant.roomType?.replace('_', ' ')}</p>
                   </div>
                   {(tenant.dateOfVacate || tenant.expectedCheckoutDate) && (
                     <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/10">
@@ -437,7 +461,7 @@ export default function TenantDetails() {
                       </div>
                       <div>
                         <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Expected Checkout</p>
-                        <p className="text-xs font-bold">{tenant.expectedCheckoutDate ? dayjs(tenant.expectedCheckoutDate).format('DD MMM YYYY') : 'N/A'}</p>
+                        <p className="text-xs font-bold">{(tenant.dateOfVacate || tenant.expectedCheckoutDate) ? dayjs(tenant.dateOfVacate || tenant.expectedCheckoutDate).format('DD MMM YYYY') : 'N/A'}</p>
                       </div>
                     </div>
                   )}
@@ -473,14 +497,12 @@ export default function TenantDetails() {
                           </p>
                         </div>
                       </div>
-                      <a
-                        href={`${IMAGE_BASE_URL}${doc.url}`}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
+                        onClick={() => setPreviewImage({ url: `${IMAGE_BASE_URL}${doc.url}`, title: doc.type })}
                         className="h-8 w-8 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-cyan-600 hover:text-white transition-all"
                       >
                         <ExternalLink size={14} />
-                      </a>
+                      </button>
                     </div>
                   ))
                 ) : (
@@ -558,6 +580,69 @@ export default function TenantDetails() {
           />
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setPreviewImage(null)}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl"
+            >
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onClick={() => setPreviewImage(null)}
+                  className="p-2 bg-slate-900/20 hover:bg-slate-900/40 backdrop-blur-md rounded-full text-white transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              <div className="p-2">
+                <img
+                  src={previewImage.url}
+                  alt={previewImage.title}
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-[1.5rem]"
+                />
+              </div>
+              <div className="p-6 bg-white border-t border-slate-100">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Image Preview</p>
+                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{previewImage.title}</h3>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function HeaderStat({ label, value, icon, color }) {
+  const colors = {
+    indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
+    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+    rose: 'text-rose-600 bg-rose-50 border-rose-100',
+    slate: 'text-slate-600 bg-slate-50 border-slate-100',
+    purple: 'text-purple-600 bg-purple-50 border-purple-100',
+    amber: 'text-amber-600 bg-amber-50 border-amber-100'
+  }
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2 bg-slate-50/50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-sm transition-all">
+      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border ${colors[color] || colors.indigo} group-hover:scale-110 transition-transform`}>
+        {React.cloneElement(icon, { size: 14, strokeWidth: 2.5 })}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
+        <p className="text-[10px] font-black text-slate-900 truncate leading-none">{value}</p>
+      </div>
     </div>
   )
 }

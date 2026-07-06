@@ -28,7 +28,6 @@ import {
   ExternalLink,
   Download,
   Bell,
-  ChevronDown,
   Building
 } from 'lucide-react'
 import dayjs from 'dayjs'
@@ -36,6 +35,7 @@ import toast from 'react-hot-toast'
 import { jsPDF } from 'jspdf'
 import PageHeader from '../components/PageHeader'
 import ConfirmModal from '../components/ConfirmModal'
+import CustomDropdown from '../components/CustomDropdown'
 import AvailableBedImg from '../assets/bed_availabe.png'
 import OccupiedBedImg from '../assets/bed_occupied.png'
 import ReservedBedImg from '../assets/bed_reserved.png'
@@ -68,86 +68,6 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
   )
 }
 
-function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white" }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = React.useRef(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
-  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
-
-  return (
-    <div className={`relative ${className}`} ref={containerRef}>
-      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
-        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
-          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
-          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
-            {displayValue}
-          </span>
-        </div>
-        <ChevronDown
-          size={16}
-          strokeWidth={3}
-          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
-          >
-            {showAll && (
-              <button
-                type="button"
-                onClick={() => { onChange('ALL'); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  value === 'ALL' ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                ALL {label}S
-              </button>
-            )}
-            {options.map((opt) => (
-              <button
-                key={opt.id || opt.value}
-                type="button"
-                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
 
 function StatusPill({ status }) {
   const styles = {

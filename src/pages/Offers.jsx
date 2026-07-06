@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   X,
   Zap,
-  Gift
+  Gift,
+  ChevronDown
 } from 'lucide-react'
 
 /* =====================================================
@@ -369,6 +370,3 @@ function OfferForm({ open, initial, onClose, onSave }) {
   )
 }
 
-const ChevronDown = ({ className, size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 12 15 18 9"></polyline></svg>
-)

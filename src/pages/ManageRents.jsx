@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Download,
   Loader2,
-  ChevronDown,
   Users,
   RefreshCw,
   Calendar,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react'
 import { getAllPgs, getPgRentStatus } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
+import CustomDropdown from '../components/CustomDropdown'
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
@@ -305,7 +305,7 @@ export default function ManageRents() {
           {loading ? (
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-20 flex flex-col items-center justify-center shadow-sm">
               <Loader2 className="animate-spin text-indigo-600 mb-4" size={40} />
-              <p className="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Syncing Data...</p>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Syncing Revenue Data...</p>
             </div>
           ) : filteredData.length === 0 ? (
             <div className="bg-white rounded-[2.5rem] border border-slate-200 p-20 flex flex-col items-center justify-center text-center shadow-sm">
@@ -380,79 +380,10 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
   )
 }
 
-function CustomDropdown({ label, value, options, onChange, icon: Icon, showAll = false, className = "min-w-[240px]", labelBg = "bg-white" }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const containerRef = React.useRef(null)
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  const selectedOption = options.find(opt => opt.id === value || opt.value === value)
-  const displayValue = selectedOption ? selectedOption.label : (value || `SELECT ${label}`)
-
-  return (
-    <div className={`relative ${className}`} ref={containerRef}>
-      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
-        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-50 border-2 rounded-2xl transition-all duration-300 ${
-          isOpen ? 'border-indigo-500 shadow-xl shadow-indigo-100/50' : 'border-slate-100 hover:border-indigo-300 shadow-sm'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          {Icon && <Icon size={18} className="text-indigo-500" strokeWidth={2.5} />}
-          <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest truncate max-w-[150px]">
-            {displayValue}
-          </span>
-        </div>
-        <ChevronDown
-          size={16}
-          strokeWidth={3}
-          className={`text-indigo-400 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
-          >
-            {options.map((opt) => (
-              <button
-                key={opt.id || opt.value}
-                type="button"
-                onClick={() => { onChange(opt.id || opt.value); setIsOpen(false); }}
-                className={`w-full px-7 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all ${
-                  (value === opt.id || value === opt.value) ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
 
 const RentMobileCard = React.forwardRef(({ item, navigate }, ref) => {
   const statusConfig = {
-    PAID: { label: 'Settled', color: 'emerald', icon: <CheckCircle2 size={12} /> },
+    PAID: { label: 'Paid', color: 'emerald', icon: <CheckCircle2 size={12} /> },
     PARTIALLY_PAID: { label: 'Partial', color: 'amber', icon: <AlertCircle size={12} /> },
     PENDING: { label: 'Pending', color: 'slate', icon: <Clock size={12} /> },
     OVERDUE: { label: 'Overdue', color: 'rose', icon: <AlertCircle size={12} /> }
@@ -555,7 +486,7 @@ function FilterTab({ label, count, active, onClick, color = 'indigo' }) {
 
 const RentTableRow = React.forwardRef(({ item, navigate }, ref) => {
   const statusConfig = {
-    PAID: { label: 'Settled', color: 'emerald', icon: <CheckCircle2 size={12} /> },
+    PAID: { label: 'Paid', color: 'emerald', icon: <CheckCircle2 size={12} /> },
     PARTIALLY_PAID: { label: 'Partial', color: 'amber', icon: <AlertCircle size={12} /> },
     PENDING: { label: 'Pending', color: 'slate', icon: <Clock size={12} /> },
     OVERDUE: { label: 'Overdue', color: 'rose', icon: <AlertCircle size={12} /> }

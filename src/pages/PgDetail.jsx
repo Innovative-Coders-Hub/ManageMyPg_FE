@@ -471,7 +471,10 @@ export default function PgDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-indigo-600" size={40} />
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Inventorying Portfolio Units...</p>
+        </div>
       </div>
     )
   }
@@ -511,8 +514,8 @@ export default function PgDetail() {
             title={pgDisplayName}
             subtitle={typeof pg.address === 'string' ? pg.address : pg.address?.address || 'Beds Management'}
             backButton={
-              <button onClick={() => navigate('/mypgs')} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all border border-slate-100 mr-2">
-                <ArrowLeft size={18} />
+              <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all border border-slate-100 mr-2">
+                <ArrowLeft size={18} strokeWidth={2.5} />
               </button>
             }
           >
