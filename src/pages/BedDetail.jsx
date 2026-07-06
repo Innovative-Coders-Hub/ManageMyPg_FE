@@ -111,19 +111,20 @@ function generateTempReceiptNumber({ pgId, periodKey }) {
   return `PG-${pgId}-${ym}-${String(hash).slice(-4)}`
 }
 
-function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50', isAccent = false }) {
+function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50', borderClass = 'border-indigo-100', isAccent = false }) {
   if (isAccent) {
     colorClass = 'text-white'
     bgClass = 'bg-indigo-600'
+    borderClass = 'border-indigo-600'
   }
   return (
-    <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
-      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
-        <Icon className="w-4 h-4 sm:w-5 h-5" />
+    <div className="flex items-center gap-3 px-3 py-2 bg-slate-50/50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-sm transition-all min-w-[120px]">
+      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border ${bgClass} ${colorClass} ${borderClass} group-hover:scale-110 transition-transform`}>
+        <Icon size={14} strokeWidth={2.5} />
       </div>
       <div className="min-w-0">
-        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
-        <div className="text-sm sm:text-lg font-black text-slate-900 leading-tight truncate">{value}</div>
+        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
+        <p className="text-[10px] font-black text-slate-900 truncate leading-none">{value}</p>
       </div>
     </div>
   )
@@ -350,34 +351,50 @@ export default function BedDetail() {
   const occupancy = bed.occupied ? 100 : 0
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
-      {/* Dynamic Header */}
-      <div className="bg-white border-b border-slate-200 pt-2 pb-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <PageHeader
-            title={`Bed ${bed.bedName}`}
-            subtitle={`${bed.floorName} • Room ${bed.roomName}`}
-          >
-            <div className="flex flex-wrap items-center justify-end gap-3">
+    <div className="min-h-screen bg-slate-50 pb-24">
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all group shrink-0"
+              >
+                <ArrowLeft size={20} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase truncate leading-tight">
+                  Bed {bed.bedName}
+                </h1>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                  {bed.floorName} • Room {bed.roomName}
+                </p>
+              </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 xl:max-w-3xl">
               <TopStat label="Status" value={bed.occupied ? 'Occupied' : 'Open'} icon={ShieldCheck} isAccent={bed.occupied} />
               <TopStat label="Rent" value={`₹${current?.monthlyRent || 0}`} icon={IndianRupee} />
-              <TopStat label="Paid" value={`₹${totals.paid}`} icon={TrendingUp} colorClass="text-emerald-600" bgClass="bg-emerald-50" />
-              <TopStat label="Pending" value={`₹${totals.pending}`} icon={AlertCircle} isAccent={totals.pending > 0} colorClass="text-rose-600" bgClass="bg-rose-50" />
+              <TopStat label="Paid" value={`₹${totals.paid}`} icon={TrendingUp} colorClass="text-emerald-600" bgClass="bg-emerald-50" borderClass="border-emerald-100" />
+              <TopStat label="Pending" value={`₹${totals.pending}`} icon={AlertCircle} isAccent={totals.pending > 0} colorClass="text-rose-600" bgClass="bg-rose-50" borderClass="border-rose-100" />
+            </div>
 
+            <div className="flex items-center gap-3 self-end xl:self-center">
               {!bed.occupied && (
                 <button
                   onClick={() => setQuickAssignOpen(true)}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 h-[64px] ml-2"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-100 disabled:opacity-50"
                 >
                   <Plus size={14} /> Quick Assign
                 </button>
               )}
             </div>
-          </PageHeader>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Resident Info */}
           <div className="lg:col-span-4 space-y-6">

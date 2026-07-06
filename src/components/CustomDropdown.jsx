@@ -14,7 +14,9 @@ export default function CustomDropdown({
   icon: Icon,
   showAll = false,
   className = "min-w-[240px]",
-  labelBg = "bg-white"
+  labelBg = "bg-white",
+  direction = "down",
+  disabled = false
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
@@ -36,8 +38,26 @@ export default function CustomDropdown({
     return typeof opt === 'object' ? opt.label : (opt || val)
   }
 
+  if (disabled) {
+    return (
+      <div className={`relative ${className}`}>
+        <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20`}>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">{label}</span>
+        </div>
+        <div className="w-full flex items-center justify-between gap-3 px-5 py-2.5 bg-slate-100 border-2 border-slate-100 rounded-2xl opacity-60">
+          <div className="flex items-center gap-3">
+            {Icon && <Icon size={18} className="text-slate-400" strokeWidth={2.5} />}
+            <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest truncate max-w-[150px]">
+              {getLabel(value)}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
+    <div className={`relative ${className} ${isOpen ? 'z-[100]' : ''}`} ref={containerRef}>
       <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
         <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
       </div>
@@ -65,10 +85,10 @@ export default function CustomDropdown({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            initial={{ opacity: 0, y: direction === 'up' ? -12 : 12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            className="absolute z-[110] left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2"
+            exit={{ opacity: 0, y: direction === 'up' ? -8 : 8, scale: 0.95 }}
+            className={`absolute z-[110] left-0 right-0 ${direction === 'up' ? 'bottom-full mb-4' : 'top-full mt-2'} bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden py-2`}
           >
             {showAll && (
               <button

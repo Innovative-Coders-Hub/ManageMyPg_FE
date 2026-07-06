@@ -6,9 +6,8 @@ import React from 'react';
  */
 export default function PageHeader({ title, subtitle, backButton, children }) {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-1">
-      <div className="min-w-0 text-center md:text-left flex items-center gap-2">
-        {backButton}
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-1 relative">
+      <div className="min-w-0 text-center md:text-left flex items-center gap-4">
         <div>
           <div className="flex items-center justify-center md:justify-start gap-3">
             <div className="h-5 w-1 bg-indigo-600 rounded-full hidden md:block" />
@@ -25,6 +24,7 @@ export default function PageHeader({ title, subtitle, backButton, children }) {
       </div>
       <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 md:gap-3">
         {children}
+        {backButton}
       </div>
     </div>
   );
