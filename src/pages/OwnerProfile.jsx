@@ -50,7 +50,7 @@ export default function OwnerProfile({ mode = 'profile' }) {
         const data = await getOwnerProfile()
         setProfile(data)
 
-        if (isOnboarding && data.hasAddress) {
+        if (isOnboarding && data.isAddress) {
           navigate('/home', { replace: true })
         }
       } finally {
@@ -83,7 +83,7 @@ export default function OwnerProfile({ mode = 'profile' }) {
     )
   }
 
-  const isMandatory = !profile.hasAddress
+  const isMandatory = !profile.isAddress
   const isReadOnly = !isOnboarding
 
   /* ---------- Helpers ---------- */

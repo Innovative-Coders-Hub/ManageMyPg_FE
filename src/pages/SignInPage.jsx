@@ -84,7 +84,7 @@ export default function SignInPage() {
         localStorage.setItem('isBlocked', isBlocked)
         localStorage.setItem('businessName', businessName)
 
-        const hasAddress = Boolean(data.hasAddress)
+        const hasAddress = Boolean(data.isAddress)
         if (hasAddress) {
           toast.success('Signed in successfully!')
           navigate('/home', { replace: true })
@@ -226,7 +226,7 @@ export default function SignInPage() {
               </div>
               <div className="flex justify-end pr-1">
                 <Link to="/forgot-password" title="Forgot Password" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors">
-                  Forgot Security Key?
+                  Forgot Password?
                 </Link>
               </div>
             </motion.div>
