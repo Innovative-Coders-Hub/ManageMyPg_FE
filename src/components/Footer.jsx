@@ -29,13 +29,13 @@ export default function Footer() {
               <span className="text-slate-300">Simplify management, scale faster, and stay ahead in the rental ecosystem.</span>
             </p>
 
-            <div className="flex items-center gap-4 pt-2">
+            {/* <div className="flex items-center gap-4 pt-2">
               <a href="#" className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all">
                 <ExternalLink size={18} />
               </a>
               <div className="h-px w-8 bg-white/10" />
               <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Connecting owners nationwide</p>
-            </div>
+            </div> */}
           </div>
 
           {/* Quick Links / Support */}
@@ -91,17 +91,17 @@ export default function Footer() {
         <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col items-center md:items-start gap-1">
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-              © {new Date().getFullYear()} ManageMyPg. Powered by Enterprise Infrastructure.
+              © {new Date().getFullYear()} ManageMyPg. All rights reserved.
             </p>
           </div>
 
-          <div className="flex items-center gap-8">
+          {/* <div className="flex items-center gap-8">
             <div className="flex gap-4 italic text-slate-600 lowercase font-medium text-[11px] items-center">
               <span>made with</span>
               <div className="h-8 w-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">❤️</div>
               <span>in india</span>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </footer>

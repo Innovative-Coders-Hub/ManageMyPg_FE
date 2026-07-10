@@ -141,8 +141,8 @@ export default function AdminLogin() {
                  <Fingerprint size={14} />
                </div>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Internal Access</h1>
-            <p className="text-slate-400 text-sm font-medium tracking-wide">Enter master credentials to establish connection</p>
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Administrator Access</h1>
+            <p className="text-slate-400 text-sm font-medium tracking-wide">Enter master credentials to login</p>
           </motion.div>
 
           {/* Error Message */}
@@ -223,7 +223,7 @@ export default function AdminLogin() {
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
                   <>
-                    Initialize Session
+                    Login
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -246,9 +246,9 @@ export default function AdminLogin() {
         </div>
 
         {/* Support Link */}
-        <motion.p variants={itemVariants} className="mt-8 text-center text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+        {/* <motion.p variants={itemVariants} className="mt-8 text-center text-slate-500 text-[10px] font-bold uppercase tracking-widest">
           Forgot credentials? Contact <a href="#" className="text-indigo-400 hover:underline">System Security</a>
-        </motion.p>
+        </motion.p> */}
       </motion.div>
     </div>
   )
