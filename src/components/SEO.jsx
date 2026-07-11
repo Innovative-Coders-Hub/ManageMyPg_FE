@@ -19,7 +19,7 @@ export default function SEO({
     // 1. Title Logic (ManageMyPG casing)
     const fullTitle = title && title !== 'Home'
       ? `${title} | ManageMyPG`
-      : 'ManageMyPG | Smart PG Management Software for Owners';
+      : 'ManageMyPG | PG Management Software | Rent & Tenant Management';
 
     const baseUrl = 'https://www.managemypg.com';
     const fullUrl = canonical ? `${baseUrl}${canonical === '/' ? '' : canonical}` : baseUrl;
