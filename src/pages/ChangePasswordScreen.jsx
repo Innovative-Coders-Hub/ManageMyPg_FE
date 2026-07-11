@@ -17,6 +17,7 @@ import {
 import { changePassword, verifyChangePassword } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
 import LogoImg from '../assets/managemypg.png'
+import SEO from '../components/SEO'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -102,6 +103,11 @@ export default function ChangePasswordScreen() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] relative overflow-hidden font-sans selection:bg-indigo-500/30">
+      <SEO
+        title="Change Password"
+        description="Securely update your ManageMyPg account password to maintain property and data security."
+        canonical="/change-password"
+      />
       <style dangerouslySetInnerHTML={{ __html: `body { background-color: #F8FAFC !important; }` }} />
 
       {/* Subtle Light Decor */}

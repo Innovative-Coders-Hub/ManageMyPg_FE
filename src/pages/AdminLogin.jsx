@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { adminLogin } from '../api/adminAuth'
 import LogoImg from '../assets/managemypg.png'
+import SEO from '../components/SEO'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -95,6 +96,11 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30">
+      <SEO
+        title="Admin Access"
+        description="Secure administrator portal for ManageMyPg. Authorized access only."
+        canonical="/admin/login"
+      />
       <style dangerouslySetInnerHTML={{ __html: `body { background-color: #020617 !important; }` }} />
       {/* Dynamic Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf"
 import dayjs from 'dayjs'
 import PageHeader from "../components/PageHeader"
 import CustomDropdown from "../components/CustomDropdown"
+import SEO from "../components/SEO"
 import {
   Download,
   Calendar,
@@ -284,6 +285,11 @@ export default function Reports() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      <SEO
+        title="Business Intelligence & Reports"
+        description="Detailed analytics and financial reports for your PG portfolio. Track occupancy, revenue, and receivables in real-time."
+        canonical="/reports"
+      />
       {/* Header Section */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">

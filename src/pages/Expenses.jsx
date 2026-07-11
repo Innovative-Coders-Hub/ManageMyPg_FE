@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import {
   Wallet,
   Plus,
@@ -429,6 +430,11 @@ export default function Expenses() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      <SEO
+        title="Expense Tracker"
+        description="Track and manage PG operational expenses. Monitor spending trends, daily averages, and transaction history."
+        canonical="/expenses"
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

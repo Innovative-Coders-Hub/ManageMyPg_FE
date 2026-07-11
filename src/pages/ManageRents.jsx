@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import {
   IndianRupee,
   Building2,
@@ -175,6 +176,11 @@ export default function ManageRents() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      <SEO
+        title="Rent Management"
+        description="Monitor PG revenue, track rent collections, manage pending payments, and export financial reports."
+        canonical="/manage-rents"
+      />
       {/* Header & Controls */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">

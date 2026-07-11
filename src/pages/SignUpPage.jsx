@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { registerOwner } from '../api/ownerAuth'
 import SuccessPopup from '../components/SuccessPopup'
+import SEO from '../components/SEO'
 import LogoImg from '../assets/managemypg.png'
 
 const containerVariants = {
@@ -112,6 +113,10 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30 py-12">
+      <SEO
+        title="Sign Up"
+        description="Join ManageMyPg and start managing your PG portfolio efficiently with our comprehensive suite of tools."
+      />
       {/* Background Decor */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />

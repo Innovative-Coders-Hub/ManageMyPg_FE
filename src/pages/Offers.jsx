@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
+import SEO from '../components/SEO'
 import PageHeader from '../components/PageHeader'
 import {
   Plus,
@@ -101,6 +102,11 @@ export default function Offers() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      <SEO
+        title="Promotions & Offers"
+        description="Create and manage PG rental offers, discounts, and referral bonuses to boost occupancy."
+        canonical="/offers"
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

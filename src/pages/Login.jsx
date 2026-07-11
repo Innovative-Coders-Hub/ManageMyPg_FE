@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import SEO from '../components/SEO'
 
 export default function Login(){
   const navigate = useNavigate()
@@ -11,6 +12,11 @@ export default function Login(){
   }
   return (
     <div className="max-w-md mx-auto mt-12 card">
+      <SEO
+        title="Owner Login"
+        description="Sign in to your ManageMyPg account to manage your PG properties, tenants, and rents efficiently."
+        canonical="/login"
+      />
       <h2 className="text-2xl font-semibold mb-4">Sign in to ManageMyPg</h2>
       <form onSubmit={submit} className="space-y-3">
         <input required placeholder="Email" className="w-full p-2 border rounded"/>

@@ -25,6 +25,7 @@ import {
   Shield,
   Home
 } from 'lucide-react'
+import SEO from '../components/SEO'
 
 /* ======================
    Animation Variants
@@ -152,6 +153,11 @@ export default function AdminOwnerDetails() {
 
   return (
     <div className="min-h-screen bg-slate-50/30">
+      <SEO
+        title={owner ? `${owner.fullName} | Owner Details` : 'Owner Verification'}
+        description={`Verification and complete profile details for PG owner ${owner?.fullName || ''} on ManageMyPg.`}
+        canonical={`/admin/owner/${id}`}
+      />
       {/* Top Header Section */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import {
   Calendar,
   Users,
@@ -313,6 +314,11 @@ export default function Bookings() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      <SEO
+        title="Bookings Management"
+        description="Track and manage PG bookings, bed availability, and upcoming resident joining dates in real-time."
+        canonical="/bookings"
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1 sticky top-0 z-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

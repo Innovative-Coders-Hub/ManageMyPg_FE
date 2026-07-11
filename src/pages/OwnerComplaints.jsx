@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import PageHeader from '../components/PageHeader'
 import CustomDropdown from '../components/CustomDropdown'
 import {
@@ -228,6 +229,11 @@ export default function OwnerComplaints() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      <SEO
+        title="Complaints Management"
+        description="Track and resolve tenant complaints, manage maintenance tickets, and monitor resolution SLAs for your PG properties."
+        canonical="/owner-complaints"
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

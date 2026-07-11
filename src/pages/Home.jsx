@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, memo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import SEO from "../components/SEO";
 import { getOwnerDashboard, getRevenueTrends, getRealTimeAlerts } from "../api/ownerAuth";
 import PageHeader from "../components/PageHeader";
 import {
@@ -268,6 +269,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <SEO
+        title={displayData?.name ? `${displayData.name} Dashboard` : "Dashboard"}
+        description="Monitor your PG metrics, occupancy, and rent collection at a glance."
+      />
       {/* HEADER + PG SWITCHER */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
