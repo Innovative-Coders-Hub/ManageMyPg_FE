@@ -50,10 +50,14 @@ export default function SEO({
     link.setAttribute('href', fullUrl);
 
     // 4. Open Graph (OG)
+    updateMeta('og:site_name', 'ManageMyPG', 'property');
     updateMeta('og:title', fullTitle, 'property');
     updateMeta('og:description', description, 'property');
     updateMeta('og:url', fullUrl, 'property');
     updateMeta('og:image', ogImage, 'property');
+    updateMeta('og:image:width', '1200', 'property');
+    updateMeta('og:image:height', '630', 'property');
+    updateMeta('og:image:type', 'image/jpeg', 'property');
     updateMeta('og:type', ogType, 'property');
 
     // 5. Twitter
