@@ -19,14 +19,14 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-title" content="ManageMyPG" />
     <link rel="manifest" href="/site.webmanifest" />
-    <title>ManageMyPG | Smart PG Management Software for Owners</title>
+    <title>ManageMyPG | PG Management Software | Rent & Tenant Management</title>
     <meta name="description" content="ManageMyPG helps PG owners manage tenants, rent collection, room allocation, complaints, expenses and reports from one powerful dashboard." />
     <link rel="canonical" href="https://www.managemypg.com/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ManageMyPG" />
-    <meta property="og:title" content="ManageMyPG | Smart PG Management Software" />
+    <meta property="og:title" content="ManageMyPG | PG Management Software | Rent & Tenant Management" />
     <meta property="og:description" content="Complete PG Management Software for PG owners. Manage tenants, rent, and operations with ease." />
     <meta property="og:url" content="https://www.managemypg.com/" />
     <meta property="og:image" content="https://www.managemypg.com/og-image.jpg" />
@@ -36,27 +36,60 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="ManageMyPG | Smart PG Management Software" />
+    <meta name="twitter:title" content="ManageMyPG | PG Management Software | Rent & Tenant Management" />
     <meta name="twitter:description" content="Complete PG Management Software for PG owners." />
     <meta name="twitter:image" content="https://www.managemypg.com/og-image.jpg" />
 
     <!-- Schema.org Markup for Google -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "ManageMyPG",
-        "applicationCategory": "BusinessApplication",
-        "operatingSystem": "Web",
-        "url": "https://www.managemypg.com",
-        "description": "ManageMyPG is a cloud-based PG management software for owners to manage tenants, rent collection, rooms, complaints and reports.",
-        "logo": "https://www.managemypg.com/logo.png",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "INR"
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.managemypg.com/#organization",
+          "name": "ManageMyPG",
+          "url": "https://www.managemypg.com",
+          "logo": "https://www.managemypg.com/logo.png",
+          "description": "Smart PG Management Software for PG owners.",
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer support",
+            "email": "support@managemypg.com",
+            "telephone": "+91-9493777076"
+          },
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.managemypg.com/#website",
+          "url": "https://www.managemypg.com",
+          "name": "ManageMyPG",
+          "publisher": {
+            "@id": "https://www.managemypg.com/#organization"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://www.managemypg.com/#software",
+          "name": "ManageMyPG",
+          "applicationCategory": "BusinessApplication",
+          "applicationSubCategory": "Property Management Software",
+          "operatingSystem": "Android, Web",
+          "url": "https://www.managemypg.com",
+          "image": "https://www.managemypg.com/og-image.jpg",
+          "description": "ManageMyPG is a cloud-based PG management software that helps PG owners manage tenants, rooms, rent collection, complaints, expenses and reports from a single platform.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "INR"
+          },
+          "publisher": {
+            "@id": "https://www.managemypg.com/#organization"
+          }
         }
-      }
+      ]
+    }
     </script>
   </head>
   <body>
