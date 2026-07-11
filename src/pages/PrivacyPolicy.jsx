@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Clock, Mail, Globe, Phone, FileText, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import SEO from '../components/SEO'
 
 export default function PrivacyPolicy() {
   const navigate = useNavigate()
@@ -117,6 +118,11 @@ export default function PrivacyPolicy() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+      <SEO
+        title="Privacy Policy"
+        description="Read the ManageMyPg Privacy Policy to understand how we collect, use, and protect your personal and property data."
+        canonical="/privacy-policy"
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

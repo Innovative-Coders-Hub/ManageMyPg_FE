@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import dayjs from 'dayjs'
+import SEO from '../components/SEO'
 import {
   ArrowLeft,
   Mail,
@@ -183,6 +184,11 @@ export default function TenantDetails() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
+      <SEO
+        title={tenant ? `${tenant.name} | Tenant Profile` : 'Tenant Profile'}
+        description={tenant ? `Detailed profile for ${tenant.name} at ${tenant.pgName}. View rent history, personal details, and verification documents.` : 'View tenant profile and rent ledger.'}
+        canonical={`/tenant-details/${tenantId}`}
+      />
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">

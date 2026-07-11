@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 import {
   markRentAsPaid,
   updateVacatingDate,
@@ -352,6 +353,11 @@ export default function BedDetail() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
+      <SEO
+        title={`Bed ${bed.bedName} | ${bed.roomName}`}
+        description={`Details for Bed ${bed.bedName} in Room ${bed.roomName} at ${bed.pgName || 'ManageMyPg'}. View resident info, payment history, and bed status.`}
+        canonical={`/bed/${bedId}`}
+      />
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">

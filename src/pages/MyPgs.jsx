@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPg, getAllPgs, updatePgPricing, uploadPgTerms } from '../api/ownerAuth'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 import {
   Plus,
   MapPin,
@@ -191,6 +192,10 @@ export default function MyPgs() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <SEO
+        title="My PGs"
+        description="Manage your PG portfolio, view occupancy, and configure pricing."
+      />
       {/* Dynamic Header & Stats Section */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import { X, Camera, User, Settings, MapPin, Mail, Loader2, CheckCircle2, ShieldCheck, FileText, Trash2, AlertTriangle, ShieldAlert, Lock, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PageHeader from '../components/PageHeader'
@@ -192,6 +193,11 @@ export default function OwnerProfile({ mode = 'profile' }) {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <SEO
+        title={isOnboarding ? "Complete Your Profile" : "My Profile Settings"}
+        description={isOnboarding ? "Finish setting up your owner profile to start managing your PG business efficiently." : "Manage your personal information, security settings, and account preferences."}
+        canonical={isOnboarding ? "/onboarding/owner" : "/owner-profile"}
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader
