@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import {
   Lock,
   Mail,
@@ -115,6 +116,11 @@ export default function SignInPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30">
+      <SEO
+        title="Sign In"
+        description="Login to your ManageMyPg portal to manage your PG business, track payments, and monitor resident records."
+        canonical="/manage/mypg/signin"
+      />
       <style dangerouslySetInnerHTML={{ __html: `body { background-color: #020617 !important; }` }} />
       {/* Background Decor */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

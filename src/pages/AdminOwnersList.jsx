@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { getAllOwners, updateOwnerStatus } from '../api/adminAuth'
 import useDebounce from '../hooks/useDebounce'
+import SEO from '../components/SEO'
 
 /* ======================
    Animation Variants
@@ -188,6 +189,11 @@ export default function AdminOwnersList() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <SEO
+        title="Owner Directory"
+        description="Comprehensive directory of PG owners registered on ManageMyPg. Manage verification status and view partner details."
+        canonical="/admin/owners"
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import SEO from '../components/SEO'
 import toast from 'react-hot-toast'
 import {
   User,
@@ -209,6 +210,11 @@ export default function TenantDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50/50">
+      <SEO
+        title="Tenant Dashboard"
+        description="View your stay details, payment history, and manage complaints."
+        canonical="/tenant-dashboard"
+      />
       <TenantHeader tenant={tenant} />
 
       <motion.div

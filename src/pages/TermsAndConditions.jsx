@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Scale, Clock, Mail, Globe, Phone, FileText, ArrowLeft, CheckCircle2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import SEO from '../components/SEO'
 
 export default function TermsAndConditions() {
   const navigate = useNavigate()
@@ -98,6 +99,11 @@ export default function TermsAndConditions() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+      <SEO
+        title="Terms & Conditions"
+        description="Review the Terms and Conditions for using ManageMyPg. Understand your rights and responsibilities as a property owner or tenant."
+        canonical="/terms-and-conditions"
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

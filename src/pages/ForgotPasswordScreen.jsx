@@ -18,6 +18,7 @@ import {
 import { forgotPassword, verifyForgotPasswordOtp, resetPassword } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
 import LogoImg from '../assets/managemypg.png'
+import SEO from '../components/SEO'
 
 const containerVariants = {
   hidden: { opacity: 0, scale: 0.98 },
@@ -144,6 +145,11 @@ export default function ForgotPasswordScreen() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC] relative overflow-hidden font-sans selection:bg-indigo-500/30">
+      <SEO
+        title="Forgot Password"
+        description="Recover your ManageMyPg account password. Enter your email or mobile to receive a secure verification code."
+        canonical="/forgot-password"
+      />
       <style dangerouslySetInnerHTML={{ __html: `body { background-color: #F8FAFC !important; }` }} />
 
       {/* Subtle Light Decor */}

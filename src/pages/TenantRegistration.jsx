@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import dayjs from 'dayjs'
+import SEO from '../components/SEO'
 import {
   User,
   Mail,
@@ -237,6 +238,11 @@ export default function TenantRegistration() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8">
+      <SEO
+        title={pgDetails ? `${pgDetails.pgName} - Resident Registration` : 'Resident Registration'}
+        description={pgDetails ? `Join ${pgDetails.pgName} community. Register as a resident to manage your stay, rent payments, and more.` : 'Register as a resident in your PG community. Easy onboarding for tenants.'}
+        canonical={pgId ? `/register/tenant/${pgId}` : '/register/tenant'}
+      />
       <motion.div
         variants={containerVariants}
         initial="hidden"

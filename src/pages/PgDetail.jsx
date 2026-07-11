@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 import {
   createFloor,
   getFloorsByPg,
@@ -504,9 +505,15 @@ export default function PgDetail() {
   }
 
   const pgDisplayName = pg?.pgName || 'PG Beds Management'
+  const pgAddress = typeof pg?.address === 'string' ? pg.address : pg?.address?.address || 'Beds Management'
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      <SEO
+        title={pgDisplayName}
+        description={`Manage rooms, beds, and occupancy for ${pgDisplayName} at ${pgAddress}. View floor-wise details and tenant status.`}
+        canonical={`/pg/${id}`}
+      />
       {/* Header Section */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">

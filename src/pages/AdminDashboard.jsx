@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { getAdminDashboard } from '../api/adminAuth'
 import useDebounce from '../hooks/useDebounce'
+import SEO from '../components/SEO'
 
 dayjs.extend(isBetween)
 
@@ -239,6 +240,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
+      <SEO
+        title="System Overview"
+        description="Comprehensive dashboard for ManageMyPg administrators to monitor system performance, user registrations, and regional distribution."
+        canonical="/admin/dashboard"
+      />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader

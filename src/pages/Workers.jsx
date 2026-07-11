@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import PageHeader from '../components/PageHeader'
+import SEO from '../components/SEO'
 import {
   Users,
   UserCheck,
@@ -323,6 +324,11 @@ export default function Workers() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24">
+      <SEO
+        title="Worker Management"
+        description="Manage your staff, track roles, salaries, and attendance. Monitor worker performance across all PG properties."
+        canonical="/workers"
+      />
       {/* Header Section */}
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
