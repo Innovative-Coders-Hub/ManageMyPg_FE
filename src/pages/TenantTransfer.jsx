@@ -125,7 +125,7 @@ export default function TenantTransfer() {
         canonical="/tenant-transfer"
       />
       <div className="bg-white border-b border-slate-200 pt-2 pb-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader
             title="Tenant Relocation"
             subtitle="Internal room transfer and contract adjustment"
@@ -141,7 +141,7 @@ export default function TenantTransfer() {
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
           {/* Left Side: Context Cards */}

@@ -49,7 +49,7 @@ export default function AdminHeader() {
     <header className={`sticky top-0 z-[60] transition-all duration-300 ${
       scrolled ? 'bg-white/80 backdrop-blur-md shadow-sm border-b' : 'bg-white border-b'
     }`}>
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-2">
 
           {/* Left: Brand */}

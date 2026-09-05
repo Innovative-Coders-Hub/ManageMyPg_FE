@@ -195,7 +195,7 @@ export default function ForgotPasswordScreen() {
               {step === STEPS.RESET && 'Set New Password'}
             </h1>
             <p className="text-slate-500 text-xs font-medium tracking-wide">
-              {step === STEPS.IDENTIFIER && 'Enter your email or mobile to receive an OTP'}
+              {step === STEPS.IDENTIFIER && 'Enter your registered email to receive an OTP'}
               {step === STEPS.OTP && `We've sent a 6-digit code to ${identifier}`}
               {step === STEPS.RESET && 'Create a strong password for your account'}
             </p>
@@ -227,7 +227,7 @@ export default function ForgotPasswordScreen() {
               >
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] ml-1">
-                    Email or Mobile Number
+                    Registered Email
                   </label>
                   <div className="relative group">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />

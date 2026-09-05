@@ -51,7 +51,9 @@ import {
   AlertCircle,
   IndianRupee,
   Plus,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  ArrowUpRight
 } from 'lucide-react'
 
 /* -------------------------------------------------- */
@@ -119,13 +121,13 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
     borderClass = 'border-indigo-600'
   }
   return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-slate-50/50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-sm transition-all min-w-[120px]">
-      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border ${bgClass} ${colorClass} ${borderClass} group-hover:scale-110 transition-transform`}>
-        <Icon size={14} strokeWidth={2.5} />
+    <div className="flex items-center gap-3 px-3.5 py-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 hover:bg-white transition-all shadow-xs min-w-0">
+      <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 border ${bgClass} ${colorClass} ${borderClass}`}>
+        <Icon size={16} strokeWidth={2.2} />
       </div>
       <div className="min-w-0">
         <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
-        <p className="text-[10px] font-black text-slate-900 truncate leading-none">{value}</p>
+        <p className="text-xs font-black text-slate-900 truncate leading-none">{value}</p>
       </div>
     </div>
   )
@@ -133,12 +135,12 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
 
 function InfoRow({ label, value, icon: Icon }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-slate-50 last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-slate-100/80 last:border-0">
       <div className="flex items-center gap-2 text-slate-400">
-        {Icon && <Icon size={12} />}
+        {Icon && <Icon size={14} />}
         <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
       </div>
-      <div className="text-[11px] font-black text-slate-900 truncate ml-4">
+      <div className="text-xs font-black text-slate-900 truncate ml-3">
         {value || '—'}
       </div>
     </div>
@@ -248,89 +250,84 @@ export default function BedDetail() {
       const pay = payments[p.key]
       rows.push([
         bed.bedName,
-        current?.name || '-',
+        current?.name || '',
         p.label,
-        fmt(p.from),
-        fmt(p.to),
-        pay ? 'Paid' : 'Unpaid',
-        pay?.amountPaid ?? 0,
-        pay?.pending ?? defaultRent,
-        pay?.modeOfPayment ?? '-',
-        pay?.paidAt ? fmt(pay.paidAt, 'DD MMM YYYY, HH:mm') : '-',
+        fmtShort(p.from),
+        fmtShort(p.to),
+        pay ? pay.status : 'DUE',
+        pay ? pay.amountPaid : 0,
+        pay ? pay.pending : current?.monthlyRent || 0,
+        pay?.modeOfPayment || '',
+        pay?.paidAt ? fmtShort(pay.paidAt) : ''
       ])
     })
-    const csv = rows.map(r =>
-      r.map(v =>
-        typeof v === 'string' && v.includes(',')
-          ? `"${v.replace(/"/g, '""')}"`
-          : v
-      ).join(',')
-    ).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `payments_${bed.bedName}.csv`
+    a.download = `payments-${bed.bedName}-${dayjs().format('YYYYMMDD')}.csv`
     a.click()
-    URL.revokeObjectURL(url)
-    toast.success('CSV exported')
   }
 
   function printPayments() {
     const win = window.open('', '_blank')
-    if (!win) return
     const rows = visiblePeriods.map(p => {
       const pay = payments[p.key]
       return `
-      <tr>
-        <td>${p.label}</td>
-        <td>${fmt(p.from)}</td>
-        <td>${fmt(p.to)}</td>
-        <td>${pay ? 'Paid' : 'Unpaid'}</td>
-        <td>${pay?.amountPaid ?? defaultRent}</td>
-        <td>${pay?.pending ?? 0}</td>
-        <td>${pay?.modeOfPayment ?? '-'}</td>
-      </tr>
-    `
+        <tr>
+          <td>${p.label}</td>
+          <td>${fmtShort(p.from)}</td>
+          <td>${fmtShort(p.to)}</td>
+          <td>${pay ? pay.status : 'DUE'}</td>
+          <td>₹${pay ? pay.amountPaid : 0}</td>
+          <td>₹${pay ? pay.pending : current?.monthlyRent || 0}</td>
+          <td>${pay?.modeOfPayment || '—'}</td>
+        </tr>
+      `
     }).join('')
+
     win.document.write(`
-    <html>
-      <head>
-        <title>Payments - ${bed.bedName}</title>
-        <style>
-          body { font: 14px system-ui; padding: 16px; }
-          table { border-collapse: collapse; width: 100%; }
-          th, td { border: 1px solid #ddd; padding: 6px; }
-          th { background: #f3f4f6; }
-        </style>
-      </head>
-      <body>
-        <h3>Payments — ${bed.bedName}</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Period</th>
-              <th>From</th>
-              <th>To</th>
-              <th>Status</th>
-              <th>Paid</th>
-              <th>Pending</th>
-              <th>Mode</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <script>window.print()</script>
-      </body>
-    </html>
-  `)
+      <html>
+        <head>
+          <title>Payments - ${bed.bedName}</title>
+          <style>
+            body { font: 14px system-ui; padding: 16px; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 6px; }
+            th { background: #f3f4f6; }
+          </style>
+        </head>
+        <body>
+          <h3>Payments — ${bed.bedName}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Period</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Status</th>
+                <th>Paid</th>
+                <th>Pending</th>
+                <th>Mode</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+          <script>window.print()</script>
+        </body>
+      </html>
+    `)
     win.document.close()
   }
 
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-600" size={40} />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-indigo-600" size={40} />
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Loading Bed Allocation Details...</p>
+        </div>
       </div>
     )
   }
@@ -338,61 +335,81 @@ export default function BedDetail() {
   if (!bed) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-        <div className="bg-white p-12 rounded-xl border border-slate-200 text-center shadow-xl shadow-slate-200/50">
-          <AlertCircle size={48} className="mx-auto text-slate-300 mb-6" />
-          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Bed not found</h2>
-          <button onClick={() => navigate(-1)} className="mt-8 px-8 py-3 bg-indigo-600 text-white rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
-            Go Back
+        <div className="bg-white p-12 rounded-3xl border border-slate-200/80 text-center shadow-xl max-w-md">
+          <AlertCircle size={48} className="mx-auto text-rose-500 mb-6" />
+          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Bed Allocation Not Found</h2>
+          <p className="text-slate-500 font-medium text-sm mt-2 mb-8">The requested bed space could not be found or has been unassigned.</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-md active:scale-95 cursor-pointer"
+          >
+            <ArrowLeft size={16} /> Return Back
           </button>
         </div>
       </div>
     )
   }
 
-  const occupancy = bed.occupied ? 100 : 0
-
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24">
       <SEO
         title={`Bed ${bed.bedName} | ${bed.roomName}`}
         description={`Details for Bed ${bed.bedName} in Room ${bed.roomName} at ${bed.pgName || 'ManageMyPg'}. View resident info, payment history, and bed status.`}
         canonical={`/bed/${bedId}`}
       />
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+
+      {/* STICKY HEADER BAR */}
+      <div className="bg-white border-b border-slate-200/80 pt-4 pb-4 sticky top-0 z-30 shadow-sm/50 backdrop-blur-md bg-white/95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all group shrink-0"
+                className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-white transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+                title="Back to PG Layout"
               >
-                <ArrowLeft size={20} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
+                <ArrowLeft size={18} />
               </button>
+
+              <div className="h-12 w-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-black shrink-0 shadow-xs">
+                <BedIcon size={24} />
+              </div>
+
               <div className="min-w-0">
-                <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase truncate leading-tight">
-                  Bed {bed.bedName}
-                </h1>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                  {bed.floorName} • Room {bed.roomName}
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase truncate leading-tight">
+                    Bed {bed.bedName}
+                  </h1>
+                  <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+                    bed.occupied
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                      : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                  }`}>
+                    {bed.occupied ? 'Occupied' : 'Available'}
+                  </span>
+                </div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                  {bed.floorName} • Room {bed.roomName} • {bed.pgName || 'Our PG'}
                 </p>
               </div>
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Quick Executive Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 xl:max-w-3xl">
-              <TopStat label="Status" value={bed.occupied ? 'Occupied' : 'Open'} icon={ShieldCheck} isAccent={bed.occupied} />
-              <TopStat label="Rent" value={`₹${current?.monthlyRent || 0}`} icon={IndianRupee} />
-              <TopStat label="Paid" value={`₹${totals.paid}`} icon={TrendingUp} colorClass="text-emerald-600" bgClass="bg-emerald-50" borderClass="border-emerald-100" />
-              <TopStat label="Pending" value={`₹${totals.pending}`} icon={AlertCircle} isAccent={totals.pending > 0} colorClass="text-rose-600" bgClass="bg-rose-50" borderClass="border-rose-100" />
+              <TopStat label="Space Status" value={bed.occupied ? 'Occupied' : 'Open'} icon={ShieldCheck} isAccent={bed.occupied} />
+              <TopStat label="Monthly Rent" value={`₹${(current?.monthlyRent || bed?.monthlyRent || bed?.rent || 0).toLocaleString()}`} icon={IndianRupee} />
+              <TopStat label="Total Paid" value={`₹${totals.paid.toLocaleString()}`} icon={TrendingUp} colorClass="text-emerald-600" bgClass="bg-emerald-50" borderClass="border-emerald-100" />
+              <TopStat label="Pending Dues" value={`₹${totals.pending.toLocaleString()}`} icon={AlertCircle} isAccent={totals.pending > 0} colorClass="text-rose-600" bgClass="bg-rose-50" borderClass="border-rose-100" />
             </div>
 
-            <div className="flex items-center gap-3 self-end xl:self-center">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 self-end xl:self-center shrink-0">
               {!bed.occupied && (
                 <button
                   onClick={() => setQuickAssignOpen(true)}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-100 disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-sm active:scale-95 cursor-pointer"
                 >
-                  <Plus size={14} /> Quick Assign
+                  <Plus size={14} /> Quick Assign Resident
                 </button>
               )}
             </div>
@@ -400,15 +417,23 @@ export default function BedDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+      {/* MAIN CONTENT GRID */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Resident Info */}
+
+          {/* LEFT COLUMN: RESIDENT PROFILE & HISTORY (4 COLS) */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Resident</h3>
+
+            {/* RESIDENT PROFILE CARD */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-5">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <User size={16} className="text-indigo-600" /> Assigned Resident
+                </h3>
                 {current && (
-                  <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${isVacated ? 'bg-slate-50 text-slate-400 border-slate-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                  <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+                    isVacated ? 'bg-slate-50 text-slate-500 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                  }`}>
                     {isVacated ? 'Vacated' : 'Active'}
                   </span>
                 )}
@@ -416,31 +441,32 @@ export default function BedDetail() {
 
               {current ? (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="w-12 h-12 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xl font-black shadow-lg shadow-indigo-100">
-                      {current.name?.charAt(0)}
+                  <div className="flex items-center gap-3.5 p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80">
+                    <div className="w-11 h-11 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-lg font-black shrink-0 shadow-xs">
+                      {current.name ? current.name.charAt(0).toUpperCase() : '?'}
                     </div>
-                    <div className="min-w-0">
-                      <Link to={`/tenant/${current.id}`} className="hover:text-indigo-600 transition-colors">
-                        <div className="text-sm font-black text-slate-900 truncate uppercase">{current.name}</div>
+                    <div className="min-w-0 flex-1">
+                      <Link to={`/tenant/${current.id}`} className="group flex items-center gap-1 hover:text-indigo-600 transition-colors">
+                        <span className="text-xs font-black text-slate-900 uppercase truncate group-hover:text-indigo-600">{current.name}</span>
+                        <ArrowUpRight size={12} className="text-slate-400 group-hover:text-indigo-600 shrink-0" />
                       </Link>
-                      <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{current.mobileNumber}</div>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">{current.mobileNumber}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     <InfoRow label="Joining Date" value={fmt(current.start)} icon={Calendar} />
                     <InfoRow label="Vacating Date" value={fmt(current.end)} icon={Clock} />
-                    <InfoRow label="Organization" value={current.company} icon={Briefcase} />
-                    <InfoRow label="Email" value={current.email} icon={Mail} />
-                    <InfoRow label="Emergency" value={current.parentNumber} icon={Phone} />
+                    <InfoRow label="Workplace / College" value={current.company} icon={Briefcase} />
+                    <InfoRow label="Email Address" value={current.email} icon={Mail} />
+                    <InfoRow label="Emergency Contact" value={current.parentNumber} icon={Phone} />
                   </div>
 
                   {!isVacated && (
-                    <div className="pt-4 grid grid-cols-2 gap-2">
+                    <div className="pt-3 grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setVacateModalOpen(true)}
-                        className="py-2.5 bg-slate-50 text-slate-900 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200 shadow-sm"
+                        className="py-2.5 px-3 bg-slate-50 text-slate-800 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200 shadow-xs cursor-pointer text-center"
                       >
                         {current?.end ? 'Update Vacate' : 'Set Vacate'}
                       </button>
@@ -455,44 +481,60 @@ export default function BedDetail() {
                           tenantId: current?.id,
                           tenantName: current?.name
                         })}
-                        className="py-2.5 bg-rose-50 text-rose-600 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100 shadow-sm"
+                        className="py-2.5 px-3 bg-rose-50 text-rose-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100 shadow-xs cursor-pointer text-center"
                       >
-                        Transfer
+                        Transfer Bed
                       </button>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-10">
-                  <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-200 mx-auto mb-4 border border-slate-100">
-                    <User size={32} />
+                <div className="text-center py-6 px-3 space-y-4">
+                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto border border-indigo-100 shadow-xs">
+                    <BedIcon size={28} />
                   </div>
-                  <p className="text-slate-500 text-xs font-medium mb-6 px-4">No resident currently assigned to this bed.</p>
-                  <button
-                    onClick={() => setQuickAssignOpen(true)}
-                    className="w-full py-3 bg-indigo-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
-                  >
-                    Quick Assign
-                  </button>
+                  <div>
+                    <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-md text-[8px] font-black uppercase tracking-widest inline-block mb-1.5">
+                      Vacant & Available
+                    </span>
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">No Resident Assigned</h4>
+                    <p className="text-[10px] font-medium text-slate-500 max-w-xs mx-auto mt-1 leading-relaxed">
+                      Assign an existing resident from your directory or onboard a new tenant to activate this bed space.
+                    </p>
+                  </div>
+                  <div className="pt-1">
+                    <button
+                      onClick={() => setQuickAssignOpen(true)}
+                      className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xs hover:bg-indigo-700 transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Plus size={14} /> Quick Assign Resident
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* History Card */}
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">History</h3>
+            {/* OCCUPANCY HISTORY CARD */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <History size={16} className="text-indigo-600" /> Occupancy History
+                </h3>
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{sortedHistory.length} Records</span>
               </div>
 
               <div className="space-y-2">
                 {sortedHistory.length === 0 ? (
-                  <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-2xl text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                    No history found
+                  <div className="text-center py-6 border-2 border-dashed border-slate-100 rounded-xl text-slate-400 text-[9px] font-black uppercase tracking-widest">
+                    No historical logs found
                   </div>
                 ) : (
                   sortedHistory.map((h, i) => (
-                    <div key={i} className="group p-3 rounded-2xl border border-slate-50 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all cursor-pointer" onClick={() => { setHistoryItem(h); setHistoryOpen(true); }}>
+                    <div
+                      key={i}
+                      className="group p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/20 transition-all cursor-pointer"
+                      onClick={() => { setHistoryItem(h); setHistoryOpen(true); }}
+                    >
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{h.tenantName}</div>
@@ -500,7 +542,7 @@ export default function BedDetail() {
                             {fmtShort(h.start)} — {h.end ? fmtShort(h.end) : 'Present'}
                           </div>
                         </div>
-                        <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-400 group-hover:translate-x-1 transition-all" />
+                        <ChevronRight size={14} className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     </div>
                   ))
@@ -509,32 +551,47 @@ export default function BedDetail() {
             </div>
           </div>
 
-          {/* Right Column: Ledger */}
+          {/* RIGHT COLUMN: FINANCIAL LEDGER & REVENUE COLLECTION (8 COLS) */}
           <div className="lg:col-span-8 space-y-6">
-            <div className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden">
-              <div className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/30">
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+              <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/40">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Financial Ledger</h3>
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Audit Trail & Revenue Collection</p>
+                  <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                    <CreditCard size={18} className="text-indigo-600" /> Financial Ledger
+                  </h3>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Audit Trail & Billing Collections</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={exportPaymentsCSV} className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-50 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200 shadow-sm">
-                    <Download size={12} /> CSV
+                  <button
+                    onClick={exportPaymentsCSV}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-slate-700 text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all border border-slate-200 shadow-xs cursor-pointer"
+                  >
+                    <Download size={13} /> CSV
                   </button>
-                  <button onClick={printPayments} className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-50 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all border border-slate-200 shadow-sm">
-                    <Printer size={12} /> Print
+                  <button
+                    onClick={printPayments}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-slate-700 text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all border border-slate-200 shadow-xs cursor-pointer"
+                  >
+                    <Printer size={13} /> Print
                   </button>
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-5 sm:p-6">
                 {!current || visiblePeriods.length === 0 ? (
-                  <div className="text-center py-20 border-2 border-dashed border-slate-100 rounded-2xl">
-                    <CreditCard size={40} className="mx-auto text-slate-200 mb-4" />
-                    <p className="text-slate-400 font-black uppercase text-[10px] tracking-widest">No billing periods active</p>
+                  <div className="text-center py-16 px-4 border-2 border-dashed border-slate-200/80 rounded-2xl bg-slate-50/50 space-y-3">
+                    <div className="w-14 h-14 bg-white text-slate-400 rounded-2xl flex items-center justify-center mx-auto border border-slate-200 shadow-xs">
+                      <CreditCard size={28} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">Financial Ledger Inactive</h4>
+                      <p className="text-[10px] font-medium text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
+                        Monthly rent tracking, payment ledger, and billing statements will activate automatically as soon as a resident is assigned to Bed {bed.bedName}.
+                      </p>
+                    </div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {visiblePeriods.map(p => {
                       const paid = payments[p.key]
                       const status = dueStatus(p, paid)
@@ -548,85 +605,82 @@ export default function BedDetail() {
                       }
 
                       return (
-                        <div key={p.key} className="group p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                              <div className={`w-12 h-12 rounded-xl border flex flex-col items-center justify-center ${toneStyles[status.tone]}`}>
-                                <div className="text-base font-black leading-none">{dayjs(p.from).format('DD')}</div>
-                                <div className="text-[8px] font-black uppercase tracking-widest mt-0.5">{dayjs(p.from).format('MMM')}</div>
+                        <div key={p.key} className="group p-4 rounded-xl border border-slate-200/80 hover:border-indigo-200 hover:shadow-xs transition-all bg-white">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="flex items-center gap-3.5">
+                              <div className={`w-11 h-11 rounded-xl border flex flex-col items-center justify-center shrink-0 ${toneStyles[status.tone]}`}>
+                                <div className="text-sm font-black leading-none">{dayjs(p.from).format('DD')}</div>
+                                <div className="text-[7px] font-black uppercase tracking-widest mt-0.5">{dayjs(p.from).format('MMM')}</div>
                               </div>
                               <div>
-                                <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{p.label}</h4>
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">
+                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">{p.label}</h4>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                                   {fmt(p.from, 'DD MMM')} — {fmt(p.to, 'DD MMM')}
                                 </p>
                               </div>
                             </div>
 
-                            <div className="flex flex-wrap items-center gap-6 md:justify-end flex-1">
-                              <div className="text-right">
-                                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</div>
-                                <div className={`inline-flex px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${toneStyles[status.tone]}`}>
+                            <div className="flex flex-wrap items-center gap-4 sm:gap-6 sm:justify-end flex-1">
+                              <div className="sm:text-right">
+                                <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Status</div>
+                                <div className={`inline-flex px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${toneStyles[status.tone]}`}>
                                   {status.label}
                                 </div>
                               </div>
 
-                              <div className="text-right">
-                                <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Collection</div>
-                                <div className="text-sm font-black text-slate-900">
-                                  ₹{paid ? paid.amountPaid : current.monthlyRent}
-                                  {paid?.pending > 0 && <span className="text-[9px] text-amber-500 ml-1">(-₹{paid.pending})</span>}
+                              <div className="sm:text-right">
+                                <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Collection</div>
+                                <div className="text-xs font-black text-slate-900">
+                                  ₹{(paid ? paid.amountPaid : current.monthlyRent).toLocaleString()}
+                                  {paid?.pending > 0 && <span className="text-[9px] text-amber-600 font-bold ml-1">(-₹{paid.pending})</span>}
                                 </div>
                               </div>
 
                               <div className="flex items-center gap-2">
-                                {!isVacated && !isFuture && (
+                                {paid ? (
                                   <>
-                                    {paid ? (
-                                      <>
-                                        <button
-                                          onClick={() => {
-                                            const receiptData = {
-                                              receipt: {
-                                                receiptNumber: generateTempReceiptNumber({ pgId: bed.pgId, periodKey: p.key }),
-                                                issuedAt: paid.paidAt,
-                                              },
-                                              pg: { name: bed.pgName || '—', address: bed.pgAddress || '—', phone: bed.pgPhone || '' },
-                                              owner: { name: bed.ownerName || '—' },
-                                              tenant: { name: current.name, mobile: current.mobileNumber },
-                                              bed: { roomName: bed.roomName, bedName: bed.bedName },
-                                              billing: {
-                                                period: { from: p.from, to: p.to },
-                                                amount: { paid: paid.amountPaid, inWords: `${numberToWords(paid.amountPaid)} only` },
-                                                payment: { mode: paid.modeOfPayment?.replace('_', ' ') || '-', paidAt: paid.paidAt },
-                                                remarks: paid.remarks,
-                                              },
-                                            }
-                                            printRentReceipt(receiptData)
-                                            setPrintedSlips(prev => ({ ...prev, [p.key]: true }))
-                                          }}
-                                          className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-2xl transition-all border border-slate-200 shadow-sm"
-                                          title="Print Receipt"
-                                        >
-                                          <Printer size={16} />
-                                        </button>
-                                        <button
-                                          onClick={() => handleEditPayment(p)}
-                                          className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-2xl transition-all border border-slate-200 shadow-sm"
-                                          title="Edit Payment"
-                                        >
-                                          <TrendingUp size={16} />
-                                        </button>
-                                      </>
-                                    ) : (
-                                      <button
-                                        onClick={() => { setActivePeriod(p); setPaymentModalOpen(true); }}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
-                                      >
-                                        Mark as Paid
-                                      </button>
-                                    )}
+                                    <button
+                                      onClick={() => {
+                                        const receiptData = {
+                                          receipt: {
+                                            receiptNumber: generateTempReceiptNumber({ pgId: bed.pgId, periodKey: p.key }),
+                                            issuedAt: paid.paidAt,
+                                          },
+                                          pg: { name: bed.pgName || '—', address: bed.pgAddress || '—', phone: bed.pgPhone || '' },
+                                          owner: { name: bed.ownerName || '—' },
+                                          tenant: { name: current.name, mobile: current.mobileNumber },
+                                          bed: { roomName: bed.roomName, bedName: bed.bedName },
+                                          billing: {
+                                            period: { from: p.from, to: p.to },
+                                            amount: { paid: paid.amountPaid, inWords: `${numberToWords(paid.amountPaid)} only` },
+                                            payment: { mode: paid.modeOfPayment || 'CASH', paidAt: paid.paidAt },
+                                            remarks: ''
+                                          }
+                                        }
+                                        printRentReceipt(receiptData)
+                                      }}
+                                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all border border-slate-200 cursor-pointer shadow-xs font-black text-[9px] uppercase tracking-wider"
+                                      title="Print Receipt"
+                                    >
+                                      <Printer size={13} /> Print
+                                    </button>
+                                    <button
+                                      onClick={() => handleEditPayment(p)}
+                                      className="px-3 py-1.5 bg-slate-100 text-slate-800 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-200 transition-colors shadow-xs cursor-pointer"
+                                    >
+                                      Edit
+                                    </button>
                                   </>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setActivePeriod(p)
+                                      setPaymentModalOpen(true)
+                                    }}
+                                    className="px-3 py-1.5 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer flex items-center gap-1"
+                                  >
+                                    <CreditCard size={13} /> Mark Paid
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -642,68 +696,50 @@ export default function BedDetail() {
         </div>
       </div>
 
-      <VacateTenantModal
-        open={vacateModalOpen}
-        tenant={current}
-        onClose={() => setVacateModalOpen(false)}
-        onSave={async ({ vacatingDate, reason }) => {
-          try {
-            await updateVacatingDate(current.id, { vacatingDate, reason })
-            const updated = await getBedDetails(bedId)
-            setBed(normalizeBed(updated))
-            toast.success('Vacating date updated')
-          } catch (e) {
-            toast.error('Failed to update vacating date')
-          } finally {
-            setVacateModalOpen(false)
-          }
-        }}
-      />
-
+      {/* MODALS */}
       <QuickAssignModal
         open={quickAssignOpen}
+        onClose={() => setQuickAssignOpen(false)}
+        bed={bed}
         tenants={tenants}
-        selectedTenant={selectedTenant}
-        onSelectTenant={setSelectedTenant}
-        onClose={() => {
-          setQuickAssignOpen(false)
-          setSelectedTenant(null)
-        }}
-        onAssign={async () => {
+        onAssignSuccess={async (selectedTenantId) => {
           try {
-            await assignTenantToBed(bed.id, selectedTenant.id)
-            const updated = await getBedDetails(bedId)
-            setBed(normalizeBed(updated))
-            toast.success('Tenant assigned successfully')
+            await assignTenantToBed({ bedId: bed.id, tenantId: selectedTenantId })
+            toast.success('Resident assigned successfully!')
             setQuickAssignOpen(false)
-            setSelectedTenant(null)
-          } catch (error) {
-            toast.error(error?.response?.data?.message || 'Assignment failed')
+            fetchBed(true)
+          } catch (err) {
+            toast.error('Failed to assign resident')
           }
+        }}
+        onAddNewTenant={() => {
+          setQuickAssignOpen(false)
+          setTenantModalOpen(true)
         }}
       />
 
       <TenantModal
         open={tenantModalOpen}
-        defaultRent={defaultRent}
         onClose={() => setTenantModalOpen(false)}
-        onSave={() => {
-          toast.success('Tenant assigned')
+        pgId={bed.pgId}
+        defaultBedId={bed.id}
+        onSuccess={() => {
           setTenantModalOpen(false)
+          fetchBed(true)
         }}
       />
 
       <PaymentModal
-        open={paymentModalOpen}
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
         period={activePeriod}
         defaultRent={defaultRent}
-        existingAdvance={firstAdvance}
-        onClose={() => setPaymentModalOpen(false)}
-        onSave={async payload => {
+        firstAdvance={firstAdvance}
+        onSave={async (payload) => {
           try {
             const requestBody = {
               paymentId: activePeriod?.__existing?.paymentId || null,
-              rentMonth: payload.rentMonth,
+              rentMonth: activePeriod?.key,
               rent: payload.rent,
               paidAmount: payload.paidAmount,
               advance: payload.advance,
@@ -712,30 +748,49 @@ export default function BedDetail() {
               paidDate: payload.paidDate,
               remarks: payload.remarks
             }
-            const res = await markRentAsPaid(current.id, requestBody)
+            await markRentAsPaid(current.id, requestBody)
             setPaymentModalOpen(false)
-            toast.success(res.message || 'Payment recorded')
+            toast.success('Payment recorded successfully!')
             fetchBed(true)
-          } catch (error) {
-            toast.error(error?.response?.data?.message || 'Payment failed')
+          } catch (err) {
+            toast.error('Failed to record payment')
           }
         }}
       />
 
       <HistoryDetailsModal
         open={historyOpen}
-        historyItem={historyItem}
-        paymentsForRange={payments}
-        defaultRent={defaultRent}
         onClose={() => setHistoryOpen(false)}
+        history={historyItem}
       />
 
       <ConfirmModal
-        open={!!confirm}
-        {...confirm}
+        open={Boolean(confirm)}
+        title={confirm?.title || ''}
+        message={confirm?.message || ''}
+        confirmText="Confirm"
         onCancel={() => setConfirm(null)}
+        onConfirm={() => {
+          confirm?.action()
+          setConfirm(null)
+        }}
+      />
+
+      <VacateTenantModal
+        open={vacateModalOpen}
+        onClose={() => setVacateModalOpen(false)}
+        currentDate={current?.end}
+        onSave={async (vacatingDate) => {
+          try {
+            await updateVacatingDate(current.id, vacatingDate)
+            toast.success('Vacating date updated successfully!')
+            setVacateModalOpen(false)
+            fetchBed(true)
+          } catch (err) {
+            toast.error('Failed to update vacating date')
+          }
+        }}
       />
     </div>
   )
 }
-

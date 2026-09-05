@@ -47,6 +47,7 @@ import bedAvailableImg from '../assets/bed_availabe.png'
 import bedOccupiedImg from '../assets/bed_occupied.png'
 import bedReservedImg from '../assets/bed_reserved.png'
 import bedDeletedImg from '../assets/bed_deleted.png'
+import CustomDropdown from '../components/CustomDropdown'
 
 // Preload assets for faster rendering
 const statusImages = {
@@ -89,13 +90,13 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
     bgClass = 'bg-indigo-600'
   }
   return (
-    <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-3 sm:gap-4 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
-      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
+    <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3 sm:gap-4 hover:shadow-sm transition-all cursor-default min-w-0">
+      <div className={`h-9 w-9 sm:h-10 sm:w-10 rounded-xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0 border border-slate-100`}>
         <Icon className="w-4 h-4 sm:w-5 h-5" />
       </div>
       <div className="min-w-0">
         <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
-        <div className="text-sm sm:text-lg font-black text-slate-900 leading-tight truncate">{value}</div>
+        <div className="text-sm sm:text-base font-black text-slate-900 leading-tight truncate">{value}</div>
       </div>
     </div>
   )
@@ -111,27 +112,32 @@ const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onT
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="bg-white rounded-[2.5rem] border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all flex flex-col h-full"
+      className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:border-indigo-200 hover:shadow-sm transition-all flex flex-col h-full"
     >
-      <div className="flex justify-between items-start mb-5">
+      <div className="flex justify-between items-start mb-4 pb-3 border-b border-slate-100">
         <div>
-          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">Room {room.number}</h4>
+          <h4 className="text-xs sm:text-sm font-black text-slate-900 uppercase tracking-tight flex items-center gap-1.5">
+            <DoorOpen size={16} className="text-indigo-600 shrink-0" />
+            Room {room.number}
+          </h4>
           <div className="flex gap-1.5 mt-2">
-            <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${room.ac ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+            <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${room.ac ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
               {room.ac ? 'AC' : 'Non-AC'}
             </span>
-            <span className="px-2 py-0.5 rounded-lg bg-slate-50 text-slate-500 text-[8px] font-black uppercase tracking-widest border border-slate-100">
+            <span className="px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 text-[8px] font-black uppercase tracking-widest border border-slate-200">
               {room.sharing} Sharing
             </span>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Occupancy</div>
-          <div className="text-xs font-black text-slate-900 mt-1 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">{occupiedCount}/{totalBedsCount}</div>
+          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Occupancy</span>
+          <span className="text-[10px] font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 block">
+            {occupiedCount}/{totalBedsCount} Beds
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2 mt-auto">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 mt-auto pt-2">
         <AnimatePresence mode="popLayout">
           {(room.beds || []).map(bed => (
             <Bed
@@ -150,9 +156,11 @@ const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onT
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onAddBed}
-          className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 transition-all group"
+          className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all group cursor-pointer"
+          title="Add Bed to Room"
         >
-          <Plus size={18} className="group-hover:scale-110 transition-transform" />
+          <Plus size={18} className="group-hover:scale-110 transition-transform mb-0.5" />
+          <span className="text-[7.5px] font-black uppercase tracking-wider">Add Bed</span>
         </motion.button>
       </div>
     </motion.div>
@@ -339,6 +347,27 @@ export default function PgDetail() {
   const [actionLoading, setActionLoading] = useState(false)
   const [actionSuccess, setActionSuccess] = useState(false)
 
+  const getNextBedName = (beds = []) => {
+    const activeBeds = beds.filter(b => !b.deleted)
+    if (activeBeds.length === 0) return 'B1'
+
+    let maxNum = 0
+    activeBeds.forEach(b => {
+      const name = b.name || ''
+      const match = name.match(/\d+/)
+      if (match) {
+        const num = parseInt(match[0], 10)
+        if (num > maxNum) maxNum = num
+      }
+    })
+
+    if (maxNum > 0) {
+      return `B${maxNum + 1}`
+    }
+
+    return `B${activeBeds.length + 1}`
+  }
+
   const updateRoomCount = (count) => {
     const n = Number(count)
     if (!Number.isFinite(n) || n <= 0) return
@@ -515,34 +544,36 @@ export default function PgDetail() {
         canonical={`/pg/${id}`}
       />
       {/* Header Section */}
-      <div className="bg-white border-b border-slate-200 pt-2 pb-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-white border-b border-slate-200/80 pt-4 pb-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <PageHeader
             title={pgDisplayName}
-            subtitle={typeof pg.address === 'string' ? pg.address : pg.address?.address || 'Beds Management'}
+            subtitle={typeof pg.address === 'string' ? pg.address : pg.address?.address || 'Beds & Layout Management'}
             backButton={
-              <button onClick={() => navigate(-1)} className="p-3 bg-slate-50 hover:bg-slate-100 rounded-2xl text-slate-400 transition-all border border-slate-100 mr-2">
-                <ArrowLeft size={18} strokeWidth={2.5} />
+              <button onClick={() => navigate(-1)} className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-white transition-all shrink-0 cursor-pointer shadow-xs active:scale-95 mr-2">
+                <ArrowLeft size={18} />
               </button>
             }
           >
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              <TopStat label="Floors" value={pg.floors?.length || 0} icon={Layers} />
-              <TopStat label="Rooms" value={totalRoomsCount} icon={DoorOpen} />
-              <TopStat label="Beds" value={totalBeds} icon={BedIcon} />
-              <TopStat label="Occupancy" value={`${totalBeds > 0 ? Math.round((filledBedsCount/totalBeds)*100) : 0}%`} icon={TrendingUp} isAccent />
-              <button
-                onClick={() => setShowAddFloor(true)}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-lg shadow-slate-100 h-[64px] ml-2"
-              >
-                <Plus size={14} /> Add Floor
-              </button>
-            </div>
+            <button
+              onClick={() => setShowAddFloor(true)}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-xs cursor-pointer"
+            >
+              <Plus size={14} /> Add Floor
+            </button>
           </PageHeader>
+
+          {/* Top Executive Stats Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4">
+            <TopStat label="Floors Count" value={pg.floors?.length || 0} icon={Layers} colorClass="text-indigo-600" bgClass="bg-indigo-50" />
+            <TopStat label="Rooms Count" value={totalRoomsCount} icon={DoorOpen} colorClass="text-purple-600" bgClass="bg-purple-50" />
+            <TopStat label="Active Beds" value={totalBeds} icon={BedIcon} colorClass="text-cyan-600" bgClass="bg-cyan-50" />
+            <TopStat label="Occupancy Rate" value={`${totalBeds > 0 ? Math.round((filledBedsCount/totalBeds)*100) : 0}%`} icon={TrendingUp} isAccent />
+          </div>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <div className="flex flex-col gap-6">
           <Toolbar filters={filters} setFilters={setFilters} />
 
@@ -574,25 +605,31 @@ export default function PgDetail() {
                       key={f.id}
                       initial={{ opacity: 0, scale: 0.98 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden"
+                      className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden"
                     >
                       {/* Floor Header */}
                       <div
                         onClick={() => setOpenFloors(prev => ({ ...prev, [floorKey]: !isOpen }))}
-                        className="p-3 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between cursor-pointer hover:bg-slate-800 transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="px-3 h-9 bg-slate-900 text-white rounded-lg flex items-center justify-center text-sm font-black shadow-sm">
-                            {f.number}
+                        <div className="flex items-center gap-3.5">
+                          <div className="h-9 px-3 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-xs font-black uppercase tracking-wider shadow-xs">
+                            Floor {f.number}
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                              {f.rooms.length} Units • {floorBedsCount} Active Beds
+                            <h3 className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2">
+                              {f.name || `Floor ${f.number}`}
+                            </h3>
+                            <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mt-0.5">
+                              {f.rooms.length} Rooms • {floorBedsCount} Active Beds
                             </p>
                           </div>
                         </div>
-                        <div className={`p-1.5 rounded-lg bg-slate-50 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                          <ChevronDown size={16} />
+
+                        <div className="flex items-center gap-3">
+                          <div className={`p-1.5 rounded-lg bg-white/10 text-white transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                            <ChevronDown size={16} />
+                          </div>
                         </div>
                       </div>
 
@@ -605,18 +642,23 @@ export default function PgDetail() {
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
-                            <div className="p-6 pt-0 border-t border-slate-50 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6 mt-6">
+                            <div className="p-5 sm:p-6 bg-slate-50/50 border-t border-slate-200/80 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                               <AnimatePresence mode="popLayout">
                                 {f.rooms.map((r) => (
                                   <RoomCard
                                     key={r.id}
                                     room={r}
-                                    onAddBed={() => setShowAddBed({
-                                      floorId: f.id,
-                                      roomId: r.id,
-                                      floorNumber: f.number,
-                                      roomNumber: r.number,
-                                    })}
+                                    onAddBed={() => {
+                                       const autoBedName = getNextBedName(r.beds || [])
+                                       setBedForm({ id: autoBedName })
+                                       setFormError('')
+                                       setShowAddBed({
+                                         floorId: f.id,
+                                         roomId: r.id,
+                                         floorNumber: f.number,
+                                         roomNumber: r.number,
+                                       })
+                                     }}
                                     onDeleteBed={(bed) => {
                                       setActionSuccess(false)
                                       setActionLoading(false)
@@ -669,135 +711,220 @@ export default function PgDetail() {
         </div>
       </div>
 
-      {/* Modal - Add Floor */}
+      {/* Right Slide-Over Drawer - Add New Floor */}
       <AnimatePresence>
         {showAddFloor && (
-          <Modal onClose={handleCloseAddFloor} title="New Floor Construction" icon={<Layers />}>
-            {floorSuccess ? (
-              <div className="text-center py-12 px-6">
-                <div className="w-16 h-16 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-emerald-100">
-                  <CheckCircle2 size={32} />
-                </div>
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Expansion Successful</h3>
-                <p className="text-slate-500 text-sm font-medium mt-2 mb-8">The new floor has been added to your inventory.</p>
-                <button
-                  className="px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-slate-100 w-full"
-                  onClick={() => { resetFloorForm(); setShowAddFloor(false); }}
-                >
-                  Return to Dashboard
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormInput label="Floor Name/ID" value={floorForm.name} onChange={(v) => setFloorForm(prev => ({ ...prev, name: v }))} placeholder="e.g. Ground, 1st, 2nd" required />
-                  <FormInput label="Room Count" type="number" value={floorForm.roomCount || ''} onChange={updateRoomCount} placeholder="0" required />
-                </div>
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={handleCloseAddFloor}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            />
 
-                <div className="space-y-4 max-h-[45vh] overflow-y-auto pr-2 custom-scrollbar pt-2">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="h-[1px] flex-1 bg-slate-100" />
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Configure Rooms</span>
-                    <div className="h-[1px] flex-1 bg-slate-100" />
+            {/* Slide-Over Drawer Panel */}
+            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                className="w-screen max-w-md bg-white shadow-2xl flex flex-col border-l border-slate-200 relative z-10"
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Drawer Header */}
+                <div className="px-6 py-5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Layers size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black uppercase tracking-tight text-white truncate">
+                        Add New Floor
+                      </h3>
+                      <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mt-0.5 truncate">
+                        Construct and configure new floor unit
+                      </p>
+                    </div>
                   </div>
+                  <button
+                    onClick={handleCloseAddFloor}
+                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0 ml-2"
+                    title="Close Drawer"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
 
-                  {floorForm.rooms.map((room, idx) => (
-                    <div key={idx} className="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Unit {idx + 1}</span>
-                        <label className="flex items-center gap-2 cursor-pointer group">
-                          <input
-                            type="checkbox"
-                            className="w-4 h-4 rounded border-slate-200 text-indigo-600 focus:ring-indigo-500/20"
-                            checked={room.ac}
-                            onChange={(e) => {
-                              const rooms = [...floorForm.rooms]
-                              rooms[idx].ac = e.target.checked
-                              setFloorForm(prev => ({ ...prev, rooms }))
-                            }}
-                          />
-                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">AC Installed</span>
-                        </label>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          placeholder="Room Name"
-                          value={room.name}
-                          onChange={(e) => {
-                            const rooms = [...floorForm.rooms]
-                            rooms[idx].name = e.target.value
-                            setFloorForm(prev => ({ ...prev, rooms }))
-                          }}
-                          className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 bg-white"
+                {/* Drawer Body Content */}
+                {floorSuccess ? (
+                  <div className="flex-1 p-6 flex flex-col items-center justify-center text-center my-auto">
+                    <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-emerald-100 shadow-xs">
+                      <CheckCircle2 size={32} />
+                    </div>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight">Floor Established Successfully</h3>
+                    <p className="text-[10px] font-medium text-slate-500 max-w-xs mx-auto mt-1 mb-8 leading-relaxed">
+                      The new floor layout and rooms have been added to your property inventory.
+                    </p>
+                    <button
+                      className="w-full py-3 bg-slate-900 text-white rounded-xl text-[9.5px] font-black uppercase tracking-widest shadow-xs hover:bg-indigo-600 transition-all cursor-pointer"
+                      onClick={() => { resetFloorForm(); setShowAddFloor(false); }}
+                    >
+                      Return to Property Dashboard
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/30">
+                    
+                    {/* Floor Basic Config */}
+                    <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight border-b border-slate-100 pb-3">
+                        Floor Specification
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormInput
+                          label="Floor Name/ID"
+                          value={floorForm.name}
+                          onChange={(v) => setFloorForm(prev => ({ ...prev, name: v }))}
+                          placeholder="e.g. 1st Floor, 2nd Floor"
+                          required
                         />
-                        <div className="relative">
-                          <input
-                            type="number"
-                            min={1}
-                            value={room.sharing}
-                            onChange={(e) => {
-                              const rooms = [...floorForm.rooms]
-                              rooms[idx].sharing = Number(e.target.value)
-                              setFloorForm(prev => ({ ...prev, rooms }))
-                            }}
-                            className="w-full px-4 py-2 rounded-2xl border border-slate-200 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-black uppercase pointer-events-none tracking-tighter">Beds</span>
-                        </div>
+                        <FormInput
+                          label="Room Count"
+                          type="number"
+                          value={floorForm.roomCount || ''}
+                          onChange={updateRoomCount}
+                          placeholder="0"
+                          required
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                {formError && (
-                  <div className="p-3 rounded-xl border border-rose-100 bg-rose-50 text-[10px] font-black uppercase text-rose-600 tracking-widest">{formError}</div>
+                    {/* Room Configuration Section */}
+                    {floorForm.rooms.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            Room Configuration ({floorForm.rooms.length} Rooms)
+                          </span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {floorForm.rooms.map((room, idx) => (
+                            <div key={idx} className="p-4 rounded-xl border border-slate-200/80 bg-white shadow-xs space-y-3">
+                              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Room #{idx + 1}</span>
+                                <label className="flex items-center gap-2 cursor-pointer group">
+                                  <input
+                                    type="checkbox"
+                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20"
+                                    checked={room.ac}
+                                    onChange={(e) => {
+                                      const rooms = [...floorForm.rooms]
+                                      rooms[idx].ac = e.target.checked
+                                      setFloorForm(prev => ({ ...prev, rooms }))
+                                    }}
+                                  />
+                                  <span className="text-[9.5px] font-black text-slate-600 uppercase tracking-widest group-hover:text-indigo-600 transition-colors">AC Installed</span>
+                                </label>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                  <label className="block text-[8.5px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Room Name</label>
+                                  <input
+                                    placeholder="e.g. 101"
+                                    value={room.name}
+                                    onChange={(e) => {
+                                      const rooms = [...floorForm.rooms]
+                                      rooms[idx].name = e.target.value
+                                      setFloorForm(prev => ({ ...prev, rooms }))
+                                    }}
+                                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[8.5px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Beds Capacity</label>
+                                  <div className="relative">
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      value={room.sharing}
+                                      onChange={(e) => {
+                                        const rooms = [...floorForm.rooms]
+                                        rooms[idx].sharing = Number(e.target.value)
+                                        setFloorForm(prev => ({ ...prev, rooms }))
+                                      }}
+                                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    />
+                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-black uppercase pointer-events-none tracking-tighter">Beds</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {formError && (
+                      <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50 text-[10px] font-black uppercase text-rose-600 tracking-widest">
+                        {formError}
+                      </div>
+                    )}
+                  </div>
                 )}
 
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <button
-                    className="flex-1 px-4 py-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-slate-600 transition-colors"
-                    onClick={handleCloseAddFloor}
-                  >
-                    Discard
-                  </button>
-                  <button
-                    disabled={creatingFloor || !floorForm.name || floorForm.roomCount <= 0}
-                    className="flex-[2] px-4 py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50"
-                    onClick={async () => {
-                      try {
-                        setCreatingFloor(true)
-                        const payload = {
-                          pgId: id,
-                          floorName: floorForm.name.trim(),
-                          roomsSize: floorForm.rooms.length,
-                          roomsRequests: floorForm.rooms.map(r => ({
-                            roomName: r.name,
-                            roomType: r.ac ? 'AC' : 'NON AC',
-                            sharing: r.sharing,
-                            beds: r.sharing,
-                          })),
+                {/* Drawer Fixed Footer Bar */}
+                {!floorSuccess && (
+                  <div className="p-4 bg-white border-t border-slate-200/80 shrink-0 flex items-center justify-between gap-3 shadow-lg">
+                    <button
+                      className="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-[9.5px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer text-center"
+                      onClick={handleCloseAddFloor}
+                    >
+                      Discard
+                    </button>
+                    <button
+                      disabled={creatingFloor || !floorForm.name || floorForm.roomCount <= 0}
+                      className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl text-[9.5px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all disabled:opacity-40 shadow-xs active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                      onClick={async () => {
+                        try {
+                          setCreatingFloor(true)
+                          const payload = {
+                            pgId: id,
+                            floorName: floorForm.name.trim(),
+                            roomsSize: floorForm.rooms.length,
+                            roomsRequests: floorForm.rooms.map(r => ({
+                              roomName: r.name,
+                              roomType: r.ac ? 'AC' : 'NON AC',
+                              sharing: r.sharing,
+                              beds: r.sharing,
+                            })),
+                          }
+                          const savedFloorResponse = await createFloor(payload)
+                          const normalizedFloor = normalizeFloorsFromBE([savedFloorResponse])[0]
+                          setPg(prev => ({
+                            ...prev,
+                            floors: [...(prev.floors || []), normalizedFloor],
+                          }))
+                          setFloorSuccess(true)
+                          toast.success('Floor added successfully')
+                        } catch (err) {
+                          setFormError(err?.response?.data?.message || 'Failed to save floor. Please try again.')
+                        } finally {
+                          setCreatingFloor(false)
                         }
-                        const savedFloorResponse = await createFloor(payload)
-                        const normalizedFloor = normalizeFloorsFromBE([savedFloorResponse])[0]
-                        setPg(prev => ({
-                          ...prev,
-                          floors: [...(prev.floors || []), normalizedFloor],
-                        }))
-                        setFloorSuccess(true)
-                        toast.success('Floor added successfully')
-                      } catch (err) {
-                        setFormError(err?.response?.data?.message || 'Failed to save floor. Please try again.')
-                      } finally {
-                        setCreatingFloor(false)
-                      }
-                    }}
-                  >
-                    {creatingFloor ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Establish Floor'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </Modal>
+                      }}
+                    >
+                      {creatingFloor ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : 'Establish Floor'}
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          </div>
         )}
       </AnimatePresence>
 
@@ -1009,137 +1136,204 @@ export default function PgDetail() {
         )}
       </AnimatePresence>
 
-      {/* Modal - Transfer Bed Asset */}
+      {/* Right Slide-Over Drawer - Transfer Bed Asset */}
       <AnimatePresence>
         {transferBedTarget && (
-          <Modal onClose={() => setTransferBedTarget(null)} title="Transfer Bed Asset" icon={<ArrowRightLeft />}>
-            <div className="space-y-6">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Current Asset Location</p>
-                <div className="text-xs font-black text-slate-900 uppercase">
-                  {transferBedTarget.bedName} • {transferBedTarget.floorNumber} • Room {transferBedTarget.roomNumber}
-                </div>
-              </div>
+          <div className="fixed inset-0 z-50 overflow-hidden">
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setTransferBedTarget(null)}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            />
 
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Floor</label>
-                  <select
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 mt-1.5"
-                    onChange={(e) => {
-                      const floorId = e.target.value;
-                      setTransferForm(prev => ({ ...prev, targetFloorId: floorId, targetRoomId: '' }));
-                    }}
-                    value={transferForm.targetFloorId || ''}
-                  >
-                    <option value="">Select Floor</option>
-                    {pg.floors.map(f => (
-                      <option key={f.id} value={f.id}>{f.number}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {transferForm.targetFloorId && (
-                  <div>
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Room</label>
-                    <select
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 text-sm font-bold text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 mt-1.5"
-                      onChange={(e) => setTransferForm(prev => ({ ...prev, targetRoomId: e.target.value }))}
-                      value={transferForm.targetRoomId || ''}
-                      required
-                    >
-                      <option value="">Select Room</option>
-                      {pg.floors.find(f => f.id === transferForm.targetFloorId)?.rooms.map(r => (
-                        <option key={r.id} value={r.id}>Room {r.number}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <FormInput
-                  label="New Bed Name"
-                  value={transferForm.newBedName}
-                  onChange={(v) => setTransferForm(prev => ({ ...prev, newBedName: v }))}
-                  placeholder="e.g. B1"
-                  required
-                />
-
-                <FormInput
-                  label="Transfer Reason"
-                  value={transferForm.reason}
-                  onChange={(v) => setTransferForm(prev => ({ ...prev, reason: v }))}
-                  placeholder="e.g. Room maintenance"
-                />
-              </div>
-
-              {formError && (
-                <div className="p-3 rounded-xl border border-rose-100 bg-rose-50 text-[10px] font-black uppercase text-rose-600 tracking-widest">
-                  {formError}
-                </div>
-              )}
-
-              <button
-                disabled={actionLoading || !transferForm.targetRoomId || !transferForm.newBedName}
-                className="w-full px-4 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-slate-200 disabled:opacity-50"
-                onClick={async () => {
-                  try {
-                    setActionLoading(true);
-                    const payload = {
-                      targetRoomId: transferForm.targetRoomId,
-                      newBedName: transferForm.newBedName,
-                      reason: transferForm.reason
-                    };
-                    await transferBed(transferBedTarget.bedId, payload);
-
-                    setPg(prev => {
-                      let bedToMove = null;
-                      const floorsAfterRemoval = prev.floors.map(f => {
-                        if (f.id === transferBedTarget.floorId) {
-                          const roomsAfterRemoval = f.rooms.map(r => {
-                            if (r.id === transferBedTarget.roomId) {
-                              bedToMove = r.beds.find(b => b.id === transferBedTarget.bedId);
-                              return { ...r, beds: r.beds.filter(b => b.id !== transferBedTarget.bedId) };
-                            }
-                            return r;
-                          });
-                          return { ...f, rooms: roomsAfterRemoval };
-                        }
-                        return f;
-                      });
-
-                      if (!bedToMove) return prev;
-
-                      const updatedBed = { ...bedToMove, name: transferForm.newBedName };
-
-                      const floorsAfterTransfer = floorsAfterRemoval.map(f => {
-                        if (f.id === transferForm.targetFloorId) {
-                          const roomsAfterTransfer = f.rooms.map(r => {
-                            if (r.id === transferForm.targetRoomId) {
-                              return { ...r, beds: [...(r.beds || []), updatedBed] };
-                            }
-                            return r;
-                          });
-                          return { ...f, rooms: roomsAfterTransfer };
-                        }
-                        return f;
-                      });
-
-                      return { ...prev, floors: floorsAfterTransfer };
-                    });
-
-                    toast.success('Bed asset transferred successfully');
-                    setTransferBedTarget(null);
-                  } catch (err) {
-                    setFormError(err?.response?.data?.message || 'Failed to transfer bed');
-                  } finally {
-                    setActionLoading(false);
-                  }
-                }}
+            {/* Slide-Over Drawer Panel */}
+            <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                className="w-screen max-w-md bg-white shadow-2xl flex flex-col border-l border-slate-200 relative z-10"
+                onClick={e => e.stopPropagation()}
               >
-                {actionLoading ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Establish Transfer'}
-              </button>
+                {/* Drawer Header */}
+                <div className="px-6 py-5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <ArrowRightLeft size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black uppercase tracking-tight text-white truncate">
+                        Transfer Bed Asset
+                      </h3>
+                      <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mt-0.5 truncate">
+                        Relocate bed space to another room
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setTransferBedTarget(null)}
+                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0 ml-2"
+                    title="Close Drawer"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
+
+                {/* Drawer Body Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-50/30">
+                  
+                  {/* Current Location Box */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs space-y-1.5">
+                    <div className="flex items-center gap-2 text-[9px] font-black text-indigo-600 uppercase tracking-widest">
+                      <BedIcon size={14} />
+                      <span>Current Asset Location</span>
+                    </div>
+                    <div className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                      Bed {transferBedTarget.bedName} • {transferBedTarget.floorNumber} • Room {transferBedTarget.roomNumber}
+                    </div>
+                  </div>
+
+                  {/* Form Selectors & Inputs */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight border-b border-slate-100 pb-3">
+                      Target Relocation Details
+                    </h4>
+
+                    <div>
+                      <CustomDropdown
+                        label="Target Floor"
+                        value={transferForm.targetFloorId || ''}
+                        options={pg.floors.map(f => ({
+                          id: f.id,
+                          label: String(f.number).toUpperCase()
+                        }))}
+                        onChange={(floorId) => {
+                          setTransferForm(prev => ({ ...prev, targetFloorId: floorId, targetRoomId: '' }));
+                        }}
+                        icon={Building2}
+                        className="w-full"
+                        labelBg="bg-white"
+                      />
+                    </div>
+
+                    {transferForm.targetFloorId && (
+                      <div>
+                        <CustomDropdown
+                          label="Target Room"
+                          value={transferForm.targetRoomId || ''}
+                          options={(pg.floors.find(f => f.id === transferForm.targetFloorId)?.rooms || []).map(r => ({
+                            id: r.id,
+                            label: `ROOM ${String(r.number).toUpperCase()}`
+                          }))}
+                          onChange={(roomId) => {
+                            setTransferForm(prev => ({ ...prev, targetRoomId: roomId }));
+                          }}
+                          icon={Home}
+                          className="w-full"
+                          labelBg="bg-white"
+                        />
+                      </div>
+                    )}
+
+                    <FormInput
+                      label="New Bed Name"
+                      value={transferForm.newBedName}
+                      onChange={(v) => setTransferForm(prev => ({ ...prev, newBedName: v }))}
+                      placeholder="e.g. B1"
+                      required
+                    />
+
+                    <FormInput
+                      label="Transfer Reason"
+                      value={transferForm.reason}
+                      onChange={(v) => setTransferForm(prev => ({ ...prev, reason: v }))}
+                      placeholder="e.g. Room maintenance, relocation"
+                    />
+                  </div>
+
+                  {formError && (
+                    <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50 text-[10px] font-black uppercase text-rose-600 tracking-widest">
+                      {formError}
+                    </div>
+                  )}
+                </div>
+
+                {/* Drawer Fixed Footer Bar */}
+                <div className="p-4 bg-white border-t border-slate-200/80 shrink-0 flex items-center justify-between gap-3 shadow-lg">
+                  <button
+                    onClick={() => setTransferBedTarget(null)}
+                    className="flex-1 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-[9.5px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all cursor-pointer text-center"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={actionLoading || !transferForm.targetRoomId || !transferForm.newBedName}
+                    className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl text-[9.5px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all disabled:opacity-40 shadow-xs active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer text-center"
+                    onClick={async () => {
+                      try {
+                        setActionLoading(true);
+                        const payload = {
+                          targetRoomId: transferForm.targetRoomId,
+                          newBedName: transferForm.newBedName,
+                          reason: transferForm.reason
+                        };
+                        await transferBed(transferBedTarget.bedId, payload);
+
+                        setPg(prev => {
+                          let bedToMove = null;
+                          const floorsAfterRemoval = prev.floors.map(f => {
+                            if (f.id === transferBedTarget.floorId) {
+                              const roomsAfterRemoval = f.rooms.map(r => {
+                                if (r.id === transferBedTarget.roomId) {
+                                  bedToMove = r.beds.find(b => b.id === transferBedTarget.bedId);
+                                  return { ...r, beds: r.beds.filter(b => b.id !== transferBedTarget.bedId) };
+                                }
+                                return r;
+                              });
+                              return { ...f, rooms: roomsAfterRemoval };
+                            }
+                            return f;
+                          });
+
+                          if (!bedToMove) return prev;
+
+                          const updatedBed = { ...bedToMove, name: transferForm.newBedName };
+
+                          const floorsAfterTransfer = floorsAfterRemoval.map(f => {
+                            if (f.id === transferForm.targetFloorId) {
+                              const roomsAfterTransfer = f.rooms.map(r => {
+                                if (r.id === transferForm.targetRoomId) {
+                                  return { ...r, beds: [...(r.beds || []), updatedBed] };
+                                }
+                                return r;
+                              });
+                              return { ...f, rooms: roomsAfterTransfer };
+                            }
+                            return f;
+                          });
+
+                          return { ...prev, floors: floorsAfterTransfer };
+                        });
+
+                        toast.success('Bed asset transferred successfully');
+                        setTransferBedTarget(null);
+                      } catch (err) {
+                        setFormError(err?.response?.data?.message || 'Failed to transfer bed');
+                      } finally {
+                        setActionLoading(false);
+                      }
+                    }}
+                  >
+                    {actionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mx-auto" /> : 'Establish Transfer'}
+                  </button>
+                </div>
+              </motion.div>
             </div>
-          </Modal>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -67,7 +67,6 @@ export const sampleData = {
       id: 'pg1',
       ownerId: 'o1',
       status: 'approved',
-      ownerId: 'o1',
       name: 'Bliss mens PG',
       address: 'MG Road, City',
       floors: [
@@ -275,7 +274,6 @@ export const sampleData = {
       id: 'pg2', // fixed duplicate id
       ownerId: 'o2',
       status: 'pending',
-      ownerId: 'o2',
       name: 'Bliss womens PG',
       address: 'MG Road, City',
       floors: [
