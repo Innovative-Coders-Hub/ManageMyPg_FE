@@ -1,4 +1,5 @@
 import api from './api'
+import { compressImage } from '../components/utills/imageCompressor'
 
 // ---------- PROMOTIONS & OFFERS API ----------
 
@@ -60,8 +61,9 @@ export const getActivePromotionsForPg = async (pgId) => {
 
 // 8. Upload Promotion Banner Image to Server
 export const uploadPromotionBannerApi = async (file) => {
+  const compressed = await compressImage(file, { maxWidth: 1400, maxHeight: 800, quality: 0.8 })
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('file', compressed)
   const res = await api.post('/mmp/promotions/banner/upload', formData)
   return res.data?.data?.bannerUrl
 }
