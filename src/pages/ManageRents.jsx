@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import SEO from '../components/SEO'
 import {
@@ -27,7 +28,7 @@ import {
   CreditCard,
   Check
 } from 'lucide-react'
-import { getAllPgs, getPgRentStatus } from '../api/ownerAuth'
+import { getAllPgs, getPgRentStatus, getAllTenants, getTenantDetails } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
 import CustomDropdown from '../components/CustomDropdown'
 
@@ -39,6 +40,12 @@ const formatDate = (dateStr) => {
   const date = new Date(dateStr)
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
 }
+
+const WhatsAppIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662a11.87 11.87 0 005.71 1.454h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413" />
+  </svg>
+)
 
 const TenantAvatar = ({ name, profileImageUrl, size = "w-11 h-11", fontSize = "text-sm" }) => {
   const [imageError, setImageError] = useState(false)
@@ -131,6 +138,7 @@ function FilterTab({ label, count, active, onClick, color = 'indigo' }) {
 ===================================================== */
 export default function ManageRents() {
   const navigate = useNavigate()
+  const { activePgId, setActivePgId, setActiveTenantId } = useAppScope()
   const [pgs, setPgs] = useState([])
   const [selectedPg, setSelectedPg] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -162,18 +170,43 @@ export default function ManageRents() {
       const data = await getAllPgs()
       setPgs(data || [])
       if (data && data.length > 0) {
-        setSelectedPg(data[0])
+        const found = data.find(p => p.id === activePgId)
+        const target = found || data[0]
+        setSelectedPg(target)
+        if (!activePgId || activePgId !== target.id) {
+          setActivePgId(target.id)
+        }
       }
     } catch (err) {
       toast.error('Failed to load properties')
     }
   }
 
+  const [tenantPhoneMap, setTenantPhoneMap] = useState({})
+
   useEffect(() => {
     if (selectedPg) {
       fetchRentStatus()
+      fetchTenantPhoneMap()
     }
   }, [selectedPg, month, year])
+
+  const fetchTenantPhoneMap = async () => {
+    if (!selectedPg?.id) return
+    try {
+      const tenants = await getAllTenants(selectedPg.id)
+      const map = {}
+      if (Array.isArray(tenants)) {
+        tenants.forEach(t => {
+          if (t.id && t.mobileNumber) map[t.id] = t.mobileNumber
+          if (t.name && t.mobileNumber) map[t.name.toLowerCase().trim()] = t.mobileNumber
+        })
+      }
+      setTenantPhoneMap(map)
+    } catch (err) {
+      console.error('Failed to fetch tenants for phone lookup', err)
+    }
+  }
 
   const fetchRentStatus = async () => {
     setLoading(true)
@@ -256,6 +289,57 @@ export default function ManageRents() {
     toast.success('Report exported as CSV')
   }
 
+  const handleSendWhatsAppReminder = async (e, item) => {
+    e.stopPropagation()
+
+    let rawPhone = item.mobileNumber || item.phone || item.mobile || item.contactNumber || item.tenantMobile || item.tenantPhone || ''
+
+    const tenantId = item.id || item.tenantId
+    if (!rawPhone && tenantId) {
+      rawPhone = tenantPhoneMap[tenantId] || (item.tenantName ? tenantPhoneMap[item.tenantName.toLowerCase().trim()] : '')
+    }
+
+    if (!rawPhone && tenantId) {
+      try {
+        const tenantDetails = await getTenantDetails(tenantId)
+        if (tenantDetails && (tenantDetails.mobileNumber || tenantDetails.phone)) {
+          rawPhone = tenantDetails.mobileNumber || tenantDetails.phone
+        }
+      } catch (err) {
+        console.error('Could not fetch tenant phone details', err)
+      }
+    }
+
+    let cleanedPhone = rawPhone ? String(rawPhone).replace(/\D/g, '') : ''
+    if (cleanedPhone.length === 10) {
+      cleanedPhone = '91' + cleanedPhone
+    }
+
+    const tenantName = item.tenantName || 'Tenant'
+    const propertyName = selectedPg?.pgName || 'our PG'
+    const monthName = months.find(m => m.value === month)?.label || ''
+    const monthlyRent = item.monthlyRent ? `₹${item.monthlyRent.toLocaleString()}` : '₹0'
+    const paidAmount = item.paidAmount ? `₹${item.paidAmount.toLocaleString()}` : '₹0'
+    const pendingAmount = item.pendingAmount ? `₹${item.pendingAmount.toLocaleString()}` : '₹0'
+
+    const message = `Hi ${tenantName},\n\nThis is a gentle reminder regarding your rent payment for *${propertyName}* for *${monthName} ${year}*.\n\n` +
+      `• *Bed Details*: ${item.bedDetails || 'N/A'}\n` +
+      `• *Monthly Rent*: ${monthlyRent}\n` +
+      `• *Paid Amount*: ${paidAmount}\n` +
+      `• *Outstanding Balance*: ${pendingAmount}\n\n` +
+      `Kindly clear the pending balance at your earliest convenience. If you have already made the payment, please ignore this message or share the receipt.\n\nThank you!`
+
+    if (!cleanedPhone) {
+      toast.error(`Phone number not found for ${tenantName}`)
+      const fallbackUrl = `https://wa.me/?text=${encodeURIComponent(message)}`
+      window.open(fallbackUrl, '_blank')
+      return
+    }
+
+    const whatsappUrl = `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(message)}`
+    window.open(whatsappUrl, '_blank')
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-16">
       <SEO
@@ -323,7 +407,11 @@ export default function ManageRents() {
               label="Property Scope"
               value={selectedPg?.id || ''}
               options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
-              onChange={(val) => setSelectedPg(pgs.find(p => p.id === val))}
+              onChange={(val) => {
+                const found = pgs.find(p => p.id === val)
+                setSelectedPg(found)
+                if (val) setActivePgId(val)
+              }}
               icon={Building2}
               className="w-full"
             />
@@ -478,7 +566,7 @@ export default function ManageRents() {
                 <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-900">
                   <AnimatePresence mode="popLayout">
                     {filteredData.map((item) => (
-                      <RentTableRow key={item.id} item={item} navigate={navigate} />
+                      <RentTableRow key={item.id} item={item} navigate={navigate} onSendReminder={handleSendWhatsAppReminder} />
                     ))}
                   </AnimatePresence>
                 </tbody>
@@ -491,7 +579,7 @@ export default function ManageRents() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence mode="popLayout">
               {filteredData.map((item) => (
-                <RentCard key={item.id} item={item} navigate={navigate} />
+                <RentCard key={item.id} item={item} navigate={navigate} onSendReminder={handleSendWhatsAppReminder} />
               ))}
             </AnimatePresence>
           </div>
@@ -504,7 +592,7 @@ export default function ManageRents() {
 /* =====================================================
    RENT TABLE ROW COMPONENT
 ===================================================== */
-const RentTableRow = React.forwardRef(({ item, navigate }, ref) => {
+const RentTableRow = React.forwardRef(({ item, navigate, onSendReminder, onOpenTenant }, ref) => {
   const statusConfig = {
     PAID: { label: 'Paid', color: 'emerald', icon: <CheckCircle2 size={12} /> },
     PARTIALLY_PAID: { label: 'Partial', color: 'amber', icon: <AlertCircle size={12} /> },
@@ -529,7 +617,7 @@ const RentTableRow = React.forwardRef(({ item, navigate }, ref) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="hover:bg-slate-50/70 transition-all cursor-pointer group"
-      onClick={() => navigate(`/tenant/${item.tenantId}`)}
+      onClick={() => onOpenTenant ? onOpenTenant(item.tenantId) : navigate('/tenant-details')}
     >
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center gap-3 text-left">
@@ -570,8 +658,19 @@ const RentTableRow = React.forwardRef(({ item, navigate }, ref) => {
         </div>
       </td>
       <td className="px-6 py-4 text-right whitespace-nowrap">
-        <div className="inline-flex p-2 bg-slate-100 text-slate-400 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
-          <ChevronRight size={16} />
+        <div className="flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={(e) => onSendReminder && onSendReminder(e, item)}
+            title="Send WhatsApp Rent Reminder"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-xs active:scale-95"
+          >
+            <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
+            <span>Reminder</span>
+          </button>
+          <div className="inline-flex p-2 bg-slate-100 text-slate-400 rounded-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
+            <ChevronRight size={16} />
+          </div>
         </div>
       </td>
     </motion.tr>
@@ -581,7 +680,7 @@ const RentTableRow = React.forwardRef(({ item, navigate }, ref) => {
 /* =====================================================
    RENT CARD COMPONENT
 ===================================================== */
-const RentCard = React.forwardRef(({ item, navigate }, ref) => {
+const RentCard = React.forwardRef(({ item, navigate, onSendReminder, onOpenTenant }, ref) => {
   const statusConfig = {
     PAID: { label: 'Paid', color: 'emerald', icon: <CheckCircle2 size={12} /> },
     PARTIALLY_PAID: { label: 'Partial', color: 'amber', icon: <AlertCircle size={12} /> },
@@ -605,7 +704,7 @@ const RentCard = React.forwardRef(({ item, navigate }, ref) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      onClick={() => navigate(`/tenant/${item.tenantId}`)}
+      onClick={() => onOpenTenant ? onOpenTenant(item.tenantId) : navigate('/tenant-details')}
       className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col justify-between cursor-pointer group relative overflow-hidden"
     >
       <div>
@@ -654,8 +753,19 @@ const RentCard = React.forwardRef(({ item, navigate }, ref) => {
         <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
           <span>Date: {formatDate(item.paymentDate)}</span> • <span>{item.paymentMode || 'N/A'}</span>
         </div>
-        <div className="p-1.5 bg-slate-900 text-white rounded-xl group-hover:bg-indigo-600 transition-all">
-          <ChevronRight size={14} />
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={(e) => onSendReminder && onSendReminder(e, item)}
+            title="Send WhatsApp Rent Reminder"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-xs active:scale-95"
+          >
+            <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
+            <span>Reminder</span>
+          </button>
+          <div className="p-1.5 bg-slate-900 text-white rounded-xl group-hover:bg-indigo-600 transition-all">
+            <ChevronRight size={14} />
+          </div>
         </div>
       </div>
     </motion.div>

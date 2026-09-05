@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -10,6 +11,7 @@ import {
   updateVacatingDate,
   getBedDetails,
   getAllTenants,
+  getUnassignedTenants,
   assignTenantToBed,
   getPgDetailsById,
   getOwnerProfile
@@ -151,7 +153,9 @@ function InfoRow({ label, value, icon: Icon }) {
 }
 
 export default function BedDetail() {
-  const { bedId } = useParams()
+  const { bedId: routeBedId } = useParams()
+  const { activeBedId } = useAppScope()
+  const bedId = activeBedId || routeBedId
   const navigate = useNavigate()
   const [printedSlips, setPrintedSlips] = useState({})
   const [bed, setBed] = useState(null)
@@ -211,13 +215,17 @@ export default function BedDetail() {
   }
 
   useEffect(() => {
+    if (!bedId) {
+      navigate('/mypgs', { replace: true })
+      return
+    }
     fetchBed()
-  }, [bedId])
+  }, [bedId, navigate])
 
   useEffect(() => {
-    if (!bed?.pgId) return
-    getAllTenants(bed.pgId).then(setTenants).catch(() => setTenants([]))
-  }, [bed?.pgId])
+    if (!bed?.pgId || !quickAssignOpen) return
+    getUnassignedTenants(bed.pgId).then(setTenants).catch(() => setTenants([]))
+  }, [bed?.pgId, quickAssignOpen])
 
   const current = bed?.occupied ? bed.tenantDetails : null
   const isVacated = hasVacated(current?.end)

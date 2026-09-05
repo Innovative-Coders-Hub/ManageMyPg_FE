@@ -10,11 +10,29 @@ import {
   Loader2,
   Bed as BedIcon
 } from 'lucide-react'
+import { getFullImageUrl } from '../../api/api'
+import { getUnassignedTenants } from '../../api/ownerAuth'
 
-const TenantAvatar = ({ name }) => {
+const TenantAvatar = ({ name, profileImageUrl }) => {
+  const [imgError, setImgError] = useState(false)
   const initials = name
     ? name.split(' ').filter(Boolean).slice(0, 2).map(n => n[0]).join('').toUpperCase()
     : '?'
+
+  const fullUrl = getFullImageUrl(profileImageUrl)
+
+  if (fullUrl && !imgError) {
+    return (
+      <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 shadow-xs">
+        <img
+          src={fullUrl}
+          alt={name}
+          className="w-full h-full object-cover"
+          onError={() => setImgError(true)}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
@@ -26,7 +44,7 @@ const TenantAvatar = ({ name }) => {
 export default function QuickAssignModal({
   open,
   bed,
-  tenants = [],
+  tenants: propTenants,
   selectedTenant: externalSelectedTenant,
   onSelectTenant,
   onClose,
@@ -36,15 +54,24 @@ export default function QuickAssignModal({
   const [searchTerm, setSearchTerm] = useState('')
   const [internalSelectedTenant, setInternalSelectedTenant] = useState(null)
   const [assigning, setAssigning] = useState(false)
+  const [fetchedTenants, setFetchedTenants] = useState([])
+  const [loadingTenants, setLoadingTenants] = useState(false)
 
+  const tenants = propTenants && propTenants.length > 0 ? propTenants : fetchedTenants
   const selectedTenant = externalSelectedTenant || internalSelectedTenant
 
   useEffect(() => {
     if (!open) {
       setSearchTerm('')
       setInternalSelectedTenant(null)
+    } else if (bed?.pgId && (!propTenants || propTenants.length === 0)) {
+      setLoadingTenants(true)
+      getUnassignedTenants(bed.pgId)
+        .then(setFetchedTenants)
+        .catch(() => setFetchedTenants([]))
+        .finally(() => setLoadingTenants(false))
     }
-  }, [open])
+  }, [open, bed?.pgId, propTenants])
 
   if (!open) return null
 
@@ -171,7 +198,10 @@ export default function QuickAssignModal({
                             : 'bg-white border-slate-200/80 hover:border-indigo-200 hover:bg-slate-50/80 shadow-xs'
                         }`}
                       >
-                        <TenantAvatar name={t.name} />
+                        <TenantAvatar
+                          name={t.name}
+                          profileImageUrl={t.profileImageUrl || t.photoUrl || t.imageUrl || t.tenantProfileImageUrl}
+                        />
                         <div className="flex-1 min-w-0">
                           <p className={`text-xs font-black uppercase tracking-tight truncate ${isSelected ? 'text-indigo-950 font-black' : 'text-slate-900'}`}>
                             {t.name}

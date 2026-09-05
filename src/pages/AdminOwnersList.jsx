@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dayjs from 'dayjs'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import PageHeader from '../components/PageHeader'
 import CustomDropdown from '../components/CustomDropdown'
 import {
@@ -85,6 +86,7 @@ const STATE_OPTIONS = [
 
 export default function AdminOwnersList() {
   const [params, setParams] = useSearchParams()
+  const { setActiveAdminOwnerId } = useAppScope()
   const navigate = useNavigate()
 
   // State
@@ -336,7 +338,7 @@ export default function AdminOwnersList() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="group hover:bg-slate-50/80 transition-colors cursor-pointer"
-                        onClick={() => navigate(`/admin/owner/${o.id || o.ownerId}`)}
+                        onClick={() => { setActiveAdminOwnerId(o.id || o.ownerId); navigate('/admin/owner-details'); }}
                       >
                         <td className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
@@ -397,7 +399,7 @@ export default function AdminOwnersList() {
                               <option value="deleted">Deleted</option>
                             </select>
                             <button
-                              onClick={() => navigate(`/admin/owner/${o.id || o.ownerId}`)}
+                              onClick={() => { setActiveAdminOwnerId(o.id || o.ownerId); navigate('/admin/owner-details'); }}
                               className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all cursor-pointer"
                               title="View Details"
                             >

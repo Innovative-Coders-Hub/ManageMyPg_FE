@@ -231,10 +231,13 @@ const hideSidebar =
               <Route path="/application/administrator/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
               <Route path="/admin/owners" element={<RequireAdmin><AdminOwnersList /></RequireAdmin>} />
+              <Route path="/admin/owner-details" element={<RequireAdmin><AdminOwnerDetails /></RequireAdmin>} />
               <Route path="/admin/owner/:id" element={<RequireAdmin><AdminOwnerDetails /></RequireAdmin>} />
               <Route path="/home" element={<RequireOwner><Home /></RequireOwner>} />
               <Route path="/my-pgs" element={<RequireOwner><MyPgs /></RequireOwner>} />
+              <Route path="/pg-details" element={<RequireOwner><PgDetail /></RequireOwner>} />
               <Route path="/pg/:id" element={<RequireOwner><PgDetail /></RequireOwner>} />
+              <Route path="/bed-details" element={<RequireOwner><BedDetail /></RequireOwner>} />
               <Route path="/beds/:bedId" element={<RequireOwner><BedDetail /></RequireOwner>} />
               <Route path="/reports" element={<RequireOwner><Reports /></RequireOwner>} />
               <Route path="/offers" element={<RequireOwner><Offers /></RequireOwner>} />
@@ -251,6 +254,7 @@ const hideSidebar =
               <Route path="/tenant-transfer" element={<RequireOwner><TenantTransfer /></RequireOwner>} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+              <Route path="/tenant-details" element={<RequireOwner><TenantDetails /></RequireOwner>} />
               <Route path="/tenant/:tenantId" element={<RequireOwner><TenantDetails /></RequireOwner>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

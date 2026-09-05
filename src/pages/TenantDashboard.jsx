@@ -31,7 +31,9 @@ import {
   Camera,
   Tag,
   Sparkles,
-  Percent
+  Percent,
+  Copy,
+  Check
 } from 'lucide-react'
 import { getTenantDetails, ownerLogout, uploadTenantProfileImage } from '../api/ownerAuth'
 import { getActivePromotionsForPg } from '../api/promotions'
@@ -103,6 +105,7 @@ export default function TenantDashboard() {
   const [rawImage, setRawImage] = useState(null)
   const [showViewModal, setShowViewModal] = useState(false)
   const [activePromotions, setActivePromotions] = useState([])
+  const [copiedCodeId, setCopiedCodeId] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -265,15 +268,21 @@ export default function TenantDashboard() {
                   >
                     {tenant.profileImageUrl ? (
                       <img
-                        src={`${BASE_URL}${tenant.profileImageUrl}`}
+                        src={getFullImageUrl(tenant.profileImageUrl)}
                         alt={tenant.name}
                         className="h-full w-full object-cover transition-transform group-hover/avatar:scale-110"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                        }}
                       />
-                    ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-2xl text-white">
-                        {tenant.name?.charAt(0) || 'T'}
-                      </div>
-                    )}
+                    ) : null}
+                    <div
+                      className="h-full w-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-black text-2xl text-white"
+                      style={{ display: tenant.profileImageUrl ? 'none' : 'flex' }}
+                    >
+                      {tenant.name?.charAt(0) || 'T'}
+                    </div>
                   </div>
                   <label className="absolute -bottom-1 -right-1 bg-indigo-600 text-white p-1.5 rounded-lg cursor-pointer shadow-md hover:bg-indigo-500 transition-colors" title="Change Photo">
                     <Camera size={12} />
@@ -319,93 +328,159 @@ export default function TenantDashboard() {
 
           {/* ACTIVE PROMOTIONS & ANNOUNCEMENTS BANNER FOR TENANTS */}
           {activePromotions.length > 0 && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-amber-500 animate-bounce" />
-                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                    Special Offers & Announcements ({activePromotions.length})
-                  </h3>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-500/10 text-amber-600 rounded-xl border border-amber-500/20">
+                    <Sparkles size={18} className="animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                      Special Offers & Announcements
+                    </h3>
+                    <p className="text-[10.5px] font-bold text-slate-500">
+                      Exclusive deals and updates for your PG stay
+                    </p>
+                  </div>
                 </div>
-                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  Exclusive Offers
+                <span className="text-[10px] font-black text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-3 py-1 rounded-full uppercase tracking-wider shadow-2xs">
+                  {activePromotions.length} {activePromotions.length === 1 ? 'Active Offer' : 'Active Offers'}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activePromotions.map((promo) => (
-                  <div
-                    key={promo.id}
-                    className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-lg border border-indigo-500/30 relative overflow-hidden group"
-                  >
-                    {/* Background Banner Image if available */}
-                    {promo.bannerUrl && (
-                      <div className="absolute inset-0 opacity-25 group-hover:opacity-35 transition-opacity">
-                        <img src={getFullImageUrl(promo.bannerUrl)} alt={promo.title} className="h-full w-full object-cover" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                      </div>
-                    )}
-
-                    <div className="relative z-10 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[9px] font-black uppercase tracking-wider shadow-sm">
-                          {promo.type || 'SPECIAL OFFER'}
-                        </span>
-
-                        {promo.discountValue && (
-                          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider">
-                            {promo.discountType === 'PERCENT' ? `${promo.discountValue}% OFF` : `₹${promo.discountValue} OFF`}
-                          </span>
-                        )}
-                      </div>
-
-                      <div>
-                        <h4 className="text-base font-black text-white tracking-tight leading-snug">
-                          {promo.title}
-                        </h4>
-                        {promo.subtitle && (
-                          <p className="text-xs font-semibold text-indigo-200 mt-0.5">
-                            {promo.subtitle}
-                          </p>
-                        )}
-                      </div>
-
-                      {promo.description && (
-                        <p className="text-[11px] font-medium text-slate-300 line-clamp-2 italic bg-black/30 p-2.5 rounded-xl border border-white/10">
-                          "{promo.description}"
-                        </p>
-                      )}
-
-                      {/* Promo Code Coupon Badge */}
-                      {promo.promoCode && (
-                        <div className="flex items-center justify-between bg-white/10 backdrop-blur-xs p-2 rounded-xl border border-white/15">
-                          <span className="text-[9.5px] font-black text-amber-300 uppercase tracking-wider">Coupon Code:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-black text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-lg text-xs tracking-widest border border-amber-400/40">
-                              {promo.promoCode}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {activePromotions.map((promo) => {
+                  const isCopied = copiedCodeId === promo.id
+                  const isPercentage = promo.discountType === 'PERCENT'
+                  
+                  return (
+                    <div
+                      key={promo.id}
+                      className="bg-white rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col group"
+                    >
+                      {/* Top Visual Section */}
+                      {promo.bannerUrl ? (
+                        <div className="relative h-48 sm:h-52 w-full bg-slate-950 overflow-hidden shrink-0">
+                          <img
+                            src={getFullImageUrl(promo.bannerUrl)}
+                            alt={promo.title}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => { e.currentTarget.style.display = 'none' }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
+                          
+                          {/* Badges Overlay */}
+                          <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+                            <span className="px-3 py-1 rounded-xl bg-slate-900/85 backdrop-blur-md text-amber-400 text-[10px] font-black uppercase tracking-wider border border-amber-400/30 shadow-md">
+                              {promo.type || 'SPECIAL OFFER'}
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(promo.promoCode)
-                                toast.success(`Copied coupon code: ${promo.promoCode}`)
-                              }}
-                              className="text-[9px] font-black text-amber-200 hover:text-white uppercase tracking-wider underline cursor-pointer"
-                            >
-                              Copy
-                            </button>
+                            
+                            {promo.discountValue && (
+                              <span className="px-3 py-1 rounded-xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md">
+                                {isPercentage ? `${promo.discountValue}% OFF` : `₹${promo.discountValue} OFF`}
+                              </span>
+                            )}
                           </div>
+                        </div>
+                      ) : (
+                        /* Fallback Visual Header without Image */
+                        <div className="relative h-28 w-full bg-gradient-to-r from-indigo-900 via-purple-900 to-slate-900 p-4 flex items-center justify-between shrink-0 overflow-hidden">
+                          <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center justify-center">
+                            <Sparkles size={140} />
+                          </div>
+                          <span className="px-3 py-1 rounded-xl bg-white/10 backdrop-blur-md text-amber-300 text-[10px] font-black uppercase tracking-wider border border-white/20">
+                            {promo.type || 'SPECIAL OFFER'}
+                          </span>
+                          {promo.discountValue && (
+                            <span className="px-3 py-1 rounded-xl bg-emerald-500 text-white text-[11px] font-black uppercase tracking-wider shadow-md">
+                              {isPercentage ? `${promo.discountValue}% OFF` : `₹${promo.discountValue} OFF`}
+                            </span>
+                          )}
                         </div>
                       )}
 
-                      {promo.terms && (
-                        <p className="text-[9.5px] font-medium text-slate-400 pt-1">
-                          * {promo.terms}
-                        </p>
-                      )}
+                      {/* Content Body */}
+                      <div className="p-5 sm:p-6 space-y-3.5 flex-1 flex flex-col justify-between">
+                        <div className="space-y-1.5">
+                          <h4 className="text-lg font-black text-slate-900 tracking-tight leading-snug group-hover:text-indigo-600 transition-colors">
+                            {promo.title}
+                          </h4>
+                          {promo.subtitle && (
+                            <p className="text-xs font-bold text-indigo-600">
+                              {promo.subtitle}
+                            </p>
+                          )}
+                          {promo.description && (
+                            <p className="text-xs font-medium text-slate-600 leading-relaxed pt-1">
+                              {promo.description}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-3 pt-2 border-t border-slate-100">
+                          {/* Coupon Code Pill */}
+                          {promo.promoCode && (
+                            <div className="bg-amber-500/10 border border-dashed border-amber-400/60 p-3 rounded-2xl flex items-center justify-between">
+                              <div>
+                                <span className="text-[9px] font-black text-amber-800 uppercase tracking-wider block">Use Coupon Code:</span>
+                                <span className="font-mono font-black text-amber-900 text-sm tracking-widest">
+                                  {promo.promoCode}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(promo.promoCode)
+                                  setCopiedCodeId(promo.id)
+                                  toast.success(`Copied code: ${promo.promoCode}`)
+                                  setTimeout(() => setCopiedCodeId(null), 2000)
+                                }}
+                                className={`px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-xs transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isCopied
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold'
+                                }`}
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check size={13} /> COPIED!
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy size={13} /> COPY CODE
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Expiration & Terms Footer */}
+                          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400 pt-0.5">
+                            {promo.expirationDate ? (
+                              <span className="flex items-center gap-1 text-slate-500 font-bold">
+                                <Clock size={12} className="text-amber-500" />
+                                Expires: {dayjs(promo.expirationDate).format('MMM DD, YYYY')}
+                              </span>
+                            ) : promo.validDays ? (
+                              <span className="flex items-center gap-1 text-slate-500 font-bold">
+                                <Clock size={12} className="text-amber-500" />
+                                Valid for {promo.validDays} days
+                              </span>
+                            ) : (
+                              <span>* Limited time offer</span>
+                            )}
+
+                            {promo.terms && (
+                              <span className="text-slate-400 truncate max-w-[180px]" title={promo.terms}>
+                                * {promo.terms}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -661,13 +736,21 @@ export default function TenantDashboard() {
                 <div className="h-60 w-60 rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm mb-6 bg-slate-50 flex items-center justify-center">
                   {tenant.profileImageUrl ? (
                     <img
-                      src={`${BASE_URL}${tenant.profileImageUrl}`}
+                      src={getFullImageUrl(tenant.profileImageUrl)}
                       alt="Profile"
                       className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                      }}
                     />
-                  ) : (
+                  ) : null}
+                  <div
+                    className="h-full w-full flex items-center justify-center bg-slate-50 text-slate-300"
+                    style={{ display: tenant.profileImageUrl ? 'none' : 'flex' }}
+                  >
                     <User size={72} className="text-slate-300" />
-                  )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 w-full gap-2.5">

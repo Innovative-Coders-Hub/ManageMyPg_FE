@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -132,8 +133,7 @@ function WorkerAvatar({ name, profileImageUrl, status, size = "w-12 h-12" }) {
 ===================================================== */
 export default function Workers() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const pgId = searchParams.get('pgId')
+  const { activePgId: pgId, setActivePgId } = useAppScope()
 
   const [pgs, setPgs] = useState([])
   const [workers, setWorkers] = useState([])
@@ -168,7 +168,7 @@ export default function Workers() {
         setPgs(pgsData || [])
 
         if (!pgId && pgsData && pgsData.length > 0) {
-          navigate(`?pgId=${pgsData[0].id}`, { replace: true })
+          setActivePgId(pgsData[0].id)
           return
         }
       } catch (e) {
@@ -176,7 +176,7 @@ export default function Workers() {
       }
     }
     init()
-  }, [pgId, navigate])
+  }, [pgId, setActivePgId])
 
   useEffect(() => {
     if (pgId) fetchWorkers()
@@ -364,7 +364,7 @@ export default function Workers() {
               label="Property Scope"
               value={pgId || ''}
               options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
-              onChange={(val) => navigate(`?pgId=${val}`)}
+              onChange={(val) => setActivePgId(val)}
               icon={Building2}
               className="w-full sm:w-56"
             />

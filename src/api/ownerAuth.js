@@ -26,6 +26,7 @@ export async function ownerLogin({ email, password }) {
 }
 
 export const ownerLogout = () => {
+  clearOwnerAuthCache()
   return api.post('/api/auth/logout')
 }
 
@@ -67,15 +68,47 @@ export async function verifyChangePassword(otp) {
   return res.data
 }
 
+// ---------- PROFILE & PG REQUEST DEDUPLICATION ----------
+let ownerProfilePromise = null
+let ownerProfileCache = null
+let ownerProfileTimestamp = 0
+
+let allPgsPromise = null
+let allPgsCache = null
+let allPgsTimestamp = 0
+
+export function clearOwnerAuthCache() {
+  ownerProfileCache = null
+  ownerProfileTimestamp = 0
+  allPgsCache = null
+  allPgsTimestamp = 0
+}
+
 // ---------- PROFILE ----------
 
-export async function getOwnerProfile() {
-  const res = await api.get('/mmp/owner/ownerProfile')
-  return res.data
+export async function getOwnerProfile(forceRefresh = false) {
+  const now = Date.now()
+  if (!forceRefresh && ownerProfileCache && (now - ownerProfileTimestamp < 10000)) {
+    return ownerProfileCache
+  }
+  if (!forceRefresh && ownerProfilePromise) {
+    return ownerProfilePromise
+  }
+  ownerProfilePromise = api.get('/mmp/owner/ownerProfile')
+    .then(res => {
+      ownerProfileCache = res.data
+      ownerProfileTimestamp = Date.now()
+      return res.data
+    })
+    .finally(() => {
+      ownerProfilePromise = null
+    })
+  return ownerProfilePromise
 }
 
 export async function updateOwnerAddress(address) {
   const res = await api.patch('/mmp/owner/ownerProfile/address', address)
+  clearOwnerAuthCache()
   return res.data
 }
 
@@ -84,6 +117,7 @@ export async function uploadOwnerProfileImage(file) {
   const formData = new FormData()
   formData.append('file', compressed)
   const res = await api.post('/mmp/owner/profile/image', formData)
+  clearOwnerAuthCache()
   return res.data
 }
 
@@ -99,12 +133,28 @@ export async function uploadTenantProfileImage(file) {
 
 export async function createPg(body) {
   const res = await api.post('/mmp/pg/create', body)
+  clearOwnerAuthCache()
   return res.data
 }
 
-export async function getAllPgs() {
-  const res = await api.get('/mmp/pg/getAll/pgs')
-  return res.data
+export async function getAllPgs(forceRefresh = false) {
+  const now = Date.now()
+  if (!forceRefresh && allPgsCache && (now - allPgsTimestamp < 10000)) {
+    return allPgsCache
+  }
+  if (!forceRefresh && allPgsPromise) {
+    return allPgsPromise
+  }
+  allPgsPromise = api.get('/mmp/pg/getAll/pgs')
+    .then(res => {
+      allPgsCache = res.data
+      allPgsTimestamp = Date.now()
+      return res.data
+    })
+    .finally(() => {
+      allPgsPromise = null
+    })
+  return allPgsPromise
 }
 
 export async function getPgDetailsById(id) {
@@ -161,6 +211,14 @@ export async function getAllTenants(pgId) {
     throw new Error('pgId is required to fetch tenants')
   }
   const res = await api.get(`/mmp/tenants/pg/${pgId}`)
+  return res.data
+}
+
+export async function getUnassignedTenants(pgId) {
+  if (!pgId) {
+    throw new Error('pgId is required to fetch unassigned tenants')
+  }
+  const res = await api.get(`/mmp/tenants/pg/${pgId}/unassigned`)
   return res.data
 }
 
@@ -282,10 +340,18 @@ export async function transferBed(bedId, payload) {
 }
 
 // ---------- DASHBOARD & ANALYTICS ----------
+let ownerDashboardPromise = null
 
 export async function getOwnerDashboard() {
-  const res = await api.get('/mmp/owner/dashboard')
-  return res.data
+  if (ownerDashboardPromise) {
+    return ownerDashboardPromise
+  }
+  ownerDashboardPromise = api.get('/mmp/owner/dashboard')
+    .then(res => res.data)
+    .finally(() => {
+      ownerDashboardPromise = null
+    })
+  return ownerDashboardPromise
 }
 
 export async function getRevenueTrends(pgId) {

@@ -1,6 +1,7 @@
 // src/pages/PgDetail.jsx
 import React, { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import dayjs from 'dayjs'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -112,7 +113,7 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
   )
 }
 
-const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onTransferBed }, ref) => {
+const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onTransferBed, isFilterActive }, ref) => {
   const occupiedCount = (room.beds || []).filter(b => b.occupied && !b.deleted).length
   const totalBedsCount = (room.beds || []).filter(b => !b.deleted).length
 
@@ -162,16 +163,18 @@ const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onT
             />
           ))}
         </AnimatePresence>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onAddBed}
-          className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all group cursor-pointer"
-          title="Add Bed to Room"
-        >
-          <Plus size={18} className="group-hover:scale-110 transition-transform mb-0.5" />
-          <span className="text-[7.5px] font-black uppercase tracking-wider">Add Bed</span>
-        </motion.button>
+        {!isFilterActive && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onAddBed}
+            className="aspect-square rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50/50 transition-all group cursor-pointer"
+            title="Add Bed to Room"
+          >
+            <Plus size={18} className="group-hover:scale-110 transition-transform mb-0.5" />
+            <span className="text-[7.5px] font-black uppercase tracking-wider">Add Bed</span>
+          </motion.button>
+        )}
       </div>
     </motion.div>
   )
@@ -179,9 +182,11 @@ const RoomCard = React.memo(React.forwardRef(({ room, onAddBed, onDeleteBed, onT
 
 const Bed = React.memo(React.forwardRef(function Bed({ id, name, status, deleted, tenantName, onDelete, onTransfer }, ref) {
   const navigate = useNavigate()
+  const { setActiveBedId } = useAppScope()
 
   const go = () => {
-    navigate(`/beds/${encodeURIComponent(id)}`, {
+    setActiveBedId(id)
+    navigate('/bed-details', {
       state: { bedName: name }
     })
   }
@@ -334,7 +339,9 @@ function Toolbar({ filters, setFilters }) {
 
 /* ================= Page ================= */
 export default function PgDetail() {
-  const { id } = useParams()
+  const { id: routePgId } = useParams()
+  const { activePgDetailId } = useAppScope()
+  const id = activePgDetailId || routePgId
   const navigate = useNavigate()
   const [pg, setPg] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -433,11 +440,15 @@ export default function PgDetail() {
       setShowDiscardConfirm(true)
     } else {
       resetFloorForm()
-      setShowAddFloor(false)
+        setShowAddFloor(false)
     }
   }
 
   useEffect(() => {
+    if (!id) {
+      navigate('/mypgs', { replace: true })
+      return
+    }
     async function fetchPg() {
       try {
         setLoading(true)
@@ -451,15 +462,21 @@ export default function PgDetail() {
             : floorsResponse?.data || []
         )
         setPg({ ...pgDetails, id, floors })
+
+        const initialOpenState = floors.reduce((acc, floor) => {
+          acc[floor.id] = true
+          return acc
+        }, {})
+        setOpenFloors(initialOpenState)
       } catch (err) {
-        toast.error('Failed to load PG details')
-        setPg(null)
+        console.error('Failed to fetch PG detail:', err)
       } finally {
         setLoading(false)
       }
     }
-    if (id) fetchPg()
-  }, [id])
+
+    fetchPg()
+  }, [id, navigate])
 
   const today = useMemo(() => dayjs(), [])
 
@@ -503,6 +520,8 @@ export default function PgDetail() {
       return { ...floor, rooms }
     })
   }, [pg, filters])
+
+  const isAnyFilterActive = Boolean(filters.ac || filters.nonac || filters.available || filters.booked || filters.vacatingSoon)
 
   const totalBeds = pg?.floors?.reduce((sum, f) => sum + (f.rooms || []).reduce((rSum, r) => rSum + (r.beds?.filter(b => !b.deleted).length || 0), 0), 0) || 0
   const filledBedsCount = pg?.floors?.reduce((sum, f) => sum + (f.rooms || []).reduce((rSum, r) => rSum + (r.beds || []).filter(b => b.occupied === true && !b.deleted).length, 0), 0) || 0
@@ -700,6 +719,7 @@ export default function PgDetail() {
                                   <RoomCard
                                     key={r.id}
                                     room={r}
+                                    isFilterActive={isAnyFilterActive}
                                     onAddBed={() => {
                                        const autoBedName = getNextBedName(r.beds || [])
                                        setBedForm({ id: autoBedName })
