@@ -10,7 +10,9 @@ import {
   updateVacatingDate,
   getBedDetails,
   getAllTenants,
-  assignTenantToBed
+  assignTenantToBed,
+  getPgDetailsById,
+  getOwnerProfile
 } from '../api/ownerAuth'
 import {
   fmt,
@@ -53,7 +55,8 @@ import {
   Plus,
   Loader2,
   CheckCircle2,
-  ArrowUpRight
+  ArrowUpRight,
+  RefreshCcw
 } from 'lucide-react'
 
 /* -------------------------------------------------- */
@@ -170,10 +173,34 @@ export default function BedDetail() {
     try {
       const data = await getBedDetails(bedId)
       const normalized = normalizeBed(data)
-      setBed(normalized)
-      if (normalized?.tenantDetails?.rentResponse) {
+
+      let pgInfo = null
+      let ownerInfo = null
+      if (normalized?.pgId) {
+        try {
+          const [pgRes, ownerRes] = await Promise.all([
+            getPgDetailsById(normalized.pgId).catch(() => null),
+            getOwnerProfile().catch(() => null)
+          ])
+          pgInfo = pgRes
+          ownerInfo = ownerRes
+        } catch (e) {
+          console.error(e)
+        }
+      }
+
+      const mergedBed = {
+        ...normalized,
+        pgName: pgInfo?.pgName || pgInfo?.name || normalized?.pgName || localStorage.getItem('selectedPgName') || localStorage.getItem('businessName') || 'Manage My PG',
+        pgAddress: pgInfo?.address || pgInfo?.fullAddress || normalized?.pgAddress || localStorage.getItem('pgAddress') || '',
+        pgPhone: pgInfo?.phone || pgInfo?.mobile || normalized?.pgPhone || '',
+        ownerName: ownerInfo?.fullName || ownerInfo?.businessName || pgInfo?.ownerName || normalized?.ownerName || localStorage.getItem('fullName') || 'Property Owner'
+      }
+
+      setBed(mergedBed)
+      if (mergedBed?.tenantDetails?.rentResponse) {
         setPayments(
-          buildPaymentsFromRentResponse(normalized.tenantDetails.rentResponse)
+          buildPaymentsFromRentResponse(mergedBed.tenantDetails.rentResponse)
         )
       }
     } catch (e) {
@@ -209,8 +236,10 @@ export default function BedDetail() {
 
   function handleTransferTenant(data) {
     navigate('/tenant-transfer', {
-      state: data,
-      pgId: bed?.pgId
+      state: {
+        ...data,
+        pgId: bed?.pgId
+      }
     });
   }
 
@@ -376,10 +405,10 @@ export default function BedDetail() {
               </div>
 
               <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase truncate leading-tight">
-                    Bed {bed.bedName}
-                  </h1>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100/80 shrink-0">
+                    {bed.pgName || 'ManageMyPg'}
+                  </span>
                   <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
                     bed.occupied
                       ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
@@ -388,8 +417,11 @@ export default function BedDetail() {
                     {bed.occupied ? 'Occupied' : 'Available'}
                   </span>
                 </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
-                  {bed.floorName} • Room {bed.roomName} • {bed.pgName || 'Our PG'}
+                <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase truncate leading-tight">
+                  Bed {bed.bedName} <span className="text-slate-400 font-bold text-base md:text-lg">({bed.roomName})</span>
+                </h1>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider truncate mt-0.5">
+                  {bed.floorName} • Room {bed.roomName} • Space {bed.bedName}
                 </p>
               </div>
             </div>
@@ -410,6 +442,23 @@ export default function BedDetail() {
                   className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-sm active:scale-95 cursor-pointer"
                 >
                   <Plus size={14} /> Quick Assign Resident
+                </button>
+              )}
+              {bed.occupied && (
+                <button
+                  onClick={() => handleTransferTenant({
+                    floorId: bed.floorId,
+                    floorName: bed.floorName,
+                    roomId: bed.roomId,
+                    roomName: bed.roomName,
+                    bedId: bed.id,
+                    bedName: bed.bedName,
+                    tenantId: current?.id,
+                    tenantName: current?.name
+                  })}
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-sm active:scale-95 cursor-pointer"
+                >
+                  <RefreshCcw size={14} /> Transfer Tenant
                 </button>
               )}
             </div>
@@ -462,7 +511,7 @@ export default function BedDetail() {
                     <InfoRow label="Emergency Contact" value={current.parentNumber} icon={Phone} />
                   </div>
 
-                  {!isVacated && (
+                  {current && (
                     <div className="pt-3 grid grid-cols-2 gap-2">
                       <button
                         onClick={() => setVacateModalOpen(true)}
@@ -481,9 +530,9 @@ export default function BedDetail() {
                           tenantId: current?.id,
                           tenantName: current?.name
                         })}
-                        className="py-2.5 px-3 bg-rose-50 text-rose-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all border border-rose-100 shadow-xs cursor-pointer text-center"
+                        className="py-2.5 px-3 bg-indigo-50 text-indigo-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all border border-indigo-100 shadow-xs cursor-pointer text-center flex items-center justify-center gap-1"
                       >
-                        Transfer Bed
+                        <RefreshCcw size={12} /> Transfer Tenant
                       </button>
                     </div>
                   )}
@@ -557,7 +606,7 @@ export default function BedDetail() {
               <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/40">
                 <div>
                   <h3 className="text-base font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                    <CreditCard size={18} className="text-indigo-600" /> Financial Ledger
+                    <CreditCard size={18} className="text-indigo-600" /> Tenant Rent Ledger
                   </h3>
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Audit Trail & Billing Collections</p>
                 </div>
@@ -639,31 +688,63 @@ export default function BedDetail() {
                               <div className="flex items-center gap-2">
                                 {paid ? (
                                   <>
-                                    <button
-                                      onClick={() => {
-                                        const receiptData = {
-                                          receipt: {
-                                            receiptNumber: generateTempReceiptNumber({ pgId: bed.pgId, periodKey: p.key }),
-                                            issuedAt: paid.paidAt,
-                                          },
-                                          pg: { name: bed.pgName || '—', address: bed.pgAddress || '—', phone: bed.pgPhone || '' },
-                                          owner: { name: bed.ownerName || '—' },
-                                          tenant: { name: current.name, mobile: current.mobileNumber },
-                                          bed: { roomName: bed.roomName, bedName: bed.bedName },
-                                          billing: {
-                                            period: { from: p.from, to: p.to },
-                                            amount: { paid: paid.amountPaid, inWords: `${numberToWords(paid.amountPaid)} only` },
-                                            payment: { mode: paid.modeOfPayment || 'CASH', paidAt: paid.paidAt },
-                                            remarks: ''
+                                    {(!paid.pending || paid.pending <= 0) && paid.status !== 'PARTIAL' ? (
+                                      <button
+                                        onClick={async () => {
+                                          let pgInfo = { name: bed.pgName, address: bed.pgAddress, phone: bed.pgPhone }
+                                          let ownerInfo = { name: bed.ownerName }
+
+                                          try {
+                                            const [pgRes, ownerRes] = await Promise.all([
+                                              bed?.pgId ? getPgDetailsById(bed.pgId).catch(() => null) : null,
+                                              getOwnerProfile().catch(() => null)
+                                            ])
+                                            if (pgRes) {
+                                              pgInfo = {
+                                                name: pgRes.pgName || pgRes.name || pgInfo.name,
+                                                address: pgRes.address || pgRes.fullAddress || pgInfo.address,
+                                                phone: pgRes.phone || pgRes.mobile || pgInfo.phone
+                                              }
+                                            }
+                                            if (ownerRes) {
+                                              ownerInfo.name = ownerRes.fullName || ownerRes.businessName || ownerInfo.name
+                                            }
+                                          } catch (e) {
+                                            console.error('Receipt API fetch error', e)
                                           }
-                                        }
-                                        printRentReceipt(receiptData)
-                                      }}
-                                      className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all border border-slate-200 cursor-pointer shadow-xs font-black text-[9px] uppercase tracking-wider"
-                                      title="Print Receipt"
-                                    >
-                                      <Printer size={13} /> Print
-                                    </button>
+
+                                          const receiptData = {
+                                            receipt: {
+                                              receiptNumber: generateTempReceiptNumber({ pgId: bed.pgId, periodKey: p.key }),
+                                              issuedAt: paid.paidAt,
+                                            },
+                                            pg: pgInfo,
+                                            owner: ownerInfo,
+                                            tenant: { name: current.name, mobile: current.mobileNumber },
+                                            bed: { roomName: bed.roomName, bedName: bed.bedName },
+                                            billing: {
+                                              period: { from: p.from, to: p.to },
+                                              amount: { paid: paid.amountPaid, inWords: `${numberToWords(paid.amountPaid)} only` },
+                                              payment: { mode: paid.modeOfPayment || 'CASH', paidAt: paid.paidAt },
+                                              remarks: ''
+                                            }
+                                          }
+                                          printRentReceipt(receiptData)
+                                        }}
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all border border-slate-200 cursor-pointer shadow-xs font-black text-[9px] uppercase tracking-wider"
+                                        title="Download Receipt"
+                                      >
+                                        <Download size={13} /> Download
+                                      </button>
+                                    ) : (
+                                      <button
+                                        disabled
+                                        className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 text-slate-400 rounded-lg border border-slate-200 cursor-not-allowed opacity-50 font-black text-[9px] uppercase tracking-wider"
+                                        title="Receipt download is only available for fully paid rent"
+                                      >
+                                        <Download size={13} /> Download
+                                      </button>
+                                    )}
                                     <button
                                       onClick={() => handleEditPayment(p)}
                                       className="px-3 py-1.5 bg-slate-100 text-slate-800 text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-slate-200 transition-colors shadow-xs cursor-pointer"
@@ -779,6 +860,7 @@ export default function BedDetail() {
       <VacateTenantModal
         open={vacateModalOpen}
         onClose={() => setVacateModalOpen(false)}
+        tenant={current}
         currentDate={current?.end}
         onSave={async (vacatingDate) => {
           try {
