@@ -704,12 +704,12 @@ export default function BedDetail() {
         tenants={tenants}
         onAssignSuccess={async (selectedTenantId) => {
           try {
-            await assignTenantToBed({ bedId: bed.id, tenantId: selectedTenantId })
+            await assignTenantToBed(bed.id, selectedTenantId)
             toast.success('Resident assigned successfully!')
             setQuickAssignOpen(false)
             fetchBed(true)
           } catch (err) {
-            toast.error('Failed to assign resident')
+            toast.error(err?.response?.data?.message || 'Failed to assign resident')
           }
         }}
         onAddNewTenant={() => {

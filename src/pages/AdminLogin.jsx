@@ -95,7 +95,7 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30 p-4 sm:p-6">
       <SEO
         title="Admin Access"
         description="Secure administrator portal for ManageMyPg. Authorized access only."
@@ -113,13 +113,13 @@ export default function AdminLogin() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="w-full max-w-[460px] px-6 relative z-10"
+        className="w-full max-w-[390px] relative z-10"
       >
         {/* Top Navigation */}
         <div className="mb-6 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-slate-500 hover:text-white transition-all group"
+            className="flex items-center gap-2 text-slate-500 hover:text-white transition-all group cursor-pointer"
           >
             <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Site</span>
@@ -132,7 +132,7 @@ export default function AdminLogin() {
         </div>
 
         {/* Main Card */}
-        <div className="bg-slate-900/40 backdrop-blur-2xl rounded-[2.5rem] border border-slate-800/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] p-8 md:p-12 relative overflow-hidden group">
+        <div className="bg-slate-900/40 backdrop-blur-2xl rounded-3xl sm:rounded-[2.5rem] border border-slate-800/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] p-6 sm:p-8 md:p-12 relative overflow-hidden group">
           {/* Subtle top light effect */}
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-50" />
 
