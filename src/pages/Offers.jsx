@@ -104,39 +104,13 @@ const PRESET_BANNERS = [
 ]
 
 /* =====================================================
-   STORAGE HOOK & SYNC WITH TENANTS
-===================================================== */
-function usePromotionsStorage() {
-  const [promotions, setPromotions] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mmp_active_promotions') || localStorage.getItem('offers_v2')
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
-  })
-
-  useEffect(() => {
-    try {
-      const json = JSON.stringify(promotions)
-      localStorage.setItem('mmp_active_promotions', json)
-      localStorage.setItem('offers_v2', json)
-      window.dispatchEvent(new Event('promotionsUpdated'))
-    } catch (err) {
-      console.error('Failed to sync promotions storage:', err)
-    }
-  }, [promotions])
-
-  return [promotions, setPromotions]
-}
-
-/* =====================================================
    MAIN PROMOTIONS & OFFERS PAGE
 ===================================================== */
 export default function Offers() {
-  const [promotions, setPromotions] = usePromotionsStorage()
+  const [promotions, setPromotions] = useState([])
   const [pgs, setPgs] = useState([])
   const [loadingPgs, setLoadingPgs] = useState(false)
+  const [loadingPromos, setLoadingPromos] = useState(true)
   
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -151,29 +125,33 @@ export default function Offers() {
   const [activeTab, setActiveTab] = useState('ALL') // ALL, ACTIVE, DRAFT, EXPIRED
 
   useEffect(() => {
-    const fetchPgs = async () => {
+    // Clear legacy mock data from local storage
+    try {
+      localStorage.removeItem('mmp_active_promotions')
+      localStorage.removeItem('offers_v2')
+    } catch (e) {}
+
+    const loadData = async () => {
+      setLoadingPgs(true)
+      setLoadingPromos(true)
       try {
-        setLoadingPgs(true)
-        const data = await getAllPgs().catch(() => [])
-        setPgs(Array.isArray(data) ? data : [])
+        const [pgData, promoData] = await Promise.all([
+          getAllPgs().catch(() => []),
+          promoApi.getMyPromotions().catch(err => {
+            toast.error(err?.response?.data?.message || 'Failed to load promotions from backend')
+            return []
+          })
+        ])
+        setPgs(Array.isArray(pgData) ? pgData : [])
+        setPromotions(Array.isArray(promoData) ? promoData : [])
       } catch (err) {
-        console.error('Failed to load PGs for promotions:', err)
+        console.error('Failed to load backend data:', err)
       } finally {
         setLoadingPgs(false)
+        setLoadingPromos(false)
       }
     }
-    const loadPromotionsFromApi = async () => {
-      try {
-        const livePromos = await promoApi.getMyPromotions()
-        if (Array.isArray(livePromos)) {
-          setPromotions(livePromos)
-        }
-      } catch (err) {
-        console.warn('Failed to load promotions from API:', err)
-      }
-    }
-    fetchPgs()
-    loadPromotionsFromApi()
+    loadData()
   }, [])
 
   /* Enrich promotions with calculated status & countdowns */
@@ -265,54 +243,53 @@ export default function Offers() {
     setSelectedDiscountTypeFilter('ALL')
   }
 
-  /* Actions */
+  /* Actions - Fully integrated with Backend API */
   const handleSavePromotion = async (payload) => {
-    if (editingPromo) {
-      setPromotions(prev => prev.map(p => p.id === editingPromo.id ? { ...p, ...payload } : p))
-      await promoApi.updatePromotionApi(editingPromo.id, payload).catch(() => {})
-      toast.success('Promotion updated successfully')
-    } else {
-      const apiResult = await promoApi.createPromotion(payload).catch(() => null)
-      const newPromo = apiResult || {
-        id: `promo_${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        ...payload
+    try {
+      if (editingPromo) {
+        await promoApi.updatePromotionApi(editingPromo.id, payload)
+        toast.success('Promotion campaign updated in database!')
+      } else {
+        await promoApi.createPromotion(payload)
+        toast.success('New promotion campaign created & published live to database!')
       }
-      setPromotions(prev => [newPromo, ...prev])
-      toast.success('New promotion campaign launched & published live!')
+      setDrawerOpen(false)
+      setEditingPromo(null)
+      setDrawerInitialData(null)
+      
+      // Refresh list from backend database
+      const freshList = await promoApi.getMyPromotions()
+      setPromotions(freshList)
+    } catch (err) {
+      console.error('Failed to save promotion to DB:', err)
+      const errorMsg = err?.response?.data?.message || err?.message || 'Failed to save promotion to backend database'
+      toast.error(errorMsg)
     }
-    setDrawerOpen(false)
-    setEditingPromo(null)
-    setDrawerInitialData(null)
   }
 
   const handleToggleStatus = async (id) => {
-    setPromotions(prev => prev.map(p => {
-      if (p.id === id) {
-        const newStatus = p.status === 'ACTIVE' ? 'DRAFT' : 'ACTIVE'
-        toast.success(newStatus === 'ACTIVE' ? 'Promotion published live to tenants!' : 'Promotion unpublished (moved to drafts)')
-        return { ...p, status: newStatus }
-      }
-      return p
-    }))
-    await promoApi.togglePromotionStatusApi(id).catch(() => {})
+    try {
+      await promoApi.togglePromotionStatusApi(id)
+      const freshList = await promoApi.getMyPromotions()
+      setPromotions(freshList)
+      toast.success('Promotion status updated in database!')
+    } catch (err) {
+      console.error('Failed to toggle promotion status:', err)
+      toast.error(err?.response?.data?.message || 'Failed to update promotion status')
+    }
   }
 
   const handleEndToday = async (id) => {
-    if (window.confirm('Are you sure you want to end this promotion today? It will immediately be marked as Expired.')) {
-      setPromotions(prev => prev.map(p => {
-        if (p.id === id) {
-          const pastTime = dayjs().subtract(1, 'minute').toISOString()
-          return {
-            ...p,
-            status: 'EXPIRED',
-            expireAt: pastTime
-          }
-        }
-        return p
-      }))
-      await promoApi.expirePromotionTodayApi(id).catch(() => {})
-      toast.success('Promotion ended & moved to Expired status!')
+    if (window.confirm('Are you sure you want to end this promotion today? It will immediately be marked as Expired in the database.')) {
+      try {
+        await promoApi.expirePromotionTodayApi(id)
+        const freshList = await promoApi.getMyPromotions()
+        setPromotions(freshList)
+        toast.success('Promotion marked as Expired in database!')
+      } catch (err) {
+        console.error('Failed to expire promotion:', err)
+        toast.error(err?.response?.data?.message || 'Failed to expire promotion in database')
+      }
     }
   }
 
@@ -323,7 +300,7 @@ export default function Offers() {
 
     const cloneData = {
       ...promo,
-      id: undefined, // Unset old ID so it gets submitted as a NEW offer request
+      id: undefined, // Unset old ID so it gets submitted as a NEW offer request to BE
       title: promo.title.includes('Re-published') ? promo.title : `${promo.title} (Re-published)`,
       status: 'ACTIVE',
       expirationMode: promo.expirationMode || 'DAYS',
@@ -334,7 +311,7 @@ export default function Offers() {
     setEditingPromo(null) // Keep null so save treats it as NEW offer request
     setDrawerInitialData(cloneData)
     setDrawerOpen(true)
-    toast.success('Pre-filled promotion template! Click Publish to launch as a new campaign.')
+    toast.success('Pre-filled promotion template! Click Publish to save to database.')
   }
 
   const handleDuplicate = (promo) => {
@@ -352,10 +329,16 @@ export default function Offers() {
   }
 
   const handleDeletePromotion = async (id) => {
-    if (window.confirm('Are you sure you want to delete this promotion campaign?')) {
-      setPromotions(prev => prev.filter(p => p.id !== id))
-      await promoApi.deletePromotionApi(id).catch(() => {})
-      toast.success('Promotion campaign deleted')
+    if (window.confirm('Are you sure you want to delete this promotion campaign from the database?')) {
+      try {
+        await promoApi.deletePromotionApi(id)
+        const freshList = await promoApi.getMyPromotions()
+        setPromotions(freshList)
+        toast.success('Promotion campaign deleted from database!')
+      } catch (err) {
+        console.error('Failed to delete promotion:', err)
+        toast.error(err?.response?.data?.message || 'Failed to delete promotion from database')
+      }
     }
   }
 
