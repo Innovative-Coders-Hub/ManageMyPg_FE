@@ -30,9 +30,10 @@ import {
   Activity,
   ThumbsUp,
   Printer,
+  Download,
   X
 } from 'lucide-react'
-import { getTenantDetails, approveTenant, markRentAsPaid } from '../api/ownerAuth'
+import { getTenantDetails, approveTenant, markRentAsPaid, getPgDetailsById, getOwnerProfile } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
 import PaymentModal from '../components/models/PaymentModal'
 import { printRentReceipt } from '../components/PrintRentReceipt'
@@ -106,20 +107,46 @@ export default function TenantDetails() {
     }
   }
 
-  const handlePrintReceipt = (rent) => {
+  const handlePrintReceipt = async (rent) => {
+    if (!rent || rent.status === 'PARTIAL' || rent.status !== 'PAID') {
+      toast.error('Receipt download is only available for fully paid rent.')
+      return
+    }
+    let pgInfo = {
+      name: tenant.pgName,
+      address: tenant.pgAddress,
+      phone: tenant.pgPhone
+    }
+    let ownerInfo = {
+      name: tenant.ownerName
+    }
+
+    try {
+      const [pgRes, ownerRes] = await Promise.all([
+        tenant?.pgId ? getPgDetailsById(tenant.pgId).catch(() => null) : null,
+        getOwnerProfile().catch(() => null)
+      ])
+      if (pgRes) {
+        pgInfo = {
+          name: pgRes.pgName || pgRes.name || pgInfo.name,
+          address: pgRes.address || pgRes.fullAddress || pgInfo.address,
+          phone: pgRes.phone || pgRes.mobile || pgInfo.phone
+        }
+      }
+      if (ownerRes) {
+        ownerInfo.name = ownerRes.fullName || ownerRes.businessName || ownerInfo.name
+      }
+    } catch (e) {
+      console.error('Receipt API fetch error', e)
+    }
+
     const receiptData = {
       receipt: {
         receiptNumber: `REC-${tenant.pgId || '00'}-${dayjs().format('YYYYMMDD')}-${Math.floor(Math.random() * 1000)}`,
         issuedAt: rent.paidDate || new Date(),
       },
-      pg: {
-        name: tenant.pgName || 'Our PG',
-        address: tenant.pgAddress || 'N/A',
-        phone: tenant.pgPhone || ''
-      },
-      owner: {
-        name: tenant.ownerName || 'Manager'
-      },
+      pg: pgInfo,
+      owner: ownerInfo,
       tenant: {
         name: tenant.name,
         mobile: tenant.mobileNumber
@@ -404,9 +431,9 @@ export default function TenantDetails() {
                                 <button
                                   onClick={() => handlePrintReceipt(rent)}
                                   className="p-1.5 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all border border-slate-200 cursor-pointer shadow-xs"
-                                  title="Print Receipt"
+                                  title="Download Receipt"
                                 >
-                                  <Printer size={14} />
+                                  <Download size={14} />
                                 </button>
                               )}
                               {rent.status !== 'PAID' && (
