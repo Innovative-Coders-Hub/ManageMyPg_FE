@@ -185,7 +185,7 @@ const hideSidebar =
         <ScrollToHash />
         <PageLoader show={routeLoading} />
 
-        <div className="min-h-[calc(100vh-64px)] flex">
+        <div className="min-h-screen flex overflow-x-hidden w-full max-w-full">
           {/* Sidebar hidden on landing and auth pages */}
           {!hideSidebar && (
             <SidebarFresh
@@ -197,7 +197,8 @@ const hideSidebar =
           )}
 
           <main className={cx(
-            "flex-1 px-4 py-4 transition-all duration-200 relative",
+            "flex-1 min-w-0 px-4 py-4 transition-all duration-300 relative overflow-x-hidden max-w-full",
+            !hideSidebar && (collapsed ? "md:ml-16" : "md:ml-52"),
             showMobileHamburger && "pt-24 md:pt-4"
           )}>
             {/* Mobile Hamburger Trigger (Visible when Header is hidden on Dashboard routes) */}

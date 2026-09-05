@@ -149,10 +149,10 @@ export default function TenantDetails() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="animate-spin text-indigo-600" size={40} />
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Retrieving Tenant Profile...</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Retrieving Resident Profile...</p>
         </div>
       </div>
     )
@@ -160,18 +160,18 @@ export default function TenantDetails() {
 
   if (error || !tenant) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8 flex items-center justify-center">
-        <div className="bg-white p-12 rounded-3xl border border-slate-200 shadow-xl text-center max-w-md">
+      <div className="min-h-screen bg-[#F8FAFC] p-8 flex items-center justify-center">
+        <div className="bg-white p-12 rounded-3xl border border-slate-200/80 shadow-xl text-center max-w-md">
           <div className="h-20 w-20 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto mb-6">
             <AlertCircle size={40} />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Error Occurred</h2>
-          <p className="text-slate-500 font-medium mb-8">{error || 'Tenant not found'}</p>
+          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Profile Unavailable</h2>
+          <p className="text-slate-500 font-medium mb-8 text-sm">{error || 'Resident profile could not be located.'}</p>
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center gap-2 w-full px-6 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-600 transition-all"
+            className="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-md active:scale-95 cursor-pointer"
           >
-            <ArrowLeft size={18} /> Go Back
+            <ArrowLeft size={16} /> Return to Directory
           </button>
         </div>
       </div>
@@ -183,22 +183,31 @@ export default function TenantDetails() {
     : null
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24">
       <SEO
-        title={tenant ? `${tenant.name} | Tenant Profile` : 'Tenant Profile'}
-        description={tenant ? `Detailed profile for ${tenant.name} at ${tenant.pgName}. View rent history, personal details, and verification documents.` : 'View tenant profile and rent ledger.'}
+        title={tenant ? `${tenant.name} - Resident Profile` : 'Resident Profile'}
+        description={tenant ? `Detailed profile for ${tenant.name} at ${tenant.pgName}. View rent ledger, personal details, and verification documents.` : 'View resident profile and rent ledger.'}
         canonical={`/tenant-details/${tenantId}`}
       />
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      {/* STICKY HEADER BAR WITH RESIDENT IDENTIFIER & QUICK STATS */}
+      <div className="bg-white border-b border-slate-200/80 pt-4 pb-4 sticky top-0 z-30 shadow-sm/50 backdrop-blur-md bg-white/95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-            <div className="flex items-center gap-4 md:gap-6">
-              {/* Profile Image Section */}
+            
+            {/* LEFT PROFILE HIGHLIGHT */}
+            <div className="flex items-center gap-4 md:gap-5">
+              <button
+                onClick={() => navigate(-1)}
+                className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:border-indigo-200 hover:bg-white transition-all shrink-0 cursor-pointer shadow-xs active:scale-95"
+                title="Back to Directory"
+              >
+                <ArrowLeft size={18} />
+              </button>
+
               <div className="relative group shrink-0">
-                <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
-                <div
-                  onClick={() => profileImageUrl && !imgError && setPreviewImage({ url: profileImageUrl, title: tenant.name })}
-                  className="relative h-20 w-20 md:h-24 md:w-24 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white border-2 border-slate-100 shadow-md overflow-hidden flex items-center justify-center cursor-pointer active:scale-95 transition-transform"
+                     onClick={() => profileImageUrl && !imgError && setPreviewImage({ url: profileImageUrl, title: tenant.name })}
                 >
                   {profileImageUrl && !imgError ? (
                     <img
@@ -208,172 +217,163 @@ export default function TenantDetails() {
                       onError={() => setImgError(true)}
                     />
                   ) : (
-                    <div className="h-full w-full bg-slate-50 flex items-center justify-center text-slate-300">
-                      <User size={40} />
+                    <div className="h-full w-full bg-indigo-600 flex items-center justify-center text-white font-black text-xl">
+                      {tenant.name ? tenant.name.charAt(0).toUpperCase() : '?'}
                     </div>
                   )}
                 </div>
                 {tenant.approved && (
-                  <div className="absolute -bottom-1 -right-1 h-8 w-8 bg-emerald-500 rounded-xl border-4 border-white flex items-center justify-center text-white shadow-lg">
-                    <CheckCircle2 size={14} />
+                  <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-emerald-500 rounded-lg border-2 border-white flex items-center justify-center text-white shadow-xs">
+                    <CheckCircle2 size={12} />
                   </div>
                 )}
               </div>
 
-              {/* Text Content Next to Image */}
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tighter uppercase truncate leading-tight">
+                  <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight uppercase truncate leading-tight">
                     {tenant.name}
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
+                  <div className="flex items-center gap-1.5">
+                    <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
                       tenant.vacated
                         ? 'bg-rose-50 text-rose-600 border-rose-100'
                         : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                     }`}>
-                      {tenant.vacated ? 'Vacated' : 'Active'}
+                      {tenant.vacated ? 'Vacated' : 'Active Resident'}
                     </span>
                     {tenant.approved && (
-                      <span className="bg-blue-50 text-blue-600 border border-blue-100 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest">
+                      <span className="bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest">
                         Verified
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
                     {tenant.pgName} • {tenant.roomName || 'Room N/A'} • {tenant.bedDetail || 'Bed N/A'}
                   </p>
-
                   <div className="flex items-center gap-1.5 text-slate-500">
-                    <div className="h-4 w-4 rounded bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                      <Clock size={8} strokeWidth={3} />
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest">Joined {dayjs(tenant.dateOfJoining).format('DD MMM YYYY')}</span>
+                    <Clock size={11} className="text-indigo-600" />
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      Joined {dayjs(tenant.dateOfJoining).format('DD MMM YYYY')}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Stats Grid - Now in Header */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 xl:max-w-3xl">
-              <HeaderStat label="Monthly Rent" value={`₹${tenant.monthlyRent}`} icon={<CreditCard />} color="indigo" />
-              <HeaderStat label="Security Advance" value={`₹${tenant.advance}`} icon={<ShieldCheck />} color="emerald" />
-              <HeaderStat label="Outstanding" value={`₹${tenant.pending}`} icon={<AlertCircle />} color={tenant.pending > 0 ? 'rose' : 'slate'} />
-              <HeaderStat label="Sharing Type" value={`${tenant.sharing} Sharing`} icon={<Users />} color="purple" />
+            {/* QUICK EXECUTIVE STATS */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 xl:max-w-2xl">
+              <HeaderStat label="Monthly Rent" value={`₹${(tenant.monthlyRent || 0).toLocaleString()}`} icon={<CreditCard />} color="indigo" />
+              <HeaderStat label="Security Deposit" value={`₹${(tenant.advance || 0).toLocaleString()}`} icon={<ShieldCheck />} color="emerald" />
+              <HeaderStat label="Outstanding Dues" value={`₹${(tenant.pending || 0).toLocaleString()}`} icon={<AlertCircle />} color={tenant.pending > 0 ? 'rose' : 'slate'} />
+              <HeaderStat label="Sharing Model" value={`${tenant.sharing || 1} Sharing`} icon={<Users />} color="purple" />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-3 self-end xl:self-center">
-              {!tenant.approved && (
+            {/* HEADER ACTIONS */}
+            {!tenant.approved && (
+              <div className="flex items-center gap-3 self-end xl:self-center shrink-0">
                 <button
                   onClick={handleApprove}
                   disabled={approving}
-                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 disabled:opacity-50"
+                  className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
                 >
                   {approving ? <Loader2 size={14} className="animate-spin" /> : <ThumbsUp size={14} strokeWidth={2.5} />}
-                  Approve
+                  Approve Resident
                 </button>
-              )}
-              <button
-                onClick={() => navigate(-1)}
-                className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:border-indigo-100 transition-all group"
-              >
-                <ArrowLeft size={20} strokeWidth={2.5} className="group-hover:-translate-x-0.5 transition-transform" />
-              </button>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* MAIN CONTENT GRID */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Left Column: Core Info */}
-          <div className="lg:col-span-8 space-y-8">
+          {/* LEFT COLUMN: CORE RESIDENT INFO & LEDGER (8 COLS) */}
+          <div className="lg:col-span-8 space-y-6">
 
-            {/* Personal Details Section */}
+            {/* PERSONAL PROFILE CARD */}
             <Section title="Personal Profile" icon={<User />} color="indigo">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-                <InfoItem label="Full Name" value={tenant.name} icon={<User />} color="indigo" />
-                <InfoItem label="Son/Daughter of" value={tenant.sonOf} icon={<Users />} color="blue" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+                <InfoItem label="Full Legal Name" value={tenant.name} icon={<User />} color="indigo" />
+                <InfoItem label="Guardian / Parent Name" value={tenant.sonOf} icon={<Users />} color="blue" />
                 <InfoItem label="Date of Birth" value={tenant.dateOfBirth ? dayjs(tenant.dateOfBirth).format('DD MMMM YYYY') : 'N/A'} icon={<Calendar />} color="amber" />
-                <InfoItem label="Age" value={`${tenant.age} Years`} icon={<Activity />} color="rose" />
-                <InfoItem label="Aadhaar Number" value={tenant.aadhaarNumber ? `XXXX XXXX ${tenant.aadhaarNumber.slice(-4)}` : 'N/A'} icon={<ShieldCheck />} color="emerald" />
-                <InfoItem label="Blood Group" value={tenant.bloodGroup} icon={<Activity />} color="rose" />
-                <InfoItem label="Qualification" value={tenant.qualification} icon={<Briefcase />} color="purple" />
+                <InfoItem label="Age" value={tenant.age ? `${tenant.age} Years` : 'N/A'} icon={<Activity />} color="rose" />
+                <InfoItem label="Aadhaar ID Number" value={tenant.aadhaarNumber ? `XXXX XXXX ${tenant.aadhaarNumber.slice(-4)}` : 'N/A'} icon={<ShieldCheck />} color="emerald" />
+                <InfoItem label="Blood Group" value={tenant.bloodGroup || 'N/A'} icon={<Activity />} color="rose" />
+                <InfoItem label="Educational Qualification" value={tenant.qualification || 'N/A'} icon={<Briefcase />} color="purple" />
               </div>
             </Section>
 
-            {/* Professional & Contact */}
-            <Section title="Professional & Contact" icon={<Briefcase />} color="purple">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+            {/* CONTACT & EMPLOYMENT CARD */}
+            <Section title="Professional & Emergency Contact" icon={<Briefcase />} color="purple">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
                 <InfoItem label="Email Address" value={tenant.email} icon={<Mail />} color="indigo" />
-                <InfoItem label="Mobile Number" value={tenant.mobileNumber} icon={<Phone />} color="emerald" />
-                <InfoItem label="Emergency Number" value={tenant.parentNumber} icon={<Phone />} color="rose" />
-                <InfoItem label="Company / College" value={tenant.workCompany} icon={<Building />} color="amber" />
+                <InfoItem label="Primary Mobile" value={tenant.mobileNumber} icon={<Phone />} color="emerald" />
+                <InfoItem label="Emergency Contact" value={tenant.parentNumber} icon={<Phone />} color="rose" />
+                <InfoItem label="Workplace / Institution" value={tenant.workCompany || 'N/A'} icon={<Building />} color="amber" />
                 <InfoItem label="Vehicle Number" value={tenant.vehicleNumber || 'No Vehicle'} icon={<Hash />} color="slate" />
               </div>
             </Section>
 
-            {/* Permanent Address */}
+            {/* PERMANENT ADDRESS CARD */}
             <Section title="Permanent Address" icon={<MapPin />} color="rose">
               {tenant.address ? (
-                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 group hover:border-rose-100 transition-colors">
-                  <div className="flex gap-4">
-                    <div className="h-10 w-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-rose-600 shadow-sm shrink-0 group-hover:scale-110 transition-transform">
-                      <MapPin size={18} strokeWidth={2.5} />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-relaxed">
-                        {tenant.address.address}, {tenant.address.areaLocality}<br />
-                        {tenant.address.landmark && `${tenant.address.landmark}, `}
-                        {tenant.address.city}, {tenant.address.district && `${tenant.address.district}, `} {tenant.address.state} - {tenant.address.pinCode}<br />
-                        {tenant.address.country}
-                      </p>
-                    </div>
+                <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 flex items-start gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-rose-600 shadow-xs shrink-0 mt-0.5">
+                    <MapPin size={18} strokeWidth={2.2} />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest leading-relaxed">
+                      {tenant.address.address}, {tenant.address.areaLocality}<br />
+                      {tenant.address.landmark && `${tenant.address.landmark}, `}
+                      {tenant.address.city}, {tenant.address.district && `${tenant.address.district}, `} {tenant.address.state} - {tenant.address.pinCode}<br />
+                      {tenant.address.country || 'India'}
+                    </p>
                   </div>
                 </div>
               ) : (
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No address information provided</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No address details registered</p>
               )}
             </Section>
 
-            {/* Rent History */}
-            <Section title="Rent Ledger" icon={<History />} color="emerald">
-              <div className="overflow-x-auto bg-white border border-slate-200 rounded-[2rem] shadow-sm">
-                <table className="w-full text-left border-collapse min-w-[800px]">
+            {/* RENT LEDGER TABLE SECTION */}
+            <Section title="Rent Payment Ledger" icon={<History />} color="emerald">
+              <div className="overflow-x-auto bg-white border border-slate-200/80 rounded-2xl shadow-xs">
+                <table className="w-full text-left border-collapse min-w-[750px]">
                   <thead>
-                    <tr className="bg-slate-50">
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Month</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Due Date</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Due</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Paid</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Paid Date</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                      <th className="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                    <tr className="bg-slate-900 text-white">
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest">Billing Month</th>
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest">Due Date</th>
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest">Total Due</th>
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest">Paid Amount</th>
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest">Payment Date</th>
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest">Status</th>
+                      <th className="px-5 py-3.5 text-[9px] font-black uppercase tracking-widest text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {tenant.rentResponse && tenant.rentResponse.length > 0 ? (
                       tenant.rentResponse.map((rent, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{rent.rentMonth}</span>
+                        <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="px-5 py-4">
+                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider block">{rent.rentMonth}</span>
                             {rent.modeOfPayment && (
-                              <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{rent.modeOfPayment}</p>
+                              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">{rent.modeOfPayment}</span>
                             )}
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
+                          <td className="px-5 py-4">
+                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                               {rent.dueDate ? dayjs(rent.dueDate).format('DD MMM YYYY') : 'N/A'}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-5 py-4">
                             <div className="flex flex-col">
-                              <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">₹{rent.rentAmount + (rent.charges || 0) + (rent.lateFee || 0)}</span>
+                              <span className="text-[11px] font-black text-slate-900 tracking-tight">₹{(rent.rentAmount + (rent.charges || 0) + (rent.lateFee || 0)).toLocaleString()}</span>
                               {(rent.charges > 0 || rent.lateFee > 0 || rent.refundAmount > 0) && (
                                 <div className="flex flex-wrap gap-1 mt-0.5">
                                   {rent.charges > 0 && <span className="text-[7px] px-1 bg-blue-50 text-blue-600 rounded font-black uppercase">Chg: ₹{rent.charges}</span>}
@@ -383,27 +383,27 @@ export default function TenantDetails() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-indigo-600">
-                            <span className="text-[11px] font-black tracking-widest">₹{rent.paidAmount}</span>
+                          <td className="px-5 py-4 text-emerald-600">
+                            <span className="text-[11px] font-black tracking-tight">₹{(rent.paidAmount || 0).toLocaleString()}</span>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                          <td className="px-5 py-4">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                               {rent.paidDate ? dayjs(rent.paidDate).format('DD MMM YYYY') : 'PENDING'}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                          <td className="px-5 py-4">
+                            <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
                               rent.status === 'PAID' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
                             }`}>
                               {rent.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-5 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               {rent.status === 'PAID' && (
                                 <button
                                   onClick={() => handlePrintReceipt(rent)}
-                                  className="p-1.5 bg-slate-50 text-slate-400 hover:text-indigo-600 rounded-2xl transition-all border border-slate-200"
+                                  className="p-1.5 bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all border border-slate-200 cursor-pointer shadow-xs"
                                   title="Print Receipt"
                                 >
                                   <Printer size={14} />
@@ -412,7 +412,7 @@ export default function TenantDetails() {
                               {rent.status !== 'PAID' && (
                                 <button
                                   onClick={() => setSelectedRent(rent)}
-                                  className="px-3 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-700 transition-colors"
+                                  className="px-3 py-1 bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-indigo-700 transition-colors shadow-xs cursor-pointer"
                                 >
                                   Mark Paid
                                 </button>
@@ -423,7 +423,7 @@ export default function TenantDetails() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="3" className="px-6 py-8 text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">No transaction history found</td>
+                        <td colSpan="7" className="px-6 py-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No rent transaction records found</td>
                       </tr>
                     )}
                   </tbody>
@@ -432,41 +432,41 @@ export default function TenantDetails() {
             </Section>
           </div>
 
-          {/* Right Column: Documentation & Bed Info */}
-          <div className="lg:col-span-4 space-y-8">
+          {/* RIGHT COLUMN: ACCOMMODATION & DOCUMENTS (4 COLS) */}
+          <div className="lg:col-span-4 space-y-6">
 
-            {/* Bed Allocation Card */}
-            <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
-                <BedIcon size={120} />
+            {/* ACCOMMODATION DETAILS CARD */}
+            <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group border border-slate-800">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                <BedIcon size={110} />
               </div>
               <div className="relative z-10">
-                <div className="flex items-center gap-2 text-indigo-400 mb-6">
+                <div className="flex items-center gap-2 text-indigo-400 mb-5">
                   <div className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Accommodation Details</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Accommodation Summary</span>
                 </div>
 
-                <div className="space-y-6 mb-8">
+                <div className="space-y-4 mb-6">
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Assigned Property</p>
-                    <p className="text-lg font-black tracking-tight">{tenant.pgName}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Assigned Pg</p>
+                    <p className="text-base font-black tracking-tight">{tenant.pgName}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Space Allocation</p>
-                    <p className="text-lg font-black tracking-tight">{tenant.bedDetail || 'Not Assigned'}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Room Allocation</p>
+                    <p className="text-base font-black tracking-tight">{tenant.bedDetail || 'Not Assigned'}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Room Type</p>
-                    <p className="text-lg font-black tracking-tight">{tenant.roomType?.replace('_', ' ')}</p>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Room Type</p>
+                    <p className="text-base font-black tracking-tight uppercase">{tenant.roomType?.replace('_', ' ') || 'Standard'}</p>
                   </div>
                   {(tenant.dateOfVacate || tenant.expectedCheckoutDate) && (
-                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/10">
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-white/10">
                       <div>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Vacate Date</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Vacate Date</p>
                         <p className="text-xs font-bold">{tenant.dateOfVacate ? dayjs(tenant.dateOfVacate).format('DD MMM YYYY') : 'N/A'}</p>
                       </div>
                       <div>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Expected Checkout</p>
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Vacateing</p>
                         <p className="text-xs font-bold">{(tenant.dateOfVacate || tenant.expectedCheckoutDate) ? dayjs(tenant.dateOfVacate || tenant.expectedCheckoutDate).format('DD MMM YYYY') : 'N/A'}</p>
                       </div>
                     </div>
@@ -476,58 +476,56 @@ export default function TenantDetails() {
                 {tenant.bedId && (
                   <Link
                     to={`/beds/${tenant.bedId}`}
-                    className="flex items-center justify-center gap-2 w-full px-6 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-indigo-50 transition-all"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-white text-slate-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-md active:scale-95"
                   >
-                    View Bed Details <ExternalLink size={16} />
+                     View Assigned Bed Details <ExternalLink size={14} />
                   </Link>
                 )}
               </div>
             </div>
 
-            {/* Documentation Section */}
-            <Section title="Verification Documents" icon={<ShieldCheck />} color="cyan">
+            {/* VERIFICATION DOCUMENTS SECTION */}
+            <Section title="Verification Documents" icon={<ShieldCheck />} color="blue">
               <div className="space-y-3">
                 {tenant.documents && tenant.documents.length > 0 ? (
                   tenant.documents.map((doc, idx) => (
-                    <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between group hover:border-cyan-600 transition-all shadow-sm">
+                    <div key={idx} className="bg-white p-3.5 rounded-xl border border-slate-200/80 flex items-center justify-between group hover:border-indigo-300 transition-all shadow-xs">
                       <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white transition-colors shadow-sm">
-                          <FileText size={18} strokeWidth={2.5} />
+                        <div className="h-9 w-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors shrink-0">
+                          <FileText size={16} strokeWidth={2.2} />
                         </div>
-                        <div>
-                          <p className="text-[9px] font-black text-slate-900 uppercase tracking-tight">{doc.type}</p>
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                            Verified: {doc.type?.toUpperCase().includes('AADHAAR')
-                              ? (doc.documentNumber ? `XXXX XXXX ${doc.documentNumber.slice(-4)}` : 'N/A')
-                              : doc.documentNumber}
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight truncate">{doc.type}</p>
+                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider truncate">
+                            ID: {doc.type?.toUpperCase().includes('AADHAAR')
+                              ? (doc.documentNumber ? `XXXX XXXX ${doc.documentNumber.slice(-4)}` : 'Verified')
+                              : (doc.documentNumber || 'Verified')}
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={() => setPreviewImage({ url: `${IMAGE_BASE_URL}${doc.url}`, title: doc.type })}
-                        className="h-8 w-8 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 hover:bg-cyan-600 hover:text-white transition-all"
+                        className="h-8 w-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all cursor-pointer shadow-xs shrink-0"
+                        title="View Document"
                       >
                         <ExternalLink size={14} />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="bg-slate-50 p-6 rounded-[2.5rem] border-2 border-dashed border-slate-200 text-center">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No Documents Uploaded</p>
+                  <div className="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No Documents Uploaded</p>
                   </div>
                 )}
               </div>
             </Section>
 
-            {/* Account Status Card */}
-            <div className="bg-white rounded-[2.5rem] p-6 border border-slate-200 shadow-sm">
-              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                  <UserCheck size={16} strokeWidth={2.5} />
-                </div>
-                Administrative Status
+            {/* ADMINISTRATIVE STATUS CARD */}
+            <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
+              <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 pb-2 border-b border-slate-100">
+                <UserCheck size={16} className="text-indigo-600" /> Administrative Status
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <StatusToggle
                   label="Approval Status"
                   status={tenant.approved ? 'APPROVED' : 'PENDING'}
@@ -537,39 +535,23 @@ export default function TenantDetails() {
                   <button
                     onClick={handleApprove}
                     disabled={approving}
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-emerald-600 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                   >
-                    {approving ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      <ThumbsUp size={14} />
-                    )}
-                    Approve Tenant
+                    {approving ? <Loader2 size={14} className="animate-spin" /> : <ThumbsUp size={14} />}
+                    Approve Resident
                   </button>
                 )}
-                <StatusToggle label="Onboarding" status={tenant.approved ? 'COMPLETE' : 'IN-PROGRESS'} active={tenant.approved} />
-                <StatusToggle label="Residency" status={tenant.vacated ? 'VACATED' : 'STAYING'} active={!tenant.vacated} />
+                <StatusToggle label="Onboarding Status" status={tenant.approved ? 'COMPLETE' : 'IN-PROGRESS'} active={tenant.approved} />
+                <StatusToggle label="Residency Status" status={tenant.vacated ? 'VACATED' : 'STAYING'} active={!tenant.vacated} />
                 <StatusToggle label="Account Access" status={tenant.blocked ? 'BLOCKED' : 'ACTIVE'} active={!tenant.blocked} />
-                <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Custom Rent</span>
-                    <span className={`text-[9px] font-bold ${tenant.customRent ? 'text-indigo-600' : 'text-slate-400'}`}>
-                      {tenant.customRent ? 'ENABLED' : 'DISABLED'}
-                    </span>
-                  </div>
-                  <div className="flex flex-col gap-1 text-right">
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Prorated</span>
-                    <span className={`text-[9px] font-bold ${tenant.prorated ? 'text-indigo-600' : 'text-slate-400'}`}>
-                      {tenant.prorated ? 'ACTIVE' : 'INACTIVE'}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
           </div>
         </div>
       </div>
+
+      {/* PAYMENT MODAL */}
       <AnimatePresence>
         {selectedRent && (
           <PaymentModal
@@ -587,6 +569,7 @@ export default function TenantDetails() {
         )}
       </AnimatePresence>
 
+      {/* IMAGE PREVIEW MODAL */}
       <AnimatePresence>
         {previewImage && (
           <motion.div
@@ -594,33 +577,30 @@ export default function TenantDetails() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setPreviewImage(null)}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-4xl w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl"
+              className="relative max-w-4xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200"
             >
-              <div className="absolute top-4 right-4 z-10">
+              <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-widest">{previewImage.title}</span>
                 <button
                   onClick={() => setPreviewImage(null)}
-                  className="p-2 bg-slate-900/20 hover:bg-slate-900/40 backdrop-blur-md rounded-full text-white transition-colors"
+                  className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
                 >
-                  <X size={24} />
+                  <X size={18} />
                 </button>
               </div>
-              <div className="p-2">
+              <div className="p-4 bg-slate-100 flex items-center justify-center">
                 <img
                   src={previewImage.url}
                   alt={previewImage.title}
-                  className="w-full h-auto max-h-[80vh] object-contain rounded-[1.5rem]"
+                  className="max-h-[75vh] w-auto object-contain rounded-xl shadow-md"
                 />
-              </div>
-              <div className="p-6 bg-white border-t border-slate-100">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Image Preview</p>
-                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{previewImage.title}</h3>
               </div>
             </motion.div>
           </motion.div>
@@ -630,6 +610,9 @@ export default function TenantDetails() {
   )
 }
 
+/* =====================================================
+   HELPER SUB-COMPONENTS
+===================================================== */
 function HeaderStat({ label, value, icon, color }) {
   const colors = {
     indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
@@ -641,35 +624,14 @@ function HeaderStat({ label, value, icon, color }) {
   }
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-slate-50/50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-sm transition-all">
-      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border ${colors[color] || colors.indigo} group-hover:scale-110 transition-transform`}>
-        {React.cloneElement(icon, { size: 14, strokeWidth: 2.5 })}
+    <div className="flex items-center gap-3 px-3.5 py-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 hover:bg-white transition-all shadow-xs">
+      <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 border ${colors[color] || colors.indigo}`}>
+        {React.cloneElement(icon, { size: 16, strokeWidth: 2.2 })}
       </div>
       <div className="min-w-0">
         <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</p>
-        <p className="text-[10px] font-black text-slate-900 truncate leading-none">{value}</p>
+        <p className="text-xs font-black text-slate-900 truncate leading-none">{value}</p>
       </div>
-    </div>
-  )
-}
-
-function StatCard({ label, value, icon, color }) {
-  const colors = {
-    indigo: 'text-indigo-600 bg-indigo-50 border-indigo-100',
-    emerald: 'text-emerald-600 bg-emerald-50 border-emerald-100',
-    rose: 'text-rose-600 bg-rose-50 border-rose-100',
-    slate: 'text-slate-600 bg-slate-50 border-slate-100',
-    purple: 'text-purple-600 bg-purple-50 border-purple-100',
-    amber: 'text-amber-600 bg-amber-50 border-amber-100'
-  }
-
-  return (
-    <div className="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-all group">
-      <div className={`h-10 w-10 rounded-xl flex items-center justify-center mb-4 border ${colors[color] || colors.indigo} group-hover:scale-110 transition-transform`}>
-        {React.cloneElement(icon, { size: 18, strokeWidth: 2.5 })}
-      </div>
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-sm font-black text-slate-900">{value}</p>
     </div>
   )
 }
@@ -687,14 +649,14 @@ function Section({ title, icon, children, color = "indigo" }) {
   const colorClass = colors[color] || colors.indigo
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 px-1">
-        <div className={`h-9 w-9 rounded-xl border flex items-center justify-center shadow-sm ${colorClass}`}>
-          {React.cloneElement(icon, { size: 18, strokeWidth: 2.5 })}
+    <div className="space-y-3">
+      <div className="flex items-center gap-2.5 px-1">
+        <div className={`h-8 w-8 rounded-lg border flex items-center justify-center shadow-xs ${colorClass}`}>
+          {React.cloneElement(icon, { size: 16, strokeWidth: 2.2 })}
         </div>
-        <h2 className="text-[10px] font-black text-slate-900 uppercase tracking-widest">{title}</h2>
+        <h2 className="text-xs font-black text-slate-900 uppercase tracking-widest">{title}</h2>
       </div>
-      <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-200 shadow-sm">
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         {children}
       </div>
     </div>
@@ -716,13 +678,13 @@ function InfoItem({ label, value, icon, color = "indigo" }) {
   const colorClass = colors[color] || colors.indigo
 
   return (
-    <div className="flex gap-4 group">
-      <div className={`h-10 w-10 rounded-xl border flex items-center justify-center transition-all shrink-0 group-hover:scale-110 shadow-sm ${colorClass}`}>
-        {React.cloneElement(icon, { size: 16, strokeWidth: 2.5 })}
+    <div className="flex gap-3.5 items-center group">
+      <div className={`h-9 w-9 rounded-xl border flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform shadow-xs ${colorClass}`}>
+        {React.cloneElement(icon, { size: 15, strokeWidth: 2.2 })}
       </div>
-      <div className="min-w-0">
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-        <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{value || 'N/A'}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+        <p className="text-xs font-black text-slate-900 uppercase tracking-tight truncate">{value || 'N/A'}</p>
       </div>
     </div>
   )
@@ -730,9 +692,9 @@ function InfoItem({ label, value, icon, color = "indigo" }) {
 
 function StatusToggle({ label, status, active }) {
   return (
-    <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100 group hover:border-slate-200 transition-colors">
-      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</span>
-      <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+      <span className="text-[9px] font-black text-slate-500 uppercase tracking-wider">{label}</span>
+      <span className={`px-2.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
         active ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'
       }`}>
         {status}
