@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import SEO from '../components/SEO'
 import {
@@ -117,10 +117,11 @@ function StatusPill({ status }) {
 /* =====================================================
    MAIN BOOKINGS COMPONENT
 ===================================================== */
+import { useAppScope } from '../context/AppScopeContext'
+
 export default function Bookings() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const pgId = searchParams.get('pgId')
+  const { activePgId: pgId, setActivePgId } = useAppScope()
 
   const [pgs, setPgs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -163,14 +164,14 @@ export default function Bookings() {
         const pgsData = await getAllPgs()
         setPgs(pgsData || [])
         if (!pgId && pgsData && pgsData.length > 0) {
-          navigate(`?pgId=${pgsData[0].id}`, { replace: true })
+          setActivePgId(pgsData[0].id)
         }
       } catch (err) {
         toast.error('Failed to load PG properties')
       }
     }
     fetchInitialData()
-  }, [pgId, navigate])
+  }, [pgId])
 
   useEffect(() => {
     if (!pgId) return
@@ -382,7 +383,7 @@ export default function Bookings() {
                 label="Property Unit"
                 value={pgId}
                 options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
-                onChange={(val) => navigate(`?pgId=${val}`)}
+                onChange={(val) => setActivePgId(val)}
                 icon={Building}
                 className="w-64"
               />

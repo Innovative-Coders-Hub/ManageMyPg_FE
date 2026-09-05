@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import LogoImg from '../assets/managemypg.png'
 
-const BASE_URL = 'https://api.managemypg.com/managemypg'
+import { getFullImageUrl } from '../api/api'
 
 export default function TenantHeader({ tenant }) {
   const navigate = useNavigate()
@@ -136,7 +136,7 @@ export default function TenantHeader({ tenant }) {
                   <div className="h-10 w-10 min-w-[40px] rounded-xl bg-indigo-50 border-2 border-white shadow-sm flex items-center justify-center text-indigo-600 font-bold overflow-hidden relative">
                     {tenant.profileImageUrl ? (
                       <img
-                        src={`${BASE_URL}${tenant.profileImageUrl}`}
+                        src={getFullImageUrl(tenant.profileImageUrl)}
                         alt="Profile"
                         className="h-full w-full object-cover transition-transform group-hover:scale-110"
                         onError={(e) => {

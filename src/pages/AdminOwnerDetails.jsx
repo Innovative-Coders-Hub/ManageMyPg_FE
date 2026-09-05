@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
 import dayjs from 'dayjs'
@@ -48,7 +49,9 @@ const itemVariants = {
 const BASE_URL = 'https://api.managemypg.com'
 
 export default function AdminOwnerDetails() {
-  const { id } = useParams()
+  const { id: routeAdminOwnerId } = useParams()
+  const { activeAdminOwnerId } = useAppScope()
+  const id = activeAdminOwnerId || routeAdminOwnerId
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
@@ -77,6 +80,10 @@ export default function AdminOwnerDetails() {
   }, [showReasonModal, showStatusModal])
 
   useEffect(() => {
+    if (!id) {
+      navigate('/admin/owners', { replace: true })
+      return
+    }
     async function fetchOwner() {
       try {
         setLoading(true)
@@ -97,7 +104,7 @@ export default function AdminOwnerDetails() {
       }
     }
     fetchOwner()
-  }, [id, refreshKey])
+  }, [id, refreshKey, navigate])
 
   async function updateOwnerStatus(action, reason) {
     try {

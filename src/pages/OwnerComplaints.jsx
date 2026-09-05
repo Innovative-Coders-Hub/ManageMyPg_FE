@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import dayjs from 'dayjs'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import SEO from '../components/SEO'
 import PageHeader from '../components/PageHeader'
@@ -117,8 +118,7 @@ const StatusBadge = ({ status }) => {
 ===================================================== */
 export default function OwnerComplaints() {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const pgId = searchParams.get('pgId')
+  const { activePgId: pgId, setActivePgId } = useAppScope()
 
   const [pgs, setPgs] = useState([])
   const [complaints, setComplaints] = useState([])
@@ -151,14 +151,14 @@ export default function OwnerComplaints() {
         setPgs(pgsData || [])
 
         if (!pgId && pgsData && pgsData.length > 0) {
-          setSearchParams({ pgId: pgsData[0].id }, { replace: true })
+          setActivePgId(pgsData[0].id)
         }
       } catch (e) {
         console.error('Failed to load PGs', e)
       }
     }
     init()
-  }, [pgId, setSearchParams])
+  }, [pgId, setActivePgId])
 
   useEffect(() => {
     if (!pgId) return
@@ -328,7 +328,7 @@ export default function OwnerComplaints() {
               label="Property Scope"
               value={pgId || ''}
               options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
-              onChange={(val) => setSearchParams({ pgId: val })}
+              onChange={(val) => setActivePgId(val)}
               icon={Building2}
               className="w-full"
             />

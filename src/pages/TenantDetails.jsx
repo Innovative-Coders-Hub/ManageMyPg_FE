@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import dayjs from 'dayjs'
 import SEO from '../components/SEO'
@@ -33,7 +34,7 @@ import {
   Download,
   X
 } from 'lucide-react'
-import { getTenantDetails, approveTenant, markRentAsPaid, getPgDetailsById, getOwnerProfile } from '../api/ownerAuth'
+import { getTenantDetails, approveTenant, markRentAsPaid, getPgDetailsById, getOwnerProfile, assignTenantToBed } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
 import PaymentModal from '../components/models/PaymentModal'
 import { printRentReceipt } from '../components/PrintRentReceipt'
@@ -42,11 +43,14 @@ import { numberToWords } from '../components/utills/numberUtils'
 const IMAGE_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
 
 export default function TenantDetails() {
-  const { tenantId } = useParams()
+  const { tenantId: routeTenantId } = useParams()
+  const { activeTenantId } = useAppScope()
+  const tenantId = activeTenantId || routeTenantId
   const navigate = useNavigate()
   const [tenant, setTenant] = useState(null)
   const [loading, setLoading] = useState(true)
   const [approving, setApproving] = useState(false)
+  const [assigningBed, setAssigningBed] = useState(false)
   const [error, setError] = useState(null)
   const [selectedRent, setSelectedRent] = useState(null)
   const [imgError, setImgError] = useState(false)
@@ -66,8 +70,12 @@ export default function TenantDetails() {
   }
 
   useEffect(() => {
+    if (!tenantId) {
+      navigate('/tenants', { replace: true })
+      return
+    }
     fetchDetails()
-  }, [tenantId])
+  }, [tenantId, navigate])
 
   const handleApprove = async () => {
     try {
@@ -80,6 +88,25 @@ export default function TenantDetails() {
       console.error(err)
     } finally {
       setApproving(false)
+    }
+  }
+
+  const handleConfirmAssignment = async () => {
+    const bedId = tenant?.bookingDetails?.bedId || tenant?.bookingDetails?.id
+    if (!bedId) {
+      toast.error('Booking bed ID not found')
+      return
+    }
+    try {
+      setAssigningBed(true)
+      await assignTenantToBed(bedId, tenantId)
+      toast.success(`Assigned ${tenant.name} to Bed ${tenant.bookingDetails?.bedName || ''}!`)
+      fetchDetails(true)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to assign bed')
+      console.error(err)
+    } finally {
+      setAssigningBed(false)
     }
   }
 
@@ -322,6 +349,50 @@ export default function TenantDetails() {
 
           {/* LEFT COLUMN: CORE RESIDENT INFO & LEDGER (8 COLS) */}
           <div className="lg:col-span-8 space-y-6">
+
+            {/* PENDING BOOKING & CONFIRM ASSIGNMENT CARD */}
+            {tenant.bookingDetails && !tenant.bedDetail && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-amber-500/10 border-2 border-amber-400/60 rounded-3xl p-6 shadow-md relative overflow-hidden"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="h-12 w-12 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-sm">
+                      <Calendar size={24} />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2.5 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[9px] font-black uppercase tracking-wider">
+                          Pending Booking
+                        </span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 tracking-tight">
+                        Reserved Bed: <span className="text-amber-700">{tenant.bookingDetails.bedName || 'N/A'}</span>
+                        {tenant.bookingDetails.roomName && ` in ${tenant.bookingDetails.roomName}`}
+                      </h3>
+                      <p className="text-xs font-semibold text-slate-600">
+                        This resident has a confirmed booking for this bed. Verify details before confirming assignment.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleConfirmAssignment}
+                    disabled={assigningBed}
+                    className="px-6 py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl font-black text-[10.5px] uppercase tracking-wider shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                  >
+                    {assigningBed ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <CheckCircle2 size={16} strokeWidth={2.5} />
+                    )}
+                    Confirm & Assign Bed
+                  </button>
+                </div>
+              </motion.div>
+            )}
 
             {/* PERSONAL PROFILE CARD */}
             <Section title="Personal Profile" icon={<User />} color="indigo">

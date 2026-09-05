@@ -19,6 +19,7 @@ import {
   ChevronDown
 } from 'lucide-react'
 import { ownerLogout, getAllPgs, getOwnerProfile } from '../api/ownerAuth'
+import { useAppScope } from '../context/AppScopeContext'
 import ConfirmModal from '../components/ConfirmModal'
 import LogoImg from '../assets/managemypg.png'
 
@@ -47,12 +48,6 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate()
   const location = useLocation()
-
-  /* ---------- URL state ---------- */
-  const selectedPgId = useMemo(() => {
-    const params = new URLSearchParams(location.search)
-    return params.get('pgId')
-  }, [location.search])
 
   const isTenantsRoute = location.pathname === '/tenants'
   const isWorkersRoute = location.pathname === '/workers'
@@ -87,6 +82,8 @@ export default function Sidebar({
   const [showConfirm, setShowConfirm] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
   const [pgs, setPgs] = useState([])
+  const { activePgId, setActivePgId } = useAppScope()
+  const selectedPgId = activePgId
   const [loadingPgs, setLoadingPgs] = useState(false)
   const [profile, setProfile] = useState(null)
   const [showTenantPgs, setShowTenantPgs] = useState(false)
@@ -96,21 +93,21 @@ export default function Sidebar({
 
   useEffect(() => {
     if (isComplaintsRoute && !selectedPgId && pgs && pgs.length > 0) {
-      navigate(`/complaints?pgId=${pgs[0].id}`, { replace: true })
+      setActivePgId(pgs[0].id)
     }
-  }, [isComplaintsRoute, selectedPgId, pgs, navigate])
+  }, [isComplaintsRoute, selectedPgId, pgs])
 
   useEffect(() => {
     if (isTenantsRoute && !selectedPgId && pgs && pgs.length > 0) {
-      navigate(`/tenants?pgId=${pgs[0].id}`, { replace: true })
+      setActivePgId(pgs[0].id)
     }
-  }, [isTenantsRoute, selectedPgId, pgs, navigate])
+  }, [isTenantsRoute, selectedPgId, pgs])
 
   useEffect(() => {
     if (isWorkersRoute && !selectedPgId && pgs && pgs.length > 0) {
-      navigate(`/workers?pgId=${pgs[0].id}`, { replace: true })
+      setActivePgId(pgs[0].id)
     }
-  }, [isWorkersRoute, selectedPgId, pgs, navigate])
+  }, [isWorkersRoute, selectedPgId, pgs])
 
   useEffect(() => {
     const syncName = () => {
@@ -273,7 +270,8 @@ export default function Sidebar({
                   <button
                     key={pg.id}
                     onClick={() => {
-                      navigate(`/tenants?pgId=${pg.id}`)
+                      setActivePgId(pg.id)
+                      navigate('/tenants')
                       if (mobileOpen) setMobileOpen(false)
                     }}
                     className={cx(
@@ -313,7 +311,8 @@ export default function Sidebar({
                   <button
                     key={pg.id}
                     onClick={() => {
-                      navigate(`/workers?pgId=${pg.id}`)
+                      setActivePgId(pg.id)
+                      navigate('/workers')
                       if (mobileOpen) setMobileOpen(false)
                     }}
                     className={cx(
@@ -353,7 +352,8 @@ export default function Sidebar({
                   <button
                     key={pg.id}
                     onClick={() => {
-                      navigate(`/complaints?pgId=${pg.id}`)
+                      setActivePgId(pg.id)
+                      navigate('/complaints')
                       if (mobileOpen) setMobileOpen(false)
                     }}
                     className={cx(

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import toast from 'react-hot-toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createPg, getAllPgs, updatePgPricing, uploadPgTerms } from '../api/ownerAuth'
@@ -812,6 +813,7 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
 }
 
 const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
+  const { setActivePgDetailId } = useAppScope()
   const occupancyPct = pg.totalBeds > 0 ? Math.round(((pg.filledBeds || 0) / pg.totalBeds) * 100) : 0
 
   return (
@@ -877,7 +879,8 @@ const PgCard = React.forwardRef(({ pg, onPricing, onTerms, onQr }, ref) => {
         </div>
 
         <Link
-          to={`/pg/${pg.id}`}
+          to="/pg-details"
+          onClick={() => setActivePgDetailId(pg.id)}
           className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-indigo-600 transition-all active:scale-95 shadow-sm whitespace-nowrap"
         >
           Manage <ArrowRight size={13} />

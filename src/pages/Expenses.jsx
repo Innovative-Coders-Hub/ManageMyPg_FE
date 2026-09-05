@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
 import SEO from '../components/SEO'
@@ -96,17 +96,14 @@ const CATEGORY_GROUPS = {
     { name: 'EGGS', label: 'Eggs', icon: Utensils },
     { name: 'MILK', label: 'Milk', icon: Milk },
     { name: 'GROCERIES', label: 'Groceries', icon: ShoppingBag },
-    { name: 'FRUITS', label: 'Fruits', icon: Apple },
-    { name: 'FOOD', label: 'Food', icon: Utensils },
+    { name: 'FRUITS', label: 'Fruits', icon: Apple }
   ],
   Utilities: [
     { name: 'ELECTRICITY', label: 'Electricity', icon: Zap },
     { name: 'WATER_BILL', label: 'Water Bill', icon: Droplets },
     { name: 'WATER_TANK', label: 'Water Tank', icon: Droplets },
-    { name: 'WATER', label: 'Water', icon: Droplets },
     { name: 'GAS', label: 'Gas', icon: Flame },
-    { name: 'INTERNET', label: 'Internet', icon: Wifi },
-    { name: 'WIFI', label: 'Wifi', icon: Wifi },
+    { name: 'INTERNET', label: 'Internet', icon: Wifi }
   ],
   Maintenance: [
     { name: 'PLUMBING', label: 'Plumbing', icon: Wrench },
@@ -115,19 +112,16 @@ const CATEGORY_GROUPS = {
     { name: 'APPLIANCES', label: 'Appliances', icon: Monitor },
     { name: 'GENERAL_MAINTENANCE', label: 'General Maintenance', icon: Wrench },
     { name: 'CLEANING_SUPPLIES', label: 'Cleaning Supplies', icon: Brush },
-    { name: 'CLEANING', label: 'Cleaning', icon: Brush },
     { name: 'LAUNDRY', label: 'Laundry', icon: WashingMachine },
-    { name: 'WASTE_MANAGEMENT', label: 'Waste Management', icon: Trash2 },
+    { name: 'WASTE_MANAGEMENT', label: 'Waste Management', icon: Trash2 }
   ],
   Staff: [
     { name: 'SECURITY', label: 'Security', icon: Shield },
     { name: 'CLEANING_STAFF', label: 'Cleaning Staff', icon: Users },
     { name: 'COOKING_STAFF', label: 'Cooking Staff', icon: Users },
-    { name: 'MAINTENANCE_STAFF', label: 'Maintenance Staff', icon: Users },
-    { name: 'STAFF', label: 'Staff', icon: Users },
+    { name: 'MAINTENANCE_STAFF', label: 'Maintenance Staff', icon: Users }
   ],
   Other: [
-    { name: 'RENT', label: 'Rent', icon: Building2 },
     { name: 'STATIONERY', label: 'Stationery', icon: PenTool },
     { name: 'MEDICAL', label: 'Medical', icon: Activity },
     { name: 'ENTERTAINMENT', label: 'Entertainment', icon: Play },
@@ -137,7 +131,7 @@ const CATEGORY_GROUPS = {
     { name: 'LEGAL', label: 'Legal', icon: Gavel },
     { name: 'ADVERTISING', label: 'Advertising', icon: Megaphone },
     { name: 'PROMOTIONS', label: 'Promotions', icon: Tag },
-    { name: 'OTHER', label: 'Other', icon: Box },
+    { name: 'OTHER', label: 'Other', icon: Box }
   ]
 }
 
@@ -206,10 +200,11 @@ function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgC
 /* =====================================================
    MAIN EXPENSES COMPONENT
 ===================================================== */
+import { useAppScope } from '../context/AppScopeContext'
+
 export default function Expenses() {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const pgId = searchParams.get('pgId')
+  const { activePgId: pgId, setActivePgId } = useAppScope()
 
   const [pgs, setPgs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -260,16 +255,16 @@ export default function Expenses() {
       const finalPgs = Array.isArray(pgsData) ? pgsData : (pgsData?.data || [])
       setPgs(finalPgs)
 
-      const defaultCats = ['Food', 'Utilities', 'Maintenance', 'Staff', 'Electricity', 'Water', 'Cleaning', 'Wifi', 'Rent', 'Other']
+      const defaultCats = ['VEGETABLES', 'GROCERIES', 'ELECTRICITY', 'WATER_BILL', 'PLUMBING', 'CLEANING_SUPPLIES', 'SECURITY', 'INTERNET', 'OTHER']
       const finalCats = Array.isArray(catsData) ? catsData : (catsData?.data || catsData?.categories || defaultCats)
       setCategories(Array.isArray(finalCats) ? finalCats : defaultCats)
 
       if (!pgId && finalPgs.length > 0) {
-        setSearchParams({ pgId: finalPgs[0].id })
+        setActivePgId(finalPgs[0].id)
       }
     } catch (e) {
       console.error('Failed to fetch initial data', e)
-      setCategories(['Food', 'Utilities', 'Maintenance', 'Staff', 'Electricity', 'Water', 'Cleaning', 'Wifi', 'Rent', 'Other'])
+      setCategories(['VEGETABLES', 'GROCERIES', 'ELECTRICITY', 'WATER_BILL', 'PLUMBING', 'CLEANING_SUPPLIES', 'SECURITY', 'INTERNET', 'OTHER'])
     }
   }
 
@@ -498,7 +493,7 @@ export default function Expenses() {
             label="Property Scope"
             value={pgId}
             options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
-            onChange={(val) => setSearchParams({ pgId: val })}
+            onChange={(val) => setActivePgId(val)}
             icon={Building2}
             className="w-full lg:w-64"
           />

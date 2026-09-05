@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import { useAppScope } from '../context/AppScopeContext'
 import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
 import SEO from '../components/SEO'
@@ -147,8 +148,7 @@ function TenantAvatar({ name, profileImageUrl, vacated, size = "w-12 h-12" }) {
 ===================================================== */
 export default function Tenants() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const pgId = searchParams.get('pgId')
+  const { activePgId: pgId, setActivePgId, setActiveTenantId } = useAppScope()
 
   const [pgs, setPgs] = useState([])
   const [tenantsRaw, setTenantsRaw] = useState([])
@@ -170,7 +170,7 @@ export default function Tenants() {
 
         if (!pgId) {
           if (pgsData && pgsData.length > 0) {
-            navigate(`?pgId=${pgsData[0].id}`, { replace: true })
+            setActivePgId(pgsData[0].id)
           } else {
             setLoading(false)
           }
@@ -188,7 +188,7 @@ export default function Tenants() {
     }
 
     init()
-  }, [pgId, navigate])
+  }, [pgId, setActivePgId])
 
   const tenants = useMemo(() => {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
@@ -310,7 +310,7 @@ export default function Tenants() {
               label="Property Scope"
               value={pgId || ''}
               options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
-              onChange={(val) => navigate(`?pgId=${val}`)}
+              onChange={(val) => setActivePgId(val)}
               icon={Building2}
               className="w-full sm:w-64"
             />
@@ -424,7 +424,7 @@ export default function Tenants() {
                     key={t.id}
                     layout
                     variants={itemVariants}
-                    onClick={() => navigate(`/tenant/${t.id}`)}
+                    onClick={() => { setActiveTenantId(t.id); navigate('/tenant-details'); }}
                     className="group bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col justify-between cursor-pointer relative overflow-hidden h-full"
                   >
                     <div>
@@ -522,7 +522,7 @@ export default function Tenants() {
                       </a>
 
                       <button
-                        onClick={(e) => { e.stopPropagation(); navigate(`/tenant/${t.id}`); }}
+                        onClick={(e) => { e.stopPropagation(); setActiveTenantId(t.id); navigate('/tenant-details'); }}
                         className="py-2 px-4 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xs flex items-center justify-center gap-1.5 shrink-0"
                       >
                         Profile <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
@@ -556,7 +556,7 @@ export default function Tenants() {
                       {filtered.map(t => (
                         <tr
                           key={t.id}
-                          onClick={() => navigate(`/tenant/${t.id}`)}
+                          onClick={() => { setActiveTenantId(t.id); navigate('/tenant-details'); }}
                           className="hover:bg-slate-50/70 transition-all cursor-pointer group"
                         >
                           {/* RESIDENT PROFILE WITH AVATAR IMAGE */}
@@ -647,7 +647,7 @@ export default function Tenants() {
                                 <WhatsAppIcon size={14} />
                               </a>
                               <button
-                                onClick={() => navigate(`/tenant/${t.id}`)}
+                                onClick={() => { setActiveTenantId(t.id); navigate('/tenant-details'); }}
                                 className="px-3.5 py-1.5 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xs flex items-center gap-1"
                               >
                                 Profile <ChevronRight size={12} />
