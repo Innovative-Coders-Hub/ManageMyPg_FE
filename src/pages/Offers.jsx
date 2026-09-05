@@ -165,7 +165,7 @@ export default function Offers() {
     const loadPromotionsFromApi = async () => {
       try {
         const livePromos = await promoApi.getMyPromotions()
-        if (Array.isArray(livePromos) && livePromos.length > 0) {
+        if (Array.isArray(livePromos)) {
           setPromotions(livePromos)
         }
       } catch (err) {
@@ -570,6 +570,9 @@ export default function Offers() {
                           src={getFullImageUrl(promo.bannerUrl)}
                           alt={promo.title}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
                         
