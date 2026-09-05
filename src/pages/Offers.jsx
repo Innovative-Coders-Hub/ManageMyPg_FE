@@ -1152,17 +1152,13 @@ function OfferDrawer({ open, initialData, pgs, onClose, onSave }) {
                       onChange={async (e) => {
                         const file = e.target.files?.[0]
                         if (!file) return
-                        if (file.size > 5 * 1024 * 1024) {
-                          toast.error('Image size must be under 5MB')
-                          return
-                        }
-                        const loadingToast = toast.loading('Uploading banner image to server...')
+                        const loadingToast = toast.loading('Compressing & uploading banner image...')
                         try {
                           const serverUrl = await promoApi.uploadPromotionBannerApi(file)
                           if (serverUrl) {
                             setBannerUrl(serverUrl)
                             toast.dismiss(loadingToast)
-                            toast.success('Custom banner uploaded to VPS server!')
+                            toast.success('Custom banner uploaded to server!')
                           } else {
                             const reader = new FileReader()
                             reader.onload = (evt) => {

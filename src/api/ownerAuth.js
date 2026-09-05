@@ -80,15 +80,17 @@ export async function updateOwnerAddress(address) {
 }
 
 export async function uploadOwnerProfileImage(file) {
+  const compressed = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.8 })
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('file', compressed)
   const res = await api.post('/mmp/owner/profile/image', formData)
   return res.data
 }
 
 export async function uploadTenantProfileImage(file) {
+  const compressed = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.8 })
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('file', compressed)
   const res = await api.post('/mmp/tenants/profile/image', formData)
   return res.data
 }
@@ -340,7 +342,8 @@ export async function createWorker(workerDetails, imageFile) {
   // The backend expects the 'request' part as a JSON string
   formData.append('request', JSON.stringify(workerDetails))
   if (imageFile) {
-    formData.append('file', imageFile)
+    const compressed = await compressImage(imageFile, { maxWidth: 800, maxHeight: 800, quality: 0.8 })
+    formData.append('file', compressed)
   }
   const res = await api.post('/mmp/workers', formData)
   return res.data
@@ -366,8 +369,9 @@ export async function updateWorkerStatus(workerId, status) {
 }
 
 export async function updateWorkerImage(workerId, file) {
+  const compressed = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.8 })
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('file', compressed)
   const res = await api.post(`/mmp/workers/${workerId}/image`, formData)
   return res.data
 }
