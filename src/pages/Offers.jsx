@@ -1177,20 +1177,6 @@ function OfferDrawer({ open, initialData, pgs, onClose, onSave }) {
                   </label>
                 </div>
 
-                {/* Direct Image URL Input */}
-                <div className="space-y-1.5 pt-1">
-                  <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider">
-                    Or paste direct image URL:
-                  </label>
-                  <input
-                    type="url"
-                    value={bannerUrl}
-                    onChange={e => setBannerUrl(e.target.value)}
-                    placeholder="https://example.com/banner-poster.jpg"
-                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-indigo-500 transition-all"
-                  />
-                </div>
-
                 {/* Quick Presets Gallery */}
                 <div className="space-y-1.5">
                   <label className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider">
@@ -1213,7 +1199,7 @@ function OfferDrawer({ open, initialData, pgs, onClose, onSave }) {
                 {/* Banner Live Preview & Remove Option */}
                 {bannerUrl && (
                   <div className="mt-3 relative h-40 w-full bg-slate-900 rounded-2xl overflow-hidden border border-indigo-200 shadow-md group">
-                    <img src={bannerUrl} alt="Banner Preview" className="h-full w-full object-cover" />
+                    <img src={getFullImageUrl(bannerUrl)} alt="Banner Preview" className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                     
                     <div className="absolute top-2 left-2 px-2.5 py-0.5 bg-slate-900/80 backdrop-blur-xs text-white text-[9px] font-black uppercase tracking-wider rounded-lg border border-white/20">
