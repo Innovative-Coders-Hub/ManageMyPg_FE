@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import SEO from '../components/SEO'
@@ -12,8 +12,7 @@ import {
   Loader2,
   ChevronLeft,
   Fingerprint,
-  Activity,
-  ShieldCheck
+  Activity
 } from 'lucide-react'
 import { ownerLogin } from '../api/ownerAuth'
 import toast from 'react-hot-toast'
@@ -25,16 +24,16 @@ const containerVariants = {
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.5,
+      duration: 0.4,
       ease: [0.16, 1, 0.3, 1],
-      staggerChildren: 0.1
+      staggerChildren: 0.05
     }
   }
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
 }
 
 export default function SignInPage() {
@@ -115,7 +114,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen flex items-center justify-center bg-[#020617] relative overflow-hidden font-sans selection:bg-indigo-500/30 p-3 sm:p-6">
       <SEO
         title="Sign In"
         description="Login to your ManageMyPg portal to manage your PG business, track payments, and monitor resident records."
@@ -133,76 +132,76 @@ export default function SignInPage() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="w-full max-w-[460px] px-6 relative z-10"
+        className="w-full max-w-[390px] relative z-10 my-auto"
       >
         {/* Back Link */}
-        <div className="mb-6">
+        <div className="mb-3 sm:mb-4 flex items-center justify-between">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-slate-500 hover:text-white transition-all group"
+            className="flex items-center gap-1.5 text-slate-500 hover:text-white transition-all group cursor-pointer"
           >
-            <ChevronLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+            <ChevronLeft size={15} className="group-hover:-translate-x-1 transition-transform" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Return to Home</span>
           </button>
         </div>
 
         {/* Login Card */}
-        <div className="bg-slate-900/40 backdrop-blur-2xl rounded-[2.5rem] border border-slate-800/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] p-8 md:p-12 relative overflow-hidden group">
+        <div className="bg-slate-900/40 backdrop-blur-2xl rounded-2xl sm:rounded-3xl border border-slate-800/50 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] p-5 sm:p-7 md:p-8 relative overflow-hidden group">
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent opacity-50" />
 
           {/* Header */}
-          <motion.div variants={itemVariants} className="text-center mb-10">
-            <div className="inline-flex relative mb-6">
-              <div className="absolute inset-0 bg-indigo-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
-              <div className="h-24 w-24 rounded-full bg-white p-0 relative z-10 shadow-2xl flex items-center justify-center overflow-hidden">
+          <motion.div variants={itemVariants} className="text-center mb-5 sm:mb-6">
+            <div className="inline-flex relative mb-3">
+              <div className="absolute inset-0 bg-indigo-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-white p-0 relative z-10 shadow-xl flex items-center justify-center overflow-hidden">
                 <img src={LogoImg} alt="ManageMyPg" className="w-full h-full object-contain" />
               </div>
-              <div className="absolute -bottom-1 -right-1 h-8 w-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-xl z-20">
-                <Fingerprint size={16} />
+              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center text-indigo-400 shadow-xl z-20">
+                <Fingerprint size={13} />
               </div>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Welcome Back</h1>
-            <p className="text-slate-400 text-sm font-medium tracking-wide">Secure access to your PG Management portal</p>
+            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight mb-0.5">Welcome Back</h1>
+            <p className="text-slate-400 text-xs font-medium tracking-wide">Secure access to your PG Management portal</p>
           </motion.div>
 
           {/* Error Message */}
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 text-rose-200"
+                className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2.5 text-rose-200"
               >
-                <AlertCircle size={18} className="shrink-0" />
+                <AlertCircle size={16} className="shrink-0 text-rose-400" />
                 <span className="text-xs font-bold tracking-tight">{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-3.5 sm:space-y-4">
             {/* Email Field */}
-            <motion.div variants={itemVariants} className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] ml-1">
+            <motion.div variants={itemVariants} className="space-y-1">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">
                 Email Address
               </label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={15} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs sm:text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all"
                   required
                 />
               </div>
             </motion.div>
 
             {/* Password Field */}
-            <motion.div variants={itemVariants} className="space-y-2">
+            <motion.div variants={itemVariants} className="space-y-1">
               <div className="flex items-center justify-between ml-1">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">
+                <label className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">
                   Password
                 </label>
                 {isCapsLock && (
@@ -212,26 +211,26 @@ export default function SignInPage() {
                 )}
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-indigo-400 transition-colors" size={15} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyUp={checkCapsLock}
                   placeholder="••••••••••••"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-2xl pl-12 pr-12 py-4 text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all"
+                  className="w-full bg-slate-950/40 border border-slate-800 rounded-xl pl-9 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder:text-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none transition-all font-mono"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 px-3 flex items-center text-slate-600 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-300 transition-colors cursor-pointer"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
-              <div className="flex justify-end pr-1">
-                <Link to="/forgot-password" title="Forgot Password" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors">
+              <div className="flex justify-end pr-0.5 pt-0.5">
+                <Link to="/forgot-password" title="Forgot Password" className="text-[9.5px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-wider transition-colors">
                   Forgot Password?
                 </Link>
               </div>
@@ -240,18 +239,18 @@ export default function SignInPage() {
             {/* Submit Button */}
             <motion.button
               variants={itemVariants}
-              whileHover={{ scale: 1.01, translateY: -2 }}
+              whileHover={{ scale: 1.005, translateY: -1 }}
               whileTap={{ scale: 0.98 }}
               disabled={loading}
-              className="w-full relative group overflow-hidden rounded-2xl bg-indigo-600 p-4 text-xs font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-indigo-500 shadow-[0_20px_40px_-12px_rgba(79,70,229,0.4)] disabled:opacity-50 disabled:shadow-none"
+              className="w-full relative group overflow-hidden rounded-xl bg-indigo-600 p-3 text-xs font-black text-white uppercase tracking-[0.2em] transition-all hover:bg-indigo-500 shadow-[0_16px_32px_-10px_rgba(79,70,229,0.4)] disabled:opacity-50 disabled:shadow-none cursor-pointer mt-1"
             >
               <div className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
+                  <Loader2 className="animate-spin" size={16} />
                 ) : (
                   <>
                     Sign In
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={15} className="group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </div>
@@ -260,7 +259,7 @@ export default function SignInPage() {
           </form>
 
           {/* New to platform */}
-          <motion.div variants={itemVariants} className="mt-8 text-center">
+          <motion.div variants={itemVariants} className="mt-5 text-center">
             <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
               New to ManageMyPg?{" "}
               <Link to="/manage/mypg/signup" className="text-indigo-400 hover:text-indigo-300 transition-colors">
@@ -271,10 +270,10 @@ export default function SignInPage() {
         </div>
 
         {/* Branding Footer */}
-        <motion.div variants={itemVariants} className="mt-10 flex items-center justify-center gap-4 text-slate-500">
-           <div className="h-px w-8 bg-slate-800" />
-           <span className="text-[9px] font-black uppercase tracking-[0.3em]">ManageMyPg Ecosystem</span>
-           <div className="h-px w-8 bg-slate-800" />
+        <motion.div variants={itemVariants} className="mt-4 flex items-center justify-center gap-3 text-slate-500">
+          <div className="h-px w-6 bg-slate-800" />
+          <span className="text-[8.5px] font-black uppercase tracking-[0.25em]">ManageMyPg Ecosystem</span>
+          <div className="h-px w-6 bg-slate-800" />
         </motion.div>
       </motion.div>
     </div>

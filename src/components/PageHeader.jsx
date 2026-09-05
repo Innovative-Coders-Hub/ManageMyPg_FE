@@ -2,29 +2,37 @@ import React from 'react';
 
 /**
  * PageHeader Component
- * Standardized High-Density Enterprise Header
+ * Executive Top Header Template for Owner Portal Pages
  */
-export default function PageHeader({ title, subtitle, backButton, children }) {
+export default function PageHeader({ title, subtitle, backButton, children, icon: Icon }) {
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-1 relative">
-      <div className="min-w-0 text-center md:text-left flex items-center gap-4">
-        <div>
-          <div className="flex items-center justify-center md:justify-start gap-3">
-            <div className="h-5 w-1 bg-indigo-600 rounded-full hidden md:block" />
-            <h1 className="text-xl font-black text-slate-900 tracking-tighter uppercase truncate leading-none">
+    <div className="bg-white border border-slate-200/80 rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden mb-6 group">
+      {/* Top Accent Gradient Bar */}
+      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 opacity-90" />
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+        <div className="min-w-0 flex items-center gap-3.5">
+          {Icon && (
+            <div className="h-11 w-11 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-black shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
+              <Icon size={20} strokeWidth={2.2} />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-snug truncate">
               {title}
             </h1>
+            {subtitle && (
+              <p className="text-xs font-bold text-slate-500 tracking-wide mt-0.5 opacity-90">
+                {subtitle}
+              </p>
+            )}
           </div>
-          {subtitle && (
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em] mt-2 opacity-80 px-0.5">
-              {subtitle}
-            </p>
-          )}
         </div>
-      </div>
-      <div className="flex flex-wrap items-center justify-center md:justify-end gap-2 md:gap-3">
-        {children}
-        {backButton}
+
+        <div className="flex flex-wrap items-center justify-start md:justify-end gap-2 sm:gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+          {children}
+          {backButton}
+        </div>
       </div>
     </div>
   );

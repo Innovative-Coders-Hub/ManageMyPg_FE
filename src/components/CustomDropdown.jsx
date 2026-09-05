@@ -33,9 +33,10 @@ export default function CustomDropdown({
 
   // Support for both simple array of strings and array of objects {id, label}
   const getLabel = (val) => {
-    if (val === 'ALL' || val === '') return `ALL ${label}S`
     const opt = options.find(o => (typeof o === 'object' ? (o.id === val || o.value === val) : o === val))
-    return typeof opt === 'object' ? opt.label : (opt || val)
+    if (opt) return typeof opt === 'object' ? opt.label : opt
+    if (val === 'ALL' || val === '') return 'ALL'
+    return val
   }
 
   if (disabled) {
@@ -58,9 +59,11 @@ export default function CustomDropdown({
 
   return (
     <div className={`relative ${className} ${isOpen ? 'z-[100]' : ''}`} ref={containerRef}>
-      <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
-        <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
-      </div>
+      {label && (
+        <div className={`absolute -top-2.5 left-5 px-2 ${labelBg} z-20 transition-all duration-300`}>
+          <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest leading-none">{label}</span>
+        </div>
+      )}
 
       <button
         type="button"

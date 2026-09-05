@@ -2,8 +2,8 @@ import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import dayjs from 'dayjs'
 import { motion, AnimatePresence } from 'framer-motion'
-import PageHeader from '../components/PageHeader'
 import SEO from '../components/SEO'
+import PageHeader from '../components/PageHeader'
 import {
   Users,
   UserCheck,
@@ -24,12 +24,20 @@ import {
   Building2,
   Bed as BedIcon,
   MessageSquare,
-  Eye
+  Eye,
+  ExternalLink,
+  Sparkles,
+  LayoutGrid,
+  List,
+  ChevronRight
 } from 'lucide-react'
 import { getAllTenants, getAllPgs } from '../api/ownerAuth'
 import CustomDropdown from '../components/CustomDropdown'
 
-const WhatsAppIcon = ({ size = 16, className = "" }) => (
+/* =====================================================
+   WHATSAPP ICON SVG
+===================================================== */
+const WhatsAppIcon = ({ size = 14, className = "" }) => (
   <svg
     viewBox="0 0 24 24"
     width={size}
@@ -41,38 +49,56 @@ const WhatsAppIcon = ({ size = 16, className = "" }) => (
   </svg>
 )
 
+/* =====================================================
+   ANIMATION VARIANTS
+===================================================== */
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05 }
+  }
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } }
+}
+
+/* =====================================================
+   SUB-COMPONENTS
+===================================================== */
 function TopStat({ label, value, icon: Icon, colorClass = 'text-indigo-600', bgClass = 'bg-indigo-50' }) {
   return (
-    <div className="bg-white p-2 sm:p-3.5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-2 sm:gap-3 hover:shadow-md hover:scale-[1.02] transition-all cursor-default flex-1 min-w-0">
-      <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-2xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
-        <Icon className="w-4 h-4 sm:w-5 h-5" />
+    <div className="bg-white p-3.5 px-4 rounded-xl border border-slate-200/80 shadow-sm flex items-center gap-3.5 hover:shadow-md transition-all cursor-default min-w-[120px]">
+      <div className={`h-10 w-10 rounded-xl ${bgClass} ${colorClass} flex items-center justify-center shrink-0`}>
+        {React.isValidElement(Icon) ? Icon : <Icon className="w-5 h-5 stroke-[2.2]" />}
       </div>
       <div className="min-w-0">
-        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{label}</div>
-        <div className="text-sm sm:text-lg font-black text-slate-900 leading-tight truncate">{value}</div>
+        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate mb-0.5">{label}</div>
+        <div className="text-lg font-black text-slate-900 leading-tight truncate">{value}</div>
       </div>
     </div>
   )
 }
 
-
 function FilterPill({ active, onClick, label, icon: Icon, activeClass }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${
+      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${
         active
-          ? `${activeClass} shadow-md`
-          : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'
+          ? `${activeClass} shadow-sm`
+          : 'bg-white border-slate-200/80 text-slate-500 hover:border-slate-300 hover:text-slate-800'
       }`}
     >
-      <Icon size={12} />
+      <Icon size={13} strokeWidth={2.5} />
       {label}
     </button>
   )
 }
 
-const initials = (name = '') =>
+const getInitials = (name = '') =>
   name
     .split(' ')
     .filter(Boolean)
@@ -80,15 +106,20 @@ const initials = (name = '') =>
     .map(s => s[0]?.toUpperCase())
     .join('') || '?'
 
-function TenantAvatar({ name, profileImageUrl, vacated }) {
+function TenantAvatar({ name, profileImageUrl, vacated, size = "w-12 h-12" }) {
   const [imageError, setImageError] = useState(false)
+
+  useEffect(() => {
+    setImageError(false)
+  }, [profileImageUrl])
+
   const showImage = Boolean(profileImageUrl) && !imageError
 
   return (
     <div
-      className={`shrink-0 relative w-10 h-10 sm:w-14 sm:h-14 overflow-hidden rounded-2xl border shadow-sm ${
+      className={`shrink-0 relative ${size} rounded-2xl border shadow-sm overflow-hidden ${
         vacated
-          ? 'bg-slate-50 text-slate-400 border-slate-100'
+          ? 'bg-slate-100 text-slate-400 border-slate-200'
           : 'bg-indigo-600 text-white border-indigo-500'
       }`}
     >
@@ -102,8 +133,8 @@ function TenantAvatar({ name, profileImageUrl, vacated }) {
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm sm:text-lg font-black uppercase tracking-tight">
-            {initials(name)}
+          <span className="text-xs sm:text-sm font-black uppercase tracking-tight">
+            {getInitials(name)}
           </span>
         </div>
       )}
@@ -111,6 +142,9 @@ function TenantAvatar({ name, profileImageUrl, vacated }) {
   )
 }
 
+/* =====================================================
+   MAIN TENANTS REGISTRY PAGE
+===================================================== */
 export default function Tenants() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -119,11 +153,13 @@ export default function Tenants() {
   const [pgs, setPgs] = useState([])
   const [tenantsRaw, setTenantsRaw] = useState([])
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'table'
   const [filters, setFilters] = useState({
     active: true,
     vacated: false,
     newlyJoined: false
   })
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     async function init() {
@@ -144,7 +180,7 @@ export default function Tenants() {
         const data = await getAllTenants(pgId)
         setTenantsRaw(Array.isArray(data) ? data : [])
       } catch (e) {
-        console.error('Failed to fetch data:', e)
+        console.error('Failed to fetch tenants:', e)
         setTenantsRaw([])
       } finally {
         setLoading(false)
@@ -154,13 +190,16 @@ export default function Tenants() {
     init()
   }, [pgId, navigate])
 
-  const [searchQuery, setSearchQuery] = useState('')
-
   const tenants = useMemo(() => {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.managemypg.com/managemypg'
     return tenantsRaw.map(t => {
       const isVacated = t.vacated === true
       const isNewlyJoined = dayjs().diff(dayjs(t.dateOfJoining), 'day') <= 7
+
+      const rawImg = t.profileImageUrl || t.imageUrl || t.photoUrl || t.tenantProfileImageUrl || t.image
+      const profileImageUrl = rawImg
+        ? (rawImg.startsWith('http') ? rawImg : `${API_BASE_URL.replace(/\/$/, '')}/${rawImg.replace(/^\//, '')}`)
+        : null
 
       return {
         id: t.id,
@@ -172,9 +211,7 @@ export default function Tenants() {
         bedId: t.bedDetail,
         vacated: isVacated,
         newlyJoined: isNewlyJoined,
-        profileImageUrl: t.profileImageUrl
-          ? (t.profileImageUrl.startsWith('http') ? t.profileImageUrl : `${API_BASE_URL.replace(/\/$/, '')}/${t.profileImageUrl.replace(/^\//, '')}`)
-          : null,
+        profileImageUrl,
         rent: t.rentResponse?.[0] || null,
       }
     })
@@ -182,7 +219,6 @@ export default function Tenants() {
 
   const filtered = useMemo(() => {
     return tenants.filter(t => {
-      // 1. Apply Status Filter (Mutual Exclusive)
       let matchesFilter = true
       if (filters.active) matchesFilter = !t.vacated
       else if (filters.vacated) matchesFilter = t.vacated
@@ -190,14 +226,13 @@ export default function Tenants() {
 
       if (!matchesFilter) return false
 
-      // 2. Apply Search Filter (Name, Email, or Mobile)
       if (!searchQuery.trim()) return true
 
       const query = searchQuery.toLowerCase()
       return (
-        t.name?.toLowerCase().includes(query) ||
-        t.email?.toLowerCase().includes(query) ||
-        t.phone?.includes(query)
+        (t.name || '').toLowerCase().includes(query) ||
+        (t.email || '').toLowerCase().includes(query) ||
+        (t.phone || '').includes(query)
       )
     })
   }, [tenants, filters, searchQuery])
@@ -213,33 +248,38 @@ export default function Tenants() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-indigo-600" size={40} />
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Accessing Tenant Registry...</p>
-        </div>
+      <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="animate-spin text-indigo-600" size={36} />
+        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Accessing Resident Registry...</span>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24">
+    <div className="min-h-screen bg-[#F8FAFC] pb-16">
       <SEO
-        title="Tenant Registry"
-        description="Manage your PG residents, track active and vacated tenants, and view resident profiles."
-        canonical="/tenants"
+        title="Tenant Directory - Resident Management"
+        description="Manage your PG residents, monitor active/vacated tenants, and inspect individual profiles."
       />
-      {/* Header Section */}
-      <div className="bg-white border-b border-slate-200 pt-2 pb-1">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <PageHeader
-            title="Tenant Registry"
-            subtitle="Tenant resident management"
-          >
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-center gap-2 sm:gap-3 w-full md:w-auto mt-4 md:mt-0">
+
+      {/* STICKY HEADER & PORTFOLIO STATS BAR */}
+      <div className="bg-white border-b border-slate-200/80 pt-4 pb-4 sticky top-0 z-30 shadow-sm/50 backdrop-blur-md bg-white/95">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="shrink-0">
+              <div className="flex items-center gap-2 text-[10px] font-black text-indigo-600 uppercase tracking-widest">
+                <Users size={14} />
+                <span>Resident Management</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5 whitespace-nowrap">
+                Tenant Registry
+              </h1>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 flex-1">
               <TopStat label="Total Residents" value={stats.total} icon={Users} />
               <TopStat
-                label="Active"
+                label="Active Stay"
                 value={stats.active}
                 icon={UserCheck}
                 colorClass="text-emerald-600"
@@ -254,49 +294,51 @@ export default function Tenants() {
                 bgClass="bg-indigo-50"
               />
             </div>
-          </PageHeader>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="flex flex-col gap-8">
-          {/* Toolbar */}
-          <div className="bg-white border border-slate-200 rounded-[2rem] sm:rounded-[2.5rem] p-4 sm:p-5 shadow-sm flex flex-col md:flex-row items-stretch md:items-center gap-4">
-            {/* PG Selector */}
+      {/* MAIN CONTAINER */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        {/* TOOLBAR: PROPERTY SCOPE, SEARCH, STATUS FILTERS & VIEW MODE SWITCHER */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          
+          {/* PROPERTY DROPDOWN & SEARCH */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 w-full">
             <CustomDropdown
               label="Property Scope"
               value={pgId || ''}
               options={pgs.map(pg => ({ id: pg.id, label: pg.pgName }))}
               onChange={(val) => navigate(`?pgId=${val}`)}
               icon={Building2}
-              className="w-full md:w-72"
-              labelBg="bg-white"
+              className="w-full sm:w-64"
             />
 
-            {/* Search Bar */}
-            <div className="relative flex-1 group w-full">
-              <label className="absolute -top-2.5 left-5 bg-white px-2 text-[9px] font-black text-indigo-600 uppercase tracking-widest z-20 transition-all duration-300">Search Directory</label>
-              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-indigo-500 group-focus-within:text-indigo-600 transition-colors pointer-events-none z-10">
-                <Search size={18} strokeWidth={2.5} />
-              </div>
+            <div className="relative flex-1 w-full">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Name, Phone or Email..."
+                placeholder="Search resident name, phone or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-12 pr-12 py-3 bg-slate-50 border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all shadow-sm"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs font-bold text-slate-900 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-rose-500 transition-colors z-10"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  <X size={16} />
+                  <X size={14} />
                 </button>
               )}
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* STATUS FILTERS & VIEW TOGGLE */}
+          <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap">
+            {/* STATUS FILTER PILLS */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <FilterPill
                 label="Active"
                 icon={UserCheck}
@@ -319,141 +361,307 @@ export default function Tenants() {
                 activeClass="bg-indigo-600 border-indigo-500 text-white"
               />
             </div>
-          </div>
 
-          {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            <AnimatePresence mode="popLayout">
-              {filtered.length === 0 ? (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="w-full md:col-span-3 xl:col-span-4 bg-white rounded-[2.5rem] border border-slate-200 py-32 text-center shadow-sm"
-                >
-                  <div className="mx-auto w-24 h-24 bg-slate-50 rounded-[2rem] flex items-center justify-center text-slate-300 mb-8 border border-slate-100 shadow-inner">
-                    <Users size={48} />
-                  </div>
-                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">No Residents Found</h2>
-                  <p className="mt-4 text-[9px] font-black text-slate-400 uppercase tracking-widest max-w-sm mx-auto px-4">
-                    Adjust your filters to see more tenants or register new ones via the PG view.
-                  </p>
-                </motion.div>
-              ) : (
-                filtered.map(t => (
+            {/* VIEW MODE TOGGLE BUTTONS */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-indigo-600 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700'
+                }`}
+                title="Cards View"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`p-2 rounded-lg transition-all ${
+                  viewMode === 'table'
+                    ? 'bg-white text-indigo-600 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700'
+                }`}
+                title="Table View"
+              >
+                <List size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* TENANTS MAIN DISPLAY (GRID OR TABLE) */}
+        <div>
+          <AnimatePresence mode="popLayout">
+            {filtered.length === 0 ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-2xl border-2 border-dashed border-slate-200 py-24 text-center px-6 shadow-sm"
+              >
+                <div className="mx-auto w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-6 border border-slate-100">
+                  <Users size={36} />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">No Residents Match Criteria</h3>
+                <p className="mt-2 text-[10px] font-black text-slate-400 uppercase tracking-widest max-w-sm mx-auto">
+                  Try adjusting search query or active filter criteria.
+                </p>
+              </motion.div>
+            ) : viewMode === 'grid' ? (
+              
+              /* VIEW 1: CARDS GRID VIEW */
+              <motion.div
+                key="grid-view"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              >
+                {filtered.map(t => (
                   <motion.div
                     key={t.id}
                     layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.98 }}
+                    variants={itemVariants}
                     onClick={() => navigate(`/tenant/${t.id}`)}
-                    className="group bg-white rounded-[2rem] border border-slate-200 p-3.5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col items-stretch gap-3 cursor-pointer hover:border-indigo-200 active:scale-[0.99] h-full relative overflow-hidden"
+                    className="group bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 flex flex-col justify-between cursor-pointer relative overflow-hidden h-full"
                   >
-                    {/* Status Badge - Floating */}
-                    <div className="absolute top-0 right-0 z-10">
+                    <div>
+                      {/* RENT STATUS BADGE */}
                       {t.rent && (
-                        <div className={`px-3 py-1 rounded-bl-2xl text-[7px] font-black uppercase tracking-widest shadow-sm ${
-                          t.rent.status === 'PAID'
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-rose-500 text-white'
-                        }`}>
-                          Rent: {t.rent.status}
+                        <div className="absolute top-0 right-0 z-10">
+                          <span className={`px-3 py-1 rounded-bl-xl text-[8px] font-black uppercase tracking-widest shadow-2xs ${
+                            t.rent.status === 'PAID'
+                              ? 'bg-emerald-500 text-white'
+                              : 'bg-rose-500 text-white'
+                          }`}>
+                            Rent: {t.rent.status}
+                          </span>
                         </div>
                       )}
-                    </div>
 
-                    {/* Header Section: Avatar + Name + Status + Contact Info */}
-                    <div className="flex items-start justify-between gap-3 pt-1">
-                      <div className="flex items-center gap-3 min-w-0">
+                      {/* CARD HEADER: AVATAR & NAME */}
+                      <div className="flex items-start gap-3.5 mb-4 pr-12">
                         <div className="relative shrink-0">
                           <TenantAvatar
                             name={t.name}
                             profileImageUrl={t.profileImageUrl}
                             vacated={t.vacated}
+                            size="w-12 h-12"
                           />
                           {!t.vacated && (
-                            <div className="absolute -bottom-1 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-sm" />
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full shadow-xs" />
                           )}
                         </div>
 
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-[14px] font-black text-slate-900 tracking-tight leading-none">{t.phone || '—'}</span>
-                            <Phone size={13} className="text-emerald-500" />
-                          </div>
-                          <h3 className="text-[15px] font-black text-slate-900 uppercase tracking-tight truncate leading-tight group-hover:text-indigo-600 transition-colors">
+                          <h3 className="text-sm font-black text-slate-900 uppercase tracking-tight truncate leading-tight group-hover:text-indigo-600 transition-colors">
                             {t.name}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-                            <span className={`px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest border ${
+
+                          <div className="flex items-center gap-1 mt-1 text-slate-600">
+                            <Phone size={12} className="text-emerald-500 shrink-0" />
+                            <span className="text-[11px] font-black tracking-tight">{t.phone || '—'}</span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest border ${
                               t.vacated
-                                ? 'bg-slate-50 text-slate-400 border-slate-200'
+                                ? 'bg-slate-100 text-slate-500 border-slate-200'
                                 : 'bg-indigo-50 text-indigo-600 border-indigo-100'
                             }`}>
                               {t.vacated ? 'Vacated' : 'Active'}
                             </span>
                             {t.newlyJoined && !t.vacated && (
-                              <span className="px-1.5 py-0.5 rounded-md text-[7px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">
+                              <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">
                                 New
                               </span>
                             )}
-                            <div className="flex items-center gap-1 ml-1 opacity-60">
-                              <Mail size={10} className="text-indigo-400" />
-                              <span className="text-[8px] font-black text-slate-400 truncate max-w-[100px] tracking-tight">{t.email || '—'}</span>
-                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Info Grid: Accommodation & Duration */}
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div className="bg-slate-50/50 rounded-xl p-1.5 border border-slate-100 group-hover:bg-white transition-colors">
-                        <p className="text-[6.5px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Accommodation</p>
-                        <div className="flex items-center gap-1">
-                          <BedIcon size={10} className="text-amber-500" />
-                          <span className="text-[8.5px] font-black text-slate-900 uppercase truncate tracking-tight">
-                            {t.bedId || 'Unassigned'}
-                          </span>
+                      {/* ACCOMMODATION & STAY DETAILS */}
+                      <div className="grid grid-cols-2 gap-2 mb-4 bg-slate-50/70 p-3 rounded-xl border border-slate-100">
+                        <div>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Bed Allocation</span>
+                          <div className="flex items-center gap-1 text-slate-900 font-black text-[10px] uppercase truncate">
+                            <BedIcon size={12} className="text-amber-500 shrink-0" />
+                            <span className="truncate">{t.bedId || 'Unassigned'}</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-0.5">Joined Date</span>
+                          <div className="flex items-center gap-1 text-slate-900 font-black text-[10px] uppercase truncate">
+                            <Calendar size={12} className="text-indigo-500 shrink-0" />
+                            <span>{t.start ? dayjs(t.start).format('DD MMM YY') : '—'}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="bg-slate-50/50 rounded-xl p-1.5 border border-slate-100 group-hover:bg-white transition-colors">
-                        <p className="text-[6.5px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Stay Duration</p>
-                        <div className="flex items-center gap-1">
-                          <Calendar size={10} className="text-indigo-500" />
-                          <span className="text-[8.5px] font-black text-slate-900 uppercase tracking-tight">
-                            {t.start ? dayjs(t.start).format('DD MMM YY') : '—'}
-                          </span>
-                        </div>
+
+                      {/* EMAIL ROW */}
+                      <div className="flex items-center gap-1.5 text-slate-400 px-0.5 mb-4">
+                        <Mail size={12} className="shrink-0 text-slate-400" />
+                        <span className="text-[9px] font-black uppercase tracking-widest truncate">{t.email || 'No Email Recorded'}</span>
                       </div>
                     </div>
 
-                    {/* Action Footer */}
-                    <div className="mt-auto pt-0.5 flex items-center gap-2">
+                    {/* CARD FOOTER ACTIONS */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
                       <a
                         href={`https://wa.me/${t.phone}`}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="flex-1 px-4 py-2.5 bg-emerald-50 text-emerald-600 rounded-2xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm flex items-center justify-center gap-2"
-                        title="WhatsApp"
+                        className="flex-1 py-2 px-3 bg-emerald-50 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-2xs flex items-center justify-center gap-1.5"
+                        title="Chat on WhatsApp"
                       >
-                        WhatsApp <WhatsAppIcon size={12} />
+                        <WhatsAppIcon size={13} /> WhatsApp
                       </a>
+
                       <button
                         onClick={(e) => { e.stopPropagation(); navigate(`/tenant/${t.id}`); }}
-                        className="px-6 py-2.5 bg-indigo-600 text-white rounded-2xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 active:scale-95 flex items-center justify-center gap-2"
+                        className="py-2 px-4 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xs flex items-center justify-center gap-1.5 shrink-0"
                       >
-                        Profile <ArrowRight size={12} className="group-hover:translate-x-1 transition-transform" />
+                        Profile <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
                       </button>
                     </div>
                   </motion.div>
-                ))
-              )}
-            </AnimatePresence>
-          </div>
+                ))}
+              </motion.div>
+            ) : (
+
+              /* VIEW 2: TABLE VIEW WITH PROFILE AVATAR */
+              <motion.div
+                key="table-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden"
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200/80 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <th className="py-4 px-6">Resident Profile</th>
+                        <th className="py-4 px-6">Contact Info</th>
+                        <th className="py-4 px-6">Bed Allocation</th>
+                        <th className="py-4 px-6">Joining Date</th>
+                        <th className="py-4 px-6">Rent Status</th>
+                        <th className="py-4 px-6 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-900">
+                      {filtered.map(t => (
+                        <tr
+                          key={t.id}
+                          onClick={() => navigate(`/tenant/${t.id}`)}
+                          className="hover:bg-slate-50/70 transition-all cursor-pointer group"
+                        >
+                          {/* RESIDENT PROFILE WITH AVATAR IMAGE */}
+                          <td className="py-3.5 px-6">
+                            <div className="flex items-center gap-3">
+                              <TenantAvatar
+                                name={t.name}
+                                profileImageUrl={t.profileImageUrl}
+                                vacated={t.vacated}
+                                size="w-10 h-10"
+                              />
+                              <div>
+                                <div className="font-black text-slate-900 uppercase tracking-tight group-hover:text-indigo-600 transition-colors">
+                                  {t.name}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
+                                    t.vacated
+                                      ? 'bg-slate-100 text-slate-500 border-slate-200'
+                                      : 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                  }`}>
+                                    {t.vacated ? 'Vacated' : 'Active'}
+                                  </span>
+                                  {t.newlyJoined && !t.vacated && (
+                                    <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">
+                                      New
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* CONTACT INFO */}
+                          <td className="py-3.5 px-6">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1 text-slate-900 font-black">
+                                <Phone size={12} className="text-emerald-500" />
+                                <span>{t.phone || '—'}</span>
+                              </div>
+                              <div className="text-[10px] font-bold text-slate-400 truncate max-w-[180px]">
+                                {t.email || 'No email recorded'}
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* BED ALLOCATION */}
+                          <td className="py-3.5 px-6">
+                            <div className="flex items-center gap-1.5 font-black text-slate-800 uppercase">
+                              <BedIcon size={14} className="text-amber-500" />
+                              <span>{t.bedId || 'Unassigned'}</span>
+                            </div>
+                          </td>
+
+                          {/* JOINING DATE */}
+                          <td className="py-3.5 px-6">
+                            <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                              <Calendar size={13} className="text-indigo-500" />
+                              <span>{t.start ? dayjs(t.start).format('DD MMM YYYY') : '—'}</span>
+                            </div>
+                          </td>
+
+                          {/* RENT STATUS */}
+                          <td className="py-3.5 px-6">
+                            {t.rent ? (
+                              <span className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-widest border ${
+                                t.rent.status === 'PAID'
+                                  ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                  : 'bg-rose-50 text-rose-600 border-rose-100'
+                              }`}>
+                                {t.rent.status}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">—</span>
+                            )}
+                          </td>
+
+                          {/* ACTIONS */}
+                          <td className="py-3.5 px-6 text-right">
+                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                              <a
+                                href={`https://wa.me/${t.phone}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
+                                title="Chat on WhatsApp"
+                              >
+                                <WhatsAppIcon size={14} />
+                              </a>
+                              <button
+                                onClick={() => navigate(`/tenant/${t.id}`)}
+                                className="px-3.5 py-1.5 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-2xs flex items-center gap-1"
+                              >
+                                Profile <ChevronRight size={12} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
