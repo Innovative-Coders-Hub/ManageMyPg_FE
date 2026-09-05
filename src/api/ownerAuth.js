@@ -163,7 +163,13 @@ export async function getAllTenants(pgId) {
 }
 
 export async function assignTenantToBed(bedId, tenantId) {
-  const res = await api.post(`/mmp/beds/${bedId}/assign/${tenantId}`)
+  let actualBedId = bedId
+  let actualTenantId = tenantId
+  if (typeof bedId === 'object' && bedId !== null) {
+    actualBedId = bedId.bedId
+    actualTenantId = bedId.tenantId
+  }
+  const res = await api.post(`/mmp/beds/${actualBedId}/assign/${actualTenantId}`)
   return res.data
 }
 

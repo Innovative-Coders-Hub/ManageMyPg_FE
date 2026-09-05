@@ -1,0 +1,1 @@
+import{a as t}from"./index-dbqnepkQ.js";const o=a=>t.post("/api/admin/login",a),r=()=>t.post("/api/admin/logout"),i=a=>{const n={params:{limit:a}};return t.get("/api/admin/dashboard",n)},e=a=>t.get("/api/admin/owners",{params:a}),p=a=>t.put("/api/admin/owner/status",a);export{o as a,e as b,r as c,i as g,p as u};
