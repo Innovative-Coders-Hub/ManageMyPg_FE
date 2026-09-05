@@ -1,5 +1,6 @@
 // src/components/DocumentUpload.jsx
 import React from "react"
+import { compressImage } from "./utills/imageCompressor"
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024 // 1MB
 
@@ -8,42 +9,6 @@ const DOCUMENT_TYPES = [
   { key: "AADHAAR", label: "Aadhaar Card" },
   { key: "ID", label: "ID Card" }
 ]
-
-// ---------- Image Compression Utility ----------
-async function compressImage(file) {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const reader = new FileReader()
-
-    reader.onload = e => {
-      img.src = e.target.result
-    }
-
-    img.onload = () => {
-      const canvas = document.createElement("canvas")
-      const ctx = canvas.getContext("2d")
-
-      const scale = Math.min(800 / img.width, 800 / img.height, 1)
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
-
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-      canvas.toBlob(
-        blob => {
-          if (!blob) reject()
-          resolve(
-            new File([blob], file.name, { type: "image/jpeg" })
-          )
-        },
-        "image/jpeg",
-        0.7 // quality (70%)
-      )
-    }
-
-    reader.readAsDataURL(file)
-  })
-}
 
 export default function DocumentUpload({ documents, setDocuments }) {
 
@@ -62,7 +27,7 @@ export default function DocumentUpload({ documents, setDocuments }) {
     // Case 2: Image → auto compress
     if (file.type.startsWith("image/")) {
       try {
-        const compressed = await compressImage(file)
+        const compressed = await compressImage(file, { maxWidth: 800, maxHeight: 800, quality: 0.75 })
 
         if (compressed.size > MAX_FILE_SIZE) {
           alert("Image is still larger than 1MB after compression")

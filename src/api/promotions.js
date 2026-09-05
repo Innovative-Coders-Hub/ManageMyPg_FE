@@ -60,8 +60,11 @@ export const getActivePromotionsForPg = async (pgId) => {
 }
 
 // 8. Upload Promotion Banner Image to Server
-export const uploadPromotionBannerApi = async (file) => {
-  const compressed = await compressImage(file, { maxWidth: 1400, maxHeight: 800, quality: 0.8 })
+export const uploadPromotionBannerApi = async (file, pgName = '') => {
+  const timestamp = Date.now()
+  const cleanPgName = pgName ? pgName.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8) : ''
+  const customFileName = cleanPgName ? `Promo_${cleanPgName}_${timestamp}.jpg` : `promo_${timestamp}.jpg`
+  const compressed = await compressImage(file, { maxWidth: 1400, maxHeight: 800, quality: 0.8, fileName: customFileName })
   const formData = new FormData()
   formData.append('file', compressed)
   const res = await api.post('/mmp/promotions/banner/upload', formData)

@@ -5,7 +5,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.ma
 
 export const getFullImageUrl = (path) => {
   if (!path) return null
-  if (path.startsWith('http')) return path
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path
   const base = API_BASE_URL.replace(/\/$/, '')
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   return `${base}${normalizedPath}`
